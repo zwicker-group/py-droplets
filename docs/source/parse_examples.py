@@ -18,7 +18,7 @@ def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     
     # copy all resources
-    shutil.rmtree(OUTPUT / 'resources')
+    shutil.rmtree(OUTPUT / 'resources', ignore_errors=True)
     shutil.copytree(INPUT / 'resources', OUTPUT / 'resources')
     
     # iterate over all examples
