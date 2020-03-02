@@ -31,7 +31,7 @@ jobs:
     - name: Test types with mypy
       run: |
         pip install mypy
-        python -m mypy --config-file tests/mypy.ini --pretty --package pde
+        python -m mypy --config-file tests/mypy.ini --pretty --package droplets
         
     - name: Test with pytest
       run: |
