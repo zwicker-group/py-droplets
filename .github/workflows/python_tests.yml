@@ -1,0 +1,40 @@
+name: Test python package
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Test style with pycodestyle
+      run: |
+        pip install pycodestyle
+        cd tests
+        ./codestyle.sh
+        
+    - name: Test types with mypy
+      run: |
+        pip install mypy
+        python -m mypy --config-file tests/mypy.ini --pretty --package pde
+        
+    - name: Test with pytest
+      run: |
+        pip install pytest
+        cd tests
+        ./tests_run.sh
