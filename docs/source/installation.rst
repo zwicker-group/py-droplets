@@ -35,7 +35,7 @@ Prerequisites
 -------------
 
 The code builds on other python packages, which need to be installed for
-`py-phasesep` to function properly.
+`py-droplets` to function properly.
 The required packages are listed in the table below:
 
 ===========  ========= =========
@@ -55,35 +55,17 @@ using :command:`macports`, :command:`homebrew`, :command:`conda`, or
 The package versions given above are minimal requirements, although
 this is not tested systematically. Generally, it should help to install the
 latest version of the package.
-The last package is available on `pip`, but if this is inconvenient the package
-can also be installed from github sources, as `described in its documentation 
+The `py-pde` package is available on `pip`, but if this is inconvenient the
+package can also be installed from github sources, as `described in its 
+documentation 
 <https://py-pde.readthedocs.io/en/latest/installation.html#installing-from-source>`_.  
-
-
-Optionally, the following packages should be installed to use some miscellaneous
-features:
-
-===========  =========
-Package      Usage                                      
-===========  =========
-h5py         Storing data in the hierarchical file format
-pandas       Handling tabular data
-pyfftw       Faster Fourier transforms
-pytest       Running tests
-sphinx       Building the documentation
-tqdm         Display progress bars during calculations
-===========  =========
-
-Additionally, :command:`ffmpeg` should be installed for making movies and the
-packages :mod:`sphinx-autodoc-annotation` and :mod:`sphinx_rtd_theme` are
-required for building the documentation.
 
 
 Downloading the package
 -----------------------
 
 The package can be simply checked out from
-`github.com/zwicker-group/py-pde <https://github.com/zwicker-group/py-droplets>`_.
+`github.com/zwicker-group/py-droplets <https://github.com/zwicker-group/py-droplets>`_.
 To import the package from any python session, it might be convenient to include
 the root folder of the package into the :envvar:`PYTHONPATH` environment variable.
 
