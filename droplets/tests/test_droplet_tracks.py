@@ -90,7 +90,7 @@ def test_conversion_from_emulsion_timecourse():
     """ test converting between DropletTrackList and EmulsionTimecourse """
     d1 = SphericalDroplet([0, 1], 5)
     d2 = SphericalDroplet([10, 15], 4)
-    times=[0, 10]
+    times = [0, 10]
     
     dt1 = DropletTrack([d1]*2, times=times)
     dt2 = DropletTrack([d2]*2, times=times)

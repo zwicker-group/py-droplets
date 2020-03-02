@@ -318,7 +318,7 @@ class SphericalDroplet(DropletBase):
             distance = np.linalg.norm(self.position - other.position)
         else:
             distance = grid.distance_real(self.position, other.position)
-        return distance < self.radius + other.radius
+        return distance < self.radius + other.radius  # type: ignore
     
     
     @preserve_scalars
