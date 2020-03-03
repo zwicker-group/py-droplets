@@ -30,7 +30,7 @@ def test_emulsion_tracker():
     e1 = EmulsionTimeCourse()
     tracker = e1.tracker(filename=fp.name)
     pde.solve(c, t_range=1, dt=1e-3, backend='numpy', tracker=tracker)
-    e2 = EmulsionTimeCourse.from_file(fp.name)
+    e2 = EmulsionTimeCourse.from_file(fp.name, progress=False)
     
     assert e1 == e2
     assert len(e1) == 2
