@@ -5,25 +5,21 @@ This `py-droplets` package is developed for python 3.6+ and should run on all
 common platforms.
 The code is tested under Linux, Windows, and macOS.
 
-.. 
-	Since the package is available on `pypi <https://pypi.org/project/py-droplets/>`_,
-	the installation is in principle as simple as running
-	
-	.. code-block:: bash
-	
-	    pip install py-droplets
-	    
-	    
-	
-	In order to have all features of the package available, you might also want to 
-	install the following optional packages:
-	
-	.. code-block:: bash
-	
-		pip install h5py pandas pyfftw tqdm
-	
-	Moreover, :command:`ffmpeg` needs to be installed and for creating movies.    
+Since the package is available on `pypi <https://pypi.org/project/py-droplets/>`_,
+the installation is in principle as simple as running
+
+.. code-block:: bash
+
+    pip install py-droplets
     
+
+In order to have all features of the package available, you might also want to 
+install the following optional packages:
+
+.. code-block:: bash
+
+	pip install h5py tqdm
+
 
 Installing from source
 ^^^^^^^^^^^^^^^^^^^^^^
