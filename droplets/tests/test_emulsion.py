@@ -9,7 +9,7 @@ import tempfile
 import pytest
 import numpy as np
 
-from pde.grids import UnitGrid
+from pde.common import ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
 
 from .. import droplets, SphericalDroplet, DiffuseDroplet, Emulsion, emulsions 
@@ -130,7 +130,14 @@ def test_timecourse():
         assert [t for t, _ in track.items()] == list(range(length))
         
     assert t1 == t1[:]
-    assert t1[3:3] == emulsions.EmulsionTimeCourse()            
+    assert t1[3:3] == emulsions.EmulsionTimeCourse()      
+    
+    t2 = emulsions.EmulsionTimeCourse(t1)
+    assert t1 == t2
+    assert t1 is not t2
+    
+    t1.clear()
+    assert len(t1) == 0      
         
         
         
@@ -153,10 +160,12 @@ def test_timecourse_io():
 @skipUnlessModule("matplotlib")
 def test_emulsion_plotting():
     """ test plotting emulsions """
+    field = ScalarField(UnitGrid([10, 10], periodic=True))
     es = [Emulsion([DiffuseDroplet([0, 1], 10, 0.5)] * 2),
           Emulsion([droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3])])]
     for e1 in es:
         e1.plot()
+        e1.plot(field)
         
     with pytest.raises(NotImplementedError):
         Emulsion().plot()

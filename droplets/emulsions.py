@@ -44,11 +44,14 @@ class Emulsion(list):
                  copy: bool = True):
         """ 
         Args:
-            droplets: A list or generator of instances of
+            droplets:
+                A list or generator of instances of
                 :class:`~phasesep.analysis.droplets.SphericalDroplet`.
-            grid (GridBase): The grid on which the droplets are defined. This
-                information is required to measure distances between droplets.
-            copy (bool, optional): Whether to make a copy of the droplet or not
+            grid (:class:`~pde.grids.base.GridBase`):
+                The grid on which the droplets are defined. This information can
+                helpful to measure distances between droplets correctly.
+            copy (bool, optional):
+                Whether to make a copy of the droplet or not
         """
         # obtain grid of the emulsion
         if isinstance(droplets, Emulsion):
@@ -93,13 +96,14 @@ class Emulsion(list):
         """ return a copy of this emulsion
         
         Args:
-            min_radius (float): The minimal radius of the droplets that are
-                retained. Droplets with exactly min_radius are removed, so
-                `min_radius == 0` can be used to filter vanished droplets.        
+            min_radius (float):
+                The minimal radius of the droplets that are retained. Droplets
+                with exactly min_radius are removed, so `min_radius == 0` can be
+                used to filter vanished droplets.        
         """
         return self.__class__([droplet.copy() for droplet in self
                                if droplet.radius > min_radius],
-                              grid=self.grid)
+                              grid=self.grid, copy=False)
     
     
     def extend(self, droplets: DropletSequence,  # type: ignore
@@ -535,9 +539,9 @@ class EmulsionTimeCourse():
         """
         if isinstance(emulsions, EmulsionTimeCourse):
             # extract data from given object; ignore `times`
-            emulsions = emulsions.emulsions
             times = emulsions.times
             self.grid = emulsions.grid
+            emulsions = emulsions.emulsions
         else:
             self.grid = None
 
@@ -633,13 +637,16 @@ class EmulsionTimeCourse():
     @classmethod
     def from_storage(cls, storage: StorageBase, progress: bool = True,
                      **kwargs) -> "EmulsionTimeCourse":
-        """ create an emulsion time course from a stored phase field
+        r""" create an emulsion time course from a stored phase field
         
         Args:
-            storage (StorageBase): The phase fields for many time instances
-            progress (bool): Whether to show the progress of the process
-            **kwargs: All other parameters are forwarded to the
-                :meth:`~phasesep.analysis.image_analysis.locate_droplets`.
+            storage (:class:`~pde.storage.base.StorageBase`):
+                The phase fields for many time instances
+            progress (bool):
+                Whether to show the progress of the process
+            \**kwargs:
+                All other parameters are forwarded to the
+                :meth:`~droplets.image_analysis.locate_droplets`.
                 
         Returns:
             EmulsionTimeCourse: an instance describing the emulsion time course

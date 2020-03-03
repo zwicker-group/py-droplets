@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 from scipy import integrate
 
+from pde.grids import UnitGrid
 from .. import droplets
 
 
@@ -43,6 +44,28 @@ def test_random_droplet(dim):
     vol = np.random.random()
     d1.volume = vol
     assert d1.volume == pytest.approx(vol)
+    
+    d1.get_phase_field(UnitGrid([10] * dim))
+    
+
+
+def test_perturbed_droplet_2d():
+    """ test methods of perturbed droplets in 2d """
+    d = droplets.PerturbedDroplet2D([0, 1], 1, 0.1, [0., 0.1, 0.2])
+    d.volume
+    d.interface_distance(0.1)
+    d.interface_position(0.1)
+    d.interface_curvature(0.1)
+    
+
+
+def test_perturbed_droplet_3d():
+    """ test methods of perturbed droplets in 2d """
+    d = droplets.PerturbedDroplet3D([0, 1, 2], 1, 0.1, [0., 0.1, 0.2, 0.3])
+    d.volume_approx
+    d.interface_distance(0.1, 0.2)
+    d.interface_position(0.1, 0.2)
+    d.interface_curvature(0.1, 0.2)
     
 
 

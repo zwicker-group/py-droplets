@@ -80,8 +80,8 @@ class DropletTrack():
         """
         if isinstance(droplets, DropletTrack):
             # get data from given object
-            droplets = droplets.droplets
             times = droplets.times
+            droplets = droplets.droplets
 
         self.droplets = []
         self.times = []
@@ -144,7 +144,10 @@ class DropletTrack():
     @property
     def duration(self) -> float:
         """ float: total duration of the track """
-        return self.end - self.start
+        if len(self.times) > 0:
+            return self.end - self.start
+        else:
+            return 0
     
     @property
     def first(self) -> SphericalDroplet:
@@ -343,6 +346,9 @@ class DropletTrack():
         """
         import matplotlib.pyplot as plt
 
+        if len(self.times) == 0:
+            return
+
         if self.dim != 2:
             raise NotImplementedError('Plotting is only implemented for '
                                       'two-dimensional spaces.')
@@ -431,7 +437,7 @@ class DropletTrackList(list):
                 in the number of time steps stored in the track
         """
         for i in reversed(range(len(self))):
-            if self[i].duration < min_duration:
+            if self[i].duration <= min_duration:
                 self.pop(i)
         
         

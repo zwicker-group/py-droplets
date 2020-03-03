@@ -6,7 +6,6 @@ Created on Jul 18, 2018
 
 import tempfile
 
-import pytest
 import numpy as np
 
 from pde.grids import UnitGrid
@@ -33,10 +32,17 @@ def test_droplettrack():
         assert [t for t, _ in track.items()] == list(range(length))
         assert isinstance(str(track), str)
         assert isinstance(repr(track), str)
+        np.testing.assert_allclose(track.get_position(0), [0])
         np.testing.assert_array_equal(track.data['time'], np.arange(length))
         
     assert t1 == t1[:]
     assert t1[3:3] == DropletTrack()
+    assert t1.time_overlaps(t1[:2])
+    np.testing.assert_allclose(t1.get_radii(), np.arange(4))
+    
+    t2 = DropletTrack(t1)
+    assert t1 == t2
+    assert t1 is not t2
             
 
 
@@ -65,10 +71,22 @@ def test_droplettrack_plotting():
     t.plot()
     t.plot(grid=UnitGrid([5, 5], periodic=True))
     
-    t = DropletTrack()
-    with pytest.raises(NotImplementedError):
-        t.plot()
+
+
+def test_droplettracklist():
+    """ test droplet tracks """
+    t1 = DropletTrack()
+    ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
+    t2 = DropletTrack(droplets=ds, times=[0, 10])
+    tl = DropletTrackList([t1, t2])
     
+    assert len(tl) == 2
+    assert tl[0] == t1
+    assert tl[1] == t2
+    
+    tl.remove_short_tracks()
+    assert len(tl) == 1
+
 
 
 @skipUnlessModule("h5py")
@@ -83,6 +101,16 @@ def test_droplettracklist_io():
     tl_out.to_file(fp.name)
     tl_in = DropletTrackList.from_file(fp.name)
     assert tl_in == tl_out
+        
+
+        
+@skipUnlessModule("matplotlib")
+def test_droplettracklist_plotting():
+    """ test plotting droplet tracks """
+    t1 = DropletTrack()
+    ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
+    t2 = DropletTrack(droplets=ds, times=[0, 10])
+    DropletTrackList([t1, t2]).plot()
         
         
         
