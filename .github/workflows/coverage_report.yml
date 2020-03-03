@@ -23,7 +23,7 @@ jobs:
         
     - name: Generate coverage report
       run: |
-        pip install pytest pytest-cov
+        pip install h5py pytest pytest-cov
         cd tests
         export MPLBACKEND="agg"
         pytest --cov-report xml:report_coverage.xml --cov=droplets ..
