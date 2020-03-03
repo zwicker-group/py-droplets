@@ -16,7 +16,7 @@ Functions for analyzing phase field images of emulsions.
 import logging
 import warnings
 from functools import reduce
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, Union
 
 import numpy as np
 from numpy.lib.recfunctions import (structured_to_unstructured,
@@ -439,8 +439,9 @@ def refine_droplet(phase_field: ScalarField,
 
 
 
-def get_structure_factor(scalar_field: ScalarField, smoothing: float = None) \
-        -> Tuple[np.ndarray, np.ndarray]:
+def get_structure_factor(scalar_field: ScalarField,
+                         smoothing: Union[float, str] = 'auto') \
+                         -> Tuple[np.ndarray, np.ndarray]:
     """ Calculates the structure factor associated with a phase field
     
     Args:
@@ -449,7 +450,8 @@ def get_structure_factor(scalar_field: ScalarField, smoothing: float = None) \
         smoothing (float, optional):
             Length scale that determines the smoothing of the radially averaged
             structure factor. If omitted, the full data about the discretized
-            structure factor is returned.
+            structure factor is returned. The special value `auto` calculates
+            a value automatically.
             
     Returns:
         (numpy.ndarray, numpy.ndarray): Two arrays giving the wave numbers and
@@ -478,7 +480,9 @@ def get_structure_factor(scalar_field: ScalarField, smoothing: float = None) \
     # calculate the magnitude 
     k_mag = np.sqrt(reduce(np.add.outer, k2s)).flat[1:]
     
-    if smoothing is not None:
+    if smoothing is not None and smoothing != 'none':
+        if smoothing == 'auto':
+            smoothing = k_mag.max() / 128
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
         k_mag = np.arange(0, k_mag.max(), smoothing / 2)
         sf = sf_smooth(k_mag)
@@ -531,7 +535,7 @@ def get_length_scale(scalar_field: ScalarField,
     elif (method == 'structure_factor_maximum' or 
             method == 'structure_factor_peak'):
         # calculate the structure factor 
-        k_mag, sf = get_structure_factor(scalar_field)
+        k_mag, sf = get_structure_factor(scalar_field, smoothing=None)
 
         # smooth the structure factor
         if smoothing is None:
