@@ -52,9 +52,7 @@ REPLACEMENTS = collections.OrderedDict([
         'BoundariesDataList'),
     ('Union[List[Union[TrackerBase, str]], TrackerBase, str, None]',
         'TrackerData'),
-    ('Union[str, phasesep.simulation.free_energies.base.FreeEnergyBase]',
-        'FreeEnergyData'),
-    ('Union[Generator, Sequence[phasesep.analysis.droplets.SphericalDroplet]]', 
+    ('Union[Generator, Sequence[droplets.droplets.SphericalDroplet]]', 
         'DropletSequence')
 ])
 

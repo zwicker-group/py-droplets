@@ -380,7 +380,7 @@ def refine_droplet(phase_field: ScalarField,
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
             Phase_field that is being used to refine the droplet
-        droplet (:class:`~phasesep.analysis.droplets.SphericalDroplet`):
+        droplet (:class:`~droplets.droplets.SphericalDroplet`):
             Droplet that should be refined. This could also be a subclass of
             :class:`SphericalDroplet`
         least_squares_params (dict):

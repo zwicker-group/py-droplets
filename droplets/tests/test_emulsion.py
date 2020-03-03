@@ -150,7 +150,7 @@ def test_timecourse_io():
     
     fp = tempfile.NamedTemporaryFile(suffix='.hdf5')
     tc1.to_file(fp.name)
-    tc2 = emulsions.EmulsionTimeCourse.from_file(fp.name)
+    tc2 = emulsions.EmulsionTimeCourse.from_file(fp.name, progress=False)
     assert tc1.times == tc2.times
     assert tc1.emulsions == tc2.emulsions
     assert len(tc2) == 2

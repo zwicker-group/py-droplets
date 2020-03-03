@@ -15,7 +15,7 @@ temporal dynamics.
 
 import json
 from typing import (List, Optional, Dict, Sequence, Tuple,  # @UnusedImport
-                    Iterator, Union, Generator, Any)
+                    Iterator, Union, Generator, Any, TYPE_CHECKING)
 
 import numpy as np
 
@@ -24,12 +24,17 @@ from pde.fields.base import DataFieldBase
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
 from pde.trackers.base import InfoDict
+from pde.trackers.intervals import IntervalType
 from pde.storage.base import StorageBase
 from pde.tools.misc import display_progress
 from pde.tools.cuboid import Cuboid
 
 from .droplets import (DropletBase, SphericalDroplet,  # @UnusedImport
                        droplet_from_data)
+
+if TYPE_CHECKING:
+    from .trackers import DropletTracker  # @UnusedImport
+
 
 
 DropletSequence = Union[Generator, Sequence[SphericalDroplet]]
@@ -46,7 +51,7 @@ class Emulsion(list):
         Args:
             droplets:
                 A list or generator of instances of
-                :class:`~phasesep.analysis.droplets.SphericalDroplet`.
+                :class:`~droplets.droplets.SphericalDroplet`.
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid on which the droplets are defined. This information can
                 helpful to measure distances between droplets correctly.
@@ -715,6 +720,25 @@ class EmulsionTimeCourse():
             if self.grid is not None:
                 fp.attrs['grid'] = self.grid.state_serialized
                 
-            
+                
+    def tracker(self, interval: Union[int, float, IntervalType] = 1,
+                filename: Optional[str] = None) -> "DropletTracker":
+        """ return a tracker that analyzes emulsions during simulations
+        
+        Args:
+            interval: Determines how often the tracker interrupts the
+                simulation. Simple numbers are interpreted as durations measured
+                in the simulation time variable. Alternatively, instances of
+                :class:`~droplets.simulation.trackers.LogarithmicIntervals` and
+                :class:`~droplets.simulation.trackers.RealtimeIntervals` might
+                be given for more control.
+            filename (str): determines where the EmulsionTimeCourse data is
+                stored
+        """
+        from .trackers import DropletTracker  # @Reimport
+        return DropletTracker(emulsion_timecourse=self, filename=filename,
+                              interval=interval)
+        
+                    
             
 __all__ = ["Emulsion", "EmulsionTimeCourse"]
