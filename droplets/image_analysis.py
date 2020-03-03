@@ -440,8 +440,8 @@ def refine_droplet(phase_field: ScalarField,
 
 
 def get_structure_factor(scalar_field: ScalarField,
-                         smoothing: Union[float, str] = 'auto') \
-                         -> Tuple[np.ndarray, np.ndarray]:
+                         smoothing: Union[None, float, str] = 'auto') \
+                            -> Tuple[np.ndarray, np.ndarray]:
     """ Calculates the structure factor associated with a phase field
     
     Args:
@@ -483,6 +483,7 @@ def get_structure_factor(scalar_field: ScalarField,
     if smoothing is not None and smoothing != 'none':
         if smoothing == 'auto':
             smoothing = k_mag.max() / 128
+        smoothing = float(smoothing)  # type: ignore
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
         k_mag = np.arange(0, k_mag.max(), smoothing / 2)
         sf = sf_smooth(k_mag)
