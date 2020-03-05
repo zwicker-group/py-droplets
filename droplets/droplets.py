@@ -689,7 +689,7 @@ class PerturbedDroplet2D(_PerturbedDropletND):
         """ initialize perturbed droplet """
         super().__init__(position, radius, interface_width, amplitudes)
         if len(self.amplitudes) % 2 != 0:
-            logger = logging.getLogger(self.__class__.__module__)
+            logger = logging.getLogger(self.__class__.__name__)
             logger.warning('`amplitudes` should be of even length to capture '
                            'all perturbations of the highest mode.')
         
@@ -857,7 +857,7 @@ class PerturbedDroplet3D(_PerturbedDropletND):
         super().__init__(position, radius, interface_width, amplitudes)
         num_modes = len(self.amplitudes) + 1
         if not spherical.spherical_index_count_optimal(num_modes):
-            logger = logging.getLogger(self.__class__.__module__)
+            logger = logging.getLogger(self.__class__.__name__)
             l, _ = spherical.spherical_index_lm(num_modes)
             opt_modes = spherical.spherical_index_count(l) - 1
             logger.warning('The length of `amplitudes` should be such that all '
