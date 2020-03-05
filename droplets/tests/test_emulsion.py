@@ -9,7 +9,7 @@ import tempfile
 import pytest
 import numpy as np
 
-from pde.common import ScalarField, UnitGrid
+from pde import ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
 
 from .. import droplets, SphericalDroplet, DiffuseDroplet, Emulsion, emulsions 
