@@ -39,6 +39,7 @@ def test_droplettrack():
     assert t1[3:3] == DropletTrack()
     assert t1.time_overlaps(t1[:2])
     np.testing.assert_allclose(t1.get_radii(), np.arange(4))
+    np.testing.assert_allclose(t1.get_volumes(), 2 * np.arange(4))
     
     t2 = DropletTrack(t1)
     assert t1 == t2
@@ -68,8 +69,10 @@ def test_droplettrack_plotting():
     """ test writing and reading droplet tracks """
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
     t = DropletTrack(droplets=ds, times=[0, 10])
-    t.plot()
-    t.plot(grid=UnitGrid([5, 5], periodic=True))
+    t.plot('radius')
+    t.plot('volume')
+    t.plot_positions()
+    t.plot_positions(grid=UnitGrid([5, 5], periodic=True))
     
 
 
@@ -111,6 +114,7 @@ def test_droplettracklist_plotting():
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
     t2 = DropletTrack(droplets=ds, times=[0, 10])
     DropletTrackList([t1, t2]).plot()
+    DropletTrackList([t1, t2]).plot_positions()
         
         
         

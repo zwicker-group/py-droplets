@@ -240,9 +240,14 @@ class DropletTrack():
         return trajectory
         
         
-    def get_radii(self):
-        """ return a list of radii over time """
+    def get_radii(self) -> np.ndarray:
+        """ returns the droplet radius for each time point """
         return np.array([droplet.radius for droplet in self.droplets])
+        
+    
+    def get_volumes(self) -> np.ndarray:
+        """ returns the droplet volume for each time point """
+        return np.array([droplet.volume for droplet in self.droplets])
         
     
     def time_overlaps(self, other: "DropletTrack") -> bool:
@@ -330,8 +335,36 @@ class DropletTrack():
                     fp.attrs[k] = json.dumps(v)
                 
     
-    def plot(self, grid: Optional[GridBase] = None, arrow: bool = True,
-             **kwargs):
+    def plot(self, attribute: str = 'radius', **kwargs):
+        """ plot the time evolution of the droplet
+        
+        Args:
+            attribute (str):
+                The attribute to plot. Typical values include `radius` and
+                `volume`, but others might be defined on the droplet class.
+            **kwargs:
+                Additional keyword arguments are passed to the matplotlib plot
+                function to affect the appearance.
+        """
+        import matplotlib.pyplot as plt
+
+        if len(self.times) == 0:
+            return
+
+        if attribute in {'radius', 'radii'}:
+            data = self.get_radii()
+        elif attribute in {'volume', 'volumes'}:
+            data = self.get_volumes()
+        else:
+            data = [getattr(droplet, attribute) for droplet in self.droplets]
+
+        plt.plot(self.times, data, **kwargs)
+        plt.xlabel('Time')
+        plt.ylabel('Radius')
+
+    
+    def plot_positions(self, grid: Optional[GridBase] = None,
+                       arrow: bool = True, **kwargs):
         """ plot the droplet track
         
         Args:
@@ -479,7 +512,25 @@ class DropletTrackList(list):
                     fp.attrs[k] = json.dumps(v)
                 
                         
-    def plot(self, **kwargs):
+    def plot(self, attribute: str = 'radius', **kwargs):
+        """ plot the time evolution of all droplets
+        
+        Args:
+            attribute (str):
+                The attribute to plot. Typical values include `radius` and
+                `volume`, but others might be defined on the droplet class.
+            **kwargs:
+                Additional keyword arguments are passed to the matplotlib plot
+                function to affect the appearance.
+        """
+        kwargs.setdefault('color', 'k')
+        # adjust alpha such that multiple tracks are visible well
+        kwargs.setdefault('alpha', np.exp(-(len(self) - 1) / 30))
+        for track in self:
+            track.plot(attribute=attribute, **kwargs)
+                        
+                        
+    def plot_positions(self, **kwargs):
         """ plot all droplet tracks
         
         Args:
@@ -488,7 +539,7 @@ class DropletTrackList(list):
                 function to affect the appearance.
         """
         for track in self:
-            track.plot(**kwargs)
+            track.plot_positions(**kwargs)
         
         
         
