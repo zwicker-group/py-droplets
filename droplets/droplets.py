@@ -11,10 +11,17 @@ Classes representing (perturbed) droplets in various dimensions
    PerturbedDroplet3D
 
 
+Inheritance structure of the classes:
+
+.. inheritance-diagram:: droplets.droplets
+   :parts: 1
+
+The details of the classes are explained below:
+
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
-from abc import abstractmethod
+from abc import abstractmethod, ABCMeta
 import logging
 from typing import (List, Optional, Callable, Dict, Any,  # @UnusedImport
                     TYPE_CHECKING, Sequence)  
@@ -523,7 +530,7 @@ class DiffuseDroplet(SphericalDroplet):
 
         
 
-class _PerturbedDropletND(DiffuseDroplet):
+class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     """ represents a single droplet with a perturbed shape.
     
     This acts as an abstract class for which member functions need to specified
@@ -654,7 +661,7 @@ class _PerturbedDropletND(DiffuseDroplet):
     
 
 
-class PerturbedDroplet2D(_PerturbedDropletND):
+class PerturbedDroplet2D(PerturbedDropletBase):
     r"""Represents a single droplet in two dimensions with a perturbed shape
     
     The shape is described using the distance :math:`R(\phi)` of the interface
@@ -822,7 +829,7 @@ class PerturbedDroplet2D(_PerturbedDropletND):
         
         
 
-class PerturbedDroplet3D(_PerturbedDropletND):
+class PerturbedDroplet3D(PerturbedDropletBase):
     r""" Represents a single droplet in two dimensions with a perturbed shape
     
     The shape is described using the distance :math:`R(\theta, \phi)` of the
@@ -831,7 +838,7 @@ class PerturbedDroplet3D(_PerturbedDropletND):
     as a truncated series of spherical harmonics :math:`Y_{l,m}(\theta, \phi)`:
     
     .. math::
-        R(\phi) = R_0 \left[1 + \sum_{l=1}^{N_l}\sum_{m=-l}^l
+        R(\theta, \phi) = R_0 \left[1 + \sum_{l=1}^{N_l}\sum_{m=-l}^l
                                 \epsilon_{l,m} Y_{l,m}(\theta, \phi) \right]
                             
     where :math:`N_l` is the number of perturbation modes considered, which is 
