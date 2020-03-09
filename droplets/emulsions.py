@@ -160,7 +160,7 @@ class Emulsion(list):
             return np.array([d.data for d in self])
         
 
-    def get_linked_data(self):
+    def get_linked_data(self) -> np.ndarray:
         """ link the data of all droplets in a single array
         
         Returns:

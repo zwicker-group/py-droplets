@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/zwicker-group/py-droplets/branch/master/graph/badge.svg)](https://codecov.io/gh/zwicker-group/py-droplets)
 [![PyPI version](https://badge.fury.io/py/py-droplets.svg)](https://badge.fury.io/py/py-droplets)
 [![Documentation Status](https://readthedocs.org/projects/py-droplets/badge/?version=latest)](https://py-droplets.readthedocs.io/en/latest/?badge=latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 `py-droplets` provides python code for representing data about physical
 droplets, like position, size, or shape.
