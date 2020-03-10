@@ -9,5 +9,6 @@ __version__ = '0.1'
 from .droplets import SphericalDroplet, DiffuseDroplet
 from .droplet_tracks import DropletTrack, DropletTrackList
 from .emulsions import Emulsion, EmulsionTimeCourse
-from .image_analysis import get_length_scale, locate_droplets
+from .image_analysis import (locate_droplets, get_structure_factor,
+                             get_length_scale)
 from .trackers import LengthScaleTracker, DropletTracker

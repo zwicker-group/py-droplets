@@ -1,17 +1,18 @@
 '''
-Created on Jul 18, 2018
-
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 '''
 
 import tempfile
 import os
 
-from pde.grids import UnitGrid
+import pytest
+import numpy as np
+
+from pde import (UnitGrid, CartesianGrid, ScalarField, CahnHilliardPDE,
+                 DiffusionPDE)
 from pde.tools.misc import skipUnlessModule
-from pde.pdes import CahnHilliardPDE
     
-from .. import SphericalDroplet
+from .. import SphericalDroplet, LengthScaleTracker
 from ..emulsions import EmulsionTimeCourse
     
     
@@ -19,7 +20,6 @@ from ..emulsions import EmulsionTimeCourse
 @skipUnlessModule("h5py")
 def test_emulsion_tracker():
     """ test using the emulsions tracker """
-    
     fp = tempfile.NamedTemporaryFile(suffix='.hdf5')
             
     d = SphericalDroplet([4, 4], 3, interface_width=1)
@@ -38,3 +38,16 @@ def test_emulsion_tracker():
     assert os.stat(fp.name).st_size > 0  # wrote some result
     
     
+
+def test_length_scale_tracker():
+    """ test the length scale tracker """
+    grid = CartesianGrid([[0, 2 * np.pi]], 64, periodic=True)
+    field = ScalarField.from_expression(grid, 'sin(2 * x)')
+    
+    pde = DiffusionPDE()
+    tracker = LengthScaleTracker(0.05)
+    pde.solve(field, t_range=0.1, backend='numpy', tracker=tracker)
+    
+    for ls in tracker.length_scales:
+        assert ls == pytest.approx(np.pi, rel=1e-3)
+        

@@ -8,8 +8,7 @@ import pytest
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 
-from pde import grids 
-from pde.fields import ScalarField
+from pde import grids, ScalarField
 
 from .. import image_analysis
 from ..droplets import DiffuseDroplet, PerturbedDroplet2D, PerturbedDroplet3D

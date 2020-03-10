@@ -540,8 +540,7 @@ def get_length_scale(scalar_field: ScalarField,
 
         # smooth the structure factor
         if smoothing is None:
-            grid = scalar_field.grid
-            smoothing = 0.01 * grid.typical_discretization
+            smoothing = 0.01 * scalar_field.grid.typical_discretization
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
         
         # find the maximum
