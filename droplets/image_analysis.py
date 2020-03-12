@@ -23,6 +23,11 @@ from numpy.lib.recfunctions import (structured_to_unstructured,
                                     unstructured_to_structured)
 from scipy import ndimage, optimize
 
+try:
+    from pyfftw.interfaces.numpy_fft import fftn as np_fftn
+except ImportError:
+    from numpy.fft import fftn as np_fftn
+
 from pde.grids import CylindricalGrid
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
@@ -480,16 +485,24 @@ def get_structure_factor(scalar_field: ScalarField,
                        'conditions, but not all grid dimensions are periodic')
         
     # do the n-dimensional Fourier transform and calculate the structure factor
-    f1 = np.fft.fftn(scalar_field.data).flat[1:]
-    f2 = np.fft.ifftn(scalar_field.data).flat[1:]
-    sf = (f1 * f2).real
+    f1 = np_fftn(scalar_field.data, norm='ortho').flat[1:]
+    sf = np.abs(f1)**2
     sf /= np.product(grid.shape) * (scalar_field**2).average  # type: ignore
+
+    # an alternative calculation of the structure factor is
+    #    f2 = np_ifftn(scalar_field.data, norm='ortho').flat[1:]
+    #    sf = (f1 * f2).real
+    #    sf /= np.product(grid.shape) * (scalar_field**2).average
+    # but since this involves two FFT, it is probably slower
         
     # determine the (squared) components of the wave vectors
     k2s = [np.fft.fftfreq(grid.shape[i], d=grid.discretization[i])**2
            for i in range(grid.dim)]
     # calculate the magnitude 
     k_mag = np.sqrt(reduce(np.add.outer, k2s)).flat[1:]
+    
+    no_wavenumbers = wave_numbers is None or (isinstance(wave_numbers, str) and
+                                              wave_numbers == 'auto')
     
     if smoothing is not None and smoothing != 'none':
         # construct the smoothed function of the structure factor
@@ -498,7 +511,7 @@ def get_structure_factor(scalar_field: ScalarField,
         smoothing = float(smoothing)  # type: ignore
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
         
-        if isinstance(wave_numbers, str) and wave_numbers == 'auto':
+        if no_wavenumbers:
             # determine the wave numbers at which to evaluate it
             k_min = 2 / grid.cuboid.size.max()
             k_max = k_mag.max()
@@ -509,6 +522,10 @@ def get_structure_factor(scalar_field: ScalarField,
 
         # obtain the smoothed values at these points
         sf = sf_smooth(k_mag)
+        
+    elif not no_wavenumbers:
+        logger.warning('Argument `wave_numbers` is only used when `smoothing` '
+                       'is enabled.')
     
     if add_zero:
         sf = np.r_[1, sf]

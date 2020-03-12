@@ -18,7 +18,7 @@ install the following optional packages:
 
 .. code-block:: bash
 
-	pip install h5py tqdm
+	pip install h5py pyfftw tqdm
 
 
 Installing from source
