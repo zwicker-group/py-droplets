@@ -449,7 +449,11 @@ def get_structure_factor(scalar_field: ScalarField,
                          wave_numbers: Union[Sequence[float], str] = 'auto',
                          add_zero: bool = False) \
                             -> Tuple[np.ndarray, np.ndarray]:
-    """ Calculates the structure factor associated with a phase field
+    """ Calculates the structure factor associated with a field
+    
+    Here, the structure factor is basically the power spectral density of the
+    field `scalar_field` normalized so that re-gridding or rescaleing the field
+    does not change the result.
     
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):
@@ -464,7 +468,8 @@ def get_structure_factor(scalar_field: ScalarField,
             evaluated. This only applies when smoothing is used. If `auto`, the
             wave numbers are determined automatically.
         add_zero (bool):
-            Determines whether the value at k=0 should also be returned
+            Determines whether the value at k=0 (defined to be 1) should also be
+            returned.
             
     Returns:
         (numpy.ndarray, numpy.ndarray): Two arrays giving the wave numbers and
@@ -486,13 +491,13 @@ def get_structure_factor(scalar_field: ScalarField,
         
     # do the n-dimensional Fourier transform and calculate the structure factor
     f1 = np_fftn(scalar_field.data, norm='ortho').flat[1:]
-    sf = np.abs(f1)**2
-    sf /= np.product(grid.shape) * (scalar_field**2).average  # type: ignore
+    flat_data = scalar_field.data.flat
+    sf = np.abs(f1)**2 / np.dot(flat_data, flat_data)
 
     # an alternative calculation of the structure factor is
     #    f2 = np_ifftn(scalar_field.data, norm='ortho').flat[1:]
     #    sf = (f1 * f2).real
-    #    sf /= np.product(grid.shape) * (scalar_field**2).average
+    #    sf /= (scalar_field.data**2).sum()
     # but since this involves two FFT, it is probably slower
         
     # determine the (squared) components of the wave vectors
