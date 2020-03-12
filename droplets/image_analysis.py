@@ -16,7 +16,7 @@ Functions for analyzing phase field images of emulsions.
 import logging
 import warnings
 from functools import reduce
-from typing import Optional, Dict, Any, Tuple, Union
+from typing import Optional, Dict, Any, Tuple, Union, Sequence
 
 import numpy as np
 from numpy.lib.recfunctions import (structured_to_unstructured,
@@ -440,7 +440,9 @@ def refine_droplet(phase_field: ScalarField,
 
 
 def get_structure_factor(scalar_field: ScalarField,
-                         smoothing: Union[None, float, str] = 'auto') \
+                         smoothing: Union[None, float, str] = 'auto',
+                         wave_numbers: Union[Sequence[float], str] = 'auto',
+                         add_zero: bool = False) \
                             -> Tuple[np.ndarray, np.ndarray]:
     """ Calculates the structure factor associated with a phase field
     
@@ -452,6 +454,12 @@ def get_structure_factor(scalar_field: ScalarField,
             structure factor. If omitted, the full data about the discretized
             structure factor is returned. The special value `auto` calculates
             a value automatically.
+        wave_numbers (list of floats, optional):
+            The magnitude of the wave vectors at which the structure factor is
+            evaluated. This only applies when smoothing is used. If `auto`, the
+            wave numbers are determined automatically.
+        add_zero (bool):
+            Determines whether the value at k=0 should also be returned
             
     Returns:
         (numpy.ndarray, numpy.ndarray): Two arrays giving the wave numbers and
@@ -471,9 +479,12 @@ def get_structure_factor(scalar_field: ScalarField,
         logger.warning('Structure factor calculation assumes periodic boundary '
                        'conditions, but not all grid dimensions are periodic')
         
-    # do the n-dimensional Fourier transform and calculate the absolute value
-    sf = np.absolute(np.fft.fftn(scalar_field.data)).flat[1:]
-    
+    # do the n-dimensional Fourier transform and calculate the structure factor
+    f1 = np.fft.fftn(scalar_field.data).flat[1:]
+    f2 = np.fft.ifftn(scalar_field.data).flat[1:]
+    sf = (f1 * f2).real
+    sf /= np.product(grid.shape) * (scalar_field**2).average  # type: ignore
+        
     # determine the (squared) components of the wave vectors
     k2s = [np.fft.fftfreq(grid.shape[i], d=grid.discretization[i])**2
            for i in range(grid.dim)]
@@ -481,12 +492,27 @@ def get_structure_factor(scalar_field: ScalarField,
     k_mag = np.sqrt(reduce(np.add.outer, k2s)).flat[1:]
     
     if smoothing is not None and smoothing != 'none':
+        # construct the smoothed function of the structure factor
         if smoothing == 'auto':
             smoothing = k_mag.max() / 128
         smoothing = float(smoothing)  # type: ignore
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
-        k_mag = np.arange(0, k_mag.max(), smoothing / 2)
+        
+        if isinstance(wave_numbers, str) and wave_numbers == 'auto':
+            # determine the wave numbers at which to evaluate it
+            k_min = 2 / grid.cuboid.size.max()
+            k_max = k_mag.max()
+            k_mag = np.linspace(k_min, k_max, 128)
+
+        else:
+            k_mag = np.array(wave_numbers)
+
+        # obtain the smoothed values at these points
         sf = sf_smooth(k_mag)
+    
+    if add_zero:
+        sf = np.r_[1, sf]
+        k_mag = np.r_[0, k_mag]
     
     return k_mag, sf
 

@@ -8,7 +8,8 @@ import pytest
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 
-from pde import grids, ScalarField
+from pde import (UnitGrid, CartesianGrid, PolarGrid, SphericalGrid,
+                 CylindricalGrid, ScalarField)
 
 from .. import image_analysis
 from ..droplets import DiffuseDroplet, PerturbedDroplet2D, PerturbedDroplet3D
@@ -25,7 +26,7 @@ def test_localization_sym_unit(size, periodic):
     width = np.random.uniform(1, 2)
     d1 = DiffuseDroplet(pos, radius, interface_width=width)
     
-    grid = grids.UnitGrid((size, size), periodic=periodic)
+    grid = UnitGrid((size, size), periodic=periodic)
     field = d1.get_phase_field(grid)
     
     emulsion = image_analysis.locate_droplets(field, refine=True)
@@ -56,7 +57,7 @@ def test_localization_sym_rect(periodic):
     
     a = np.random.random(2) - size / 2
     b = np.random.random(2) + size / 2
-    grid = grids.CartesianGrid(np.c_[a, b], size, periodic=periodic)
+    grid = CartesianGrid(np.c_[a, b], size, periodic=periodic)
     field = d1.get_phase_field(grid)
     
     emulsion = image_analysis.locate_droplets(field, refine=True)
@@ -86,7 +87,7 @@ def test_localization_perturbed_2d(periodic):
       
     a = np.random.random(2) - size / 2
     b = np.random.random(2) + size / 2
-    grid = grids.CartesianGrid(np.c_[a, b], 2*size, periodic=periodic)
+    grid = CartesianGrid(np.c_[a, b], 2*size, periodic=periodic)
     field = d1.get_phase_field(grid)
       
     emulsion = image_analysis.locate_droplets(field, refine=True,
@@ -117,7 +118,7 @@ def test_localization_perturbed_3d(periodic):
       
     a = np.random.random(3) - size / 2
     b = np.random.random(3) + size / 2
-    grid = grids.CartesianGrid(np.c_[a, b], 2*size, periodic=periodic)
+    grid = CartesianGrid(np.c_[a, b], 2*size, periodic=periodic)
     assert grid.dim == 3
     field = d1.get_phase_field(grid)
       
@@ -143,7 +144,7 @@ def test_localization_polar():
     d1 = DiffuseDroplet((0, 0), radius, interface_width=width)
     
     grid_radius = 6 + 2 * np.random.random()
-    grid = grids.PolarGrid(grid_radius, 16)
+    grid = PolarGrid(grid_radius, 16)
     field = d1.get_phase_field(grid)
     
     emulsion = image_analysis.locate_droplets(field, refine=True)
@@ -166,7 +167,7 @@ def test_localization_spherical():
     d1 = DiffuseDroplet((0, 0, 0), radius, interface_width=width)
     
     grid_radius = 6 + 2 * np.random.random()
-    grid = grids.SphericalGrid(grid_radius, 16)
+    grid = SphericalGrid(grid_radius, 16)
     field = d1.get_phase_field(grid)
     
     emulsion = image_analysis.locate_droplets(field, refine=True)
@@ -192,8 +193,7 @@ def test_localization_cylindrical(periodic):
     
     grid_radius = 6 + 2 * np.random.random()
     bounds_z = np.random.uniform(1, 2, size=2) * np.array([-4, 4])
-    grid = grids.CylindricalGrid(grid_radius, bounds_z, (16, 32),
-                                 periodic_z=periodic)
+    grid = CylindricalGrid(grid_radius, bounds_z, (16, 32), periodic_z=periodic)
     field = d1.get_phase_field(grid)
     
     emulsion = image_analysis.locate_droplets(field, refine=True)
@@ -211,7 +211,7 @@ def test_localization_cylindrical(periodic):
 
 def test_get_length_scale():
     """ test determining the length scale """
-    grid = grids.CartesianGrid([[0, 4 * np.pi]], 64, periodic=True)
+    grid = CartesianGrid([[0, 4 * np.pi]], 64, periodic=True)
     c = ScalarField(grid, np.sin(grid.axes_coords[0]))
     for method in ['structure_factor_mean', 'structure_factor_maximum']:
         s = image_analysis.get_length_scale(c, method=method)
@@ -221,7 +221,7 @@ def test_get_length_scale():
 
 def test_emulsion_processing():
     """ test identifying emulsions in phase fields """
-    grid = grids.UnitGrid([32, 32], periodic=True)
+    grid = UnitGrid([32, 32], periodic=True)
     
     e1 = Emulsion([DiffuseDroplet(position=[5, 6], radius=9, interface_width=1),
                    DiffuseDroplet(position=[20, 19], radius=8,
@@ -233,3 +233,28 @@ def test_emulsion_processing():
     
     np.testing.assert_allclose(structured_to_unstructured(e1.data),
                                structured_to_unstructured(e2.data), rtol=0.02)
+
+
+
+def test_structure_factor_random():
+    """ test the structure factor function for random input """
+    g1 = CartesianGrid([[0, 10]] * 2, 64, periodic=True)
+    f1 = ScalarField.random_colored(g1, -2)
+    
+    # test invariance with re-meshing
+    g2 = CartesianGrid([[0, 10]] * 2, [128, 64], periodic=True)
+    f2 = f1.interpolate_to_grid(g2)
+    
+    ks = np.linspace(0.2, 3)
+    k1, s1 = image_analysis.get_structure_factor(f1, wave_numbers=ks)
+    k2, s2 = image_analysis.get_structure_factor(f2, wave_numbers=ks)
+    
+    np.testing.assert_equal(ks, k1)
+    np.testing.assert_equal(ks, k2)
+    np.testing.assert_allclose(s1, s2, atol=0.05)
+
+    # test invariance with respect to scaling
+    k2, s2 = image_analysis.get_structure_factor(100 * f1, wave_numbers=ks)
+    np.testing.assert_equal(ks, k2)
+    np.testing.assert_allclose(s1, s2, atol=0.05)
+

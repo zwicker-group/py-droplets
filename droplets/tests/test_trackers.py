@@ -41,7 +41,7 @@ def test_emulsion_tracker():
 
 def test_length_scale_tracker():
     """ test the length scale tracker """
-    grid = CartesianGrid([[0, 2 * np.pi]], 64, periodic=True)
+    grid = CartesianGrid([[0, 10 * np.pi]], 64, periodic=True)
     field = ScalarField.from_expression(grid, 'sin(2 * x)')
     
     pde = DiffusionPDE()
