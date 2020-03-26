@@ -64,8 +64,8 @@ def _locate_droplets_in_mask_cartesian_single(grid: CartesianGridBase,
     
     # determine volume from binary image and scale it to real space
     vol = ndimage.measurements.sum(img_binary, labels, index=indices)
-    vol = np.asanyarray(vol) * grid.cell_volume_data
-    
+    vol = np.asanyarray(vol) * np.prod(grid.discretization)
+
     # return an emulsion of droplets
     droplets = (SphericalDroplet.from_volume(p, v)
                 for p, v in zip(pos, vol))
@@ -194,13 +194,13 @@ def _locate_droplets_in_mask_cylindrical_single(grid: CylindricalGrid,
     # determine position from binary image and scale it to real space
     pos = ndimage.measurements.center_of_mass(img_binary, labels,
                                               index=indices)
-    
     pos = grid.cell_to_point(pos)
     
     # determine volume from binary image and scale it to real space
-    vol = ndimage.measurements.sum(grid.cell_volume_data, labels,
-                                   index=indices)
-    
+    vol_r, dz = grid.cell_volume_data
+    cell_volumes = vol_r * dz
+    vol = ndimage.measurements.sum(cell_volumes, labels, index=indices)
+
     # return an emulsion of droplets
     droplets = (SphericalDroplet.from_volume((0, 0, p[2]), v)
                 for p, v in zip(pos, vol))

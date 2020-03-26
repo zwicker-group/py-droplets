@@ -22,7 +22,7 @@ def test_emulsion_tracker():
     """ test using the emulsions tracker """
     fp = tempfile.NamedTemporaryFile(suffix='.hdf5')
             
-    d = SphericalDroplet([4, 4], 3, interface_width=1)
+    d = SphericalDroplet([4, 4], 3)
     c = d.get_phase_field(UnitGrid([8, 8]))
 
     pde = CahnHilliardPDE()

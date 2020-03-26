@@ -137,7 +137,7 @@ class Emulsion(list):
                              f'{droplet.dim} to emulsion in dimension '
                              f'{self.dim}')
         if copy:
-            droplet = droplet.copy()  # type: ignore
+            droplet = droplet.copy()
         super().append(droplet)
 
 
@@ -153,10 +153,9 @@ class Emulsion(list):
             # emulsion contains at least one droplet
             classes = set(d.__class__ for d in self)
             if len(classes) > 1:
-                raise NotImplementedError('Emulsion data cannot be stored '
-                                          'contiguously if it contains a '
-                                          'multiple of droplet classes: '
-                                          f'{classes}')
+                raise TypeError("Emulsion data cannot be stored contiguously "
+                                "if it contains a multiple of droplet classes: "
+                                f"{', '.join(c.__name__ for c in classes)}")
             return np.array([d.data for d in self])
         
 

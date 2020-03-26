@@ -16,6 +16,7 @@ from typing import (List, Optional, Callable, Dict, Any,  # @UnusedImport
                     Union, TYPE_CHECKING)
 
 import numpy as np
+from numpy.lib import recfunctions as rfn
 from scipy.ndimage import filters
 
 from pde.grids.base import GridBase
@@ -278,9 +279,12 @@ class DropletTrack():
         if droplet_class == 'None':
             return obj
         else:
-            for data in dataset:
+            # separate time from the data set
+            times = dataset['time']
+            droplet_data = rfn.rec_drop_fields(dataset, 'time')
+            for time, data in zip(times, droplet_data):
                 droplet = droplet_from_data(droplet_class, data)
-                obj.append(droplet, time=data['time'])  # type: ignore
+                obj.append(droplet, time=time)  # type: ignore
 
         return obj
 

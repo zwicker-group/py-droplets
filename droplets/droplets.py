@@ -24,7 +24,7 @@ The details of the classes are explained below:
 from abc import abstractmethod, ABCMeta
 import logging
 from typing import (List, Optional, Callable, Dict, Any,  # @UnusedImport
-                    TYPE_CHECKING, Sequence)  
+                    TYPE_CHECKING, TypeVar, Sequence)  
 
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
@@ -45,13 +45,18 @@ if TYPE_CHECKING:
     from .emulsions import EmulsionTimeCourse  # @UnusedImport
 
 
+TDroplet = TypeVar('TDroplet', bound='DropletBase')
+
+
 
 def get_dtype_field_size(dtype, field_name: str) -> int:
     """ return the number of elements in a field of structured numpy array
     
     Args:
-        dtype: The dtype of the numpy array
-        field_name (str): The name of the field that needs to be checked
+        dtype (list):
+            The dtype of the numpy array
+        field_name (str):
+            The name of the field that needs to be checked
     """
     shape = dtype.fields[field_name][0].shape
     return np.prod(shape) if shape else 1  # type: ignore
@@ -89,33 +94,68 @@ def iterate_in_pairs(it, fill=0):
 
 
 class DropletBase():
-    """ represents a generic droplet """
+    """ represents a generic droplet
+    
+    The data associated with a droplet is stored in structured array.
+    Consequently, the `dtype` of the array determines what information the
+    droplet class stores.     
+    """
     
     
     _subclasses: Dict[str, "DropletBase"] = {}  # collect all inheriting classes
  
 
-    def __init__(self, **kwargs):
-        r""" 
-        Args:
-            data (numpy.ndarray): A structured array carrying all information.
-                If data is not supplied, the instance is initialized using the
-                keyword arguments.
-            \**kwargs: The keyword arguments are used to determine the data type
-                using the classmethod :meth:`~get_datatype`.
-        """
-        # determine the data type of the droplet
-        dtype = self.get_datatype(**kwargs)
-
-        # create empty record with the correct data type
-        self.data = np.recarray(1, dtype=dtype)[0]
-            
-        # data is stored in structured array with the given dtype. Note that
-        # the conversion np.recarray(1)[0] turns the array into a scalar type
-        # (instance of numpy.record) that contains the structured data.
-        # This conversion is necessary for numba to operate on the data.
+    @classmethod
+    def from_data(cls, data: np.recarray) -> "DropletBase":
+        """ create droplet class from a given data
         
-
+        Args:
+            data (:class:`numpy.recarray`):
+                The data array used to initialize the droplet
+        """
+        # note that we do not call the __init__ method of the class, since we do
+        # not need to invent the dtype and set all the attributes. We here
+        # simply assume that the given data is sane
+        obj = cls.__new__(cls)
+        obj.data = data
+        return obj  # type: ignore
+        
+            
+    @classmethod
+    def from_droplet(cls, droplet: "DropletBase", **kwargs) -> "DropletBase": 
+        r""" return a droplet with data taken from `droplet`
+         
+        Args:
+            droplet (:class:`DropletBase`):
+                Another droplet from which data is copied. This does not be the
+                same type of droplet
+            \**kwargs:
+                Additional arguments that can overwrite data in `droplet` or
+                set additional arguments for the current class
+        """
+        args = droplet._args
+        args.update(kwargs)
+        return cls(**args)  # type: ignore
+            
+        
+    def _init_data(self, **kwargs):
+        """ initializes the `data` attribute if it is not present
+        
+        Args:
+            **kwargs:
+                Arguments used to determine the dtype of the data array
+        """
+        if not hasattr(self, "data"):
+            dtype = self.get_dtype(**kwargs)
+            
+            # We need to create an empty record with the correct data type. Note
+            # that the conversion np.recarray(1)[0] turns the array into a
+            # scalar type (instance of numpy.record) that contains the 
+            # structured data. This conversion is necessary for numba to operate
+            # on the data.
+            self.data = np.recarray(1, dtype=dtype)[0]
+    
+    
     def __init_subclass__(cls, **kwargs):  # @NoSelf
         """ register all subclassess to reconstruct them later """
         super().__init_subclass__(**kwargs)
@@ -126,12 +166,6 @@ class DropletBase():
         """ method that checks the validity and consistency of self.data """
         pass
 
-        
-    @classmethod
-    def get_datatype(cls, **kwargs):
-        """ default implementation to determine the type of the stored data """
-        return [(key, 'f8') for key in kwargs.keys()]
-        
     
     @property
     def _args(self):
@@ -151,29 +185,18 @@ class DropletBase():
         """ return the data of the droplet in an unstructured array """
         return structured_to_unstructured(self.data)
             
-            
-    @classmethod
-    def from_droplet(cls, droplet, **kwargs) -> "DropletBase": 
-        r""" return a droplet with data taken from `droplet`
-        
-        Args:
-            droplet: Another droplet from which data is copied
-            \**kwargs: Additional arguments an be used to set data of the
-                returned droplet.
-        """
-        args = droplet._args
-        args.update(kwargs)
-        return cls(**args)
     
-    
-    def copy(self, **kwargs) -> "DropletBase":
+    def copy(self: TDroplet, **kwargs) -> TDroplet:
         r""" return a copy of the current droplet
         
         Args:
             \**kwargs: Additional arguments an be used to set data of the
                 returned droplet.
         """
-        return self.__class__.from_droplet(self, **kwargs)
+        if kwargs:
+            return self.from_droplet(self, **kwargs)  # type: ignore
+        else:
+            return self.from_data(self.data.copy())  # type: ignore
 
 
     @property
@@ -200,25 +223,19 @@ class DropletBase():
         
 class SphericalDroplet(DropletBase):
     """ Represents a single, spherical droplet
-    
-    Attributes:
-        position (vector): center of the droplet
-        radius (float): radius of the droplet
     """
     
         
-    def __init__(self, position: Sequence[float], radius: float, **kwargs):
+    def __init__(self, position: Sequence[float], radius: float):
         r""" 
         Args:
-            position (vector): center of the droplet
-            radius (float): radius of the droplet
-            \**kwargs: Additional arguments are forwarded to
-                :meth:`get_datatype` to determine the correct data type.
+            position (:class:`numpy.ndarray`):
+                Position of the droplet center
+            radius (float):
+                Radius of the droplet
         """
-        position = np.atleast_1d(position)
-        super().__init__(position=position, **kwargs)
+        self._init_data(position=position)
         
-        self.dim = get_dtype_field_size(self.data.dtype, 'position')
         self.position = position
         self.radius = radius
         self.check_data()
@@ -231,9 +248,15 @@ class SphericalDroplet(DropletBase):
 
 
     @classmethod
-    def get_datatype(cls, **kwargs):
-        dim = len(kwargs['position'])
-        return [('position', 'f8', (dim,)), ('radius', 'f8')]
+    def get_dtype(cls, position):
+        position = np.atleast_1d(position)
+        dim = len(position)
+        return [('position', float, (dim,)), ('radius', float)]
+
+
+    @property
+    def dim(self) -> int:
+        return get_dtype_field_size(self.data.dtype, 'position')
 
 
     @property
@@ -245,7 +268,7 @@ class SphericalDroplet(DropletBase):
         
         
     @classmethod
-    def from_volume(cls, position: Sequence[float], volume: float, **kwargs):
+    def from_volume(cls, position: Sequence[float], volume: float):
         """ Construct a droplet from given volume instead of radius
         
         Args:
@@ -255,7 +278,7 @@ class SphericalDroplet(DropletBase):
         """
         dim = len(np.array(position, np.double, ndmin=1))
         radius = spherical.radius_from_volume(volume, dim)
-        return cls(position, radius, **kwargs)
+        return cls(position, radius)
 
 
     @property
@@ -440,26 +463,23 @@ class SphericalDroplet(DropletBase):
 
 class DiffuseDroplet(SphericalDroplet):
     """ Represents a single, spherical droplet with a diffuse interface
-    
-    Attributes:
-        position (vector): center of the droplet
-        radius (float): radius of the droplet
-        interface_width (float, optional): width of the interface
     """
     
         
     def __init__(self, position: Sequence[float],
                  radius: float,
-                 interface_width: float = None, **kwargs):
-        r""" 
+                 interface_width: float = None):
+        """ 
         Args:
-            position (vector): center of the droplet
-            radius (float): radius of the droplet
-            interface_width (float, optional): width of the interface
-            \**kwargs: Additional arguments are forwarded to
-                :meth:`get_datatype` to determine the correct data type.
+            position (:class:`numpy.ndarray`):
+                Position of the droplet center
+            radius (float):
+                Radius of the droplet
+            interface_width (float, optional):
+                Width of the interface
         """
-        super().__init__(position=position, radius=radius, **kwargs)
+        self._init_data(position=position)
+        super().__init__(position=position, radius=radius)
         self.interface_width = interface_width
 
 
@@ -472,8 +492,9 @@ class DiffuseDroplet(SphericalDroplet):
 
 
     @classmethod
-    def get_datatype(cls, **kwargs):
-        return super().get_datatype(**kwargs) + [('interface_width', 'f8')]
+    def get_dtype(cls, position):
+        dtype = super().get_dtype(position=position)
+        return dtype + [('interface_width', float)]
         
 
     @property
@@ -542,9 +563,21 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
                  radius: float,
                  interface_width: float = None,
                  amplitudes: List[float] = None):
-        """ initialize perturbed droplet """
+        """ 
+        Args:
+            position (:class:`numpy.ndarray`):
+                Position of the droplet center
+            radius (float):
+                Radius of the droplet
+            interface_width (float, optional):
+                Width of the interface
+            amplitudes (:class:`numpy.ndarray`):
+                The amplitudes of the perturbations
+        """
+        self._init_data(position=position, amplitudes=amplitudes)
         super().__init__(position=position, radius=radius,
-                         interface_width=interface_width, amplitudes=amplitudes)
+                         interface_width=interface_width)
+
         self.amplitudes = amplitudes
 
         if len(self.position) != self.__class__.dim:
@@ -552,13 +585,14 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
 
     @classmethod
-    def get_datatype(cls, **kwargs):
-        amplitudes = kwargs.get('amplitudes')
+    def get_dtype(cls, position, amplitudes):
+        dtype = super().get_dtype(position=position)
+        
         if amplitudes is None:
             modes = 0
         else:
             modes = len(amplitudes)
-        return super().get_datatype(**kwargs) + [('amplitudes', 'f8', (modes,))]
+        return dtype + [('amplitudes', float, (modes,))]
 
 
     @property
@@ -675,15 +709,6 @@ class PerturbedDroplet2D(PerturbedDropletBase):
     where :math:`N` is the number of perturbation modes considered, which is
     given by half the length of the `amplitudes` array. Consequently, amplitudes
     should always be an even number, to consider both `sin` and `cos` terms.
-    
-    Attributes:
-        position (vector): droplet center position
-        radius (float): base radius :math:`R_0` of the droplet
-        interface_width (float, optional): width of the interface
-        amplitudes (array, optional): (dimensionless) perturbation amplitudes
-            :math:`\{\epsilon^{(1)}_1, \epsilon^{(2)}_1, 
-            \epsilon^{(1)}_2, \epsilon^{(2)}_2,
-            \epsilon^{(1)}_3, \epsilon^{(2)}_3, \dots \}`
     """
     
     dim = 2
@@ -693,7 +718,21 @@ class PerturbedDroplet2D(PerturbedDropletBase):
                  radius: float,
                  interface_width: float = None,
                  amplitudes: List[float] = None):
-        """ initialize perturbed droplet """
+        r""" 
+        Args:
+            position (:class:`numpy.ndarray`):
+                Position of the droplet center
+            radius (float):
+                Radius of the droplet
+            interface_width (float, optional):
+                Width of the interface
+            amplitudes (:class:`numpy.ndarray`):
+                (dimensionless) perturbation amplitudes
+                :math:`\{\epsilon^{(1)}_1, \epsilon^{(2)}_1, \epsilon^{(1)}_2,
+                \epsilon^{(2)}_2, \epsilon^{(1)}_3, \epsilon^{(2)}_3, \dots \}`.
+                The length of the array needs to be even to capture
+                perturbations of the highest mode consistently.
+        """
         super().__init__(position, radius, interface_width, amplitudes)
         if len(self.amplitudes) % 2 != 0:
             logger = logging.getLogger(self.__class__.__name__)
@@ -843,14 +882,6 @@ class PerturbedDroplet3D(PerturbedDropletBase):
                             
     where :math:`N_l` is the number of perturbation modes considered, which is 
     deduced from the length of the `amplitudes` array.
-    
-    Attributes:
-        position (vector): droplet center, i.e., coordinates of the origin
-        radius (float): base radius :math:`R_0` of the droplet
-        interface_width (float, optional): width of the interface
-        amplitudes (array, optional): perturbation amplitudes
-            :math:`\epsilon_{l,m}`
-            
     """
     
     dim = 3
@@ -860,7 +891,19 @@ class PerturbedDroplet3D(PerturbedDropletBase):
                  radius: float,
                  interface_width: float = None,
                  amplitudes: List[float] = None):
-        """ initialize perturbed droplet """
+        r""" 
+        Args:
+            position (:class:`numpy.ndarray`):
+                Position of the droplet center
+            radius (float):
+                Radius of the droplet
+            interface_width (float, optional):
+                Width of the interface
+            amplitudes (:class:`numpy.ndarray`):
+                Perturbation amplitudes :math:`\epsilon_{l,m}`. The length of
+                the array needs to be 0, 3, 8, 15, 24, ... to capture
+                perturbations of the highest mode consistently.
+        """
         super().__init__(position, radius, interface_width, amplitudes)
         num_modes = len(self.amplitudes) + 1
         if not spherical.spherical_index_count_optimal(num_modes):

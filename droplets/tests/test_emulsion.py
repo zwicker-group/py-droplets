@@ -86,6 +86,24 @@ def test_emulsion_two():
     
     
     
+def test_emulsion_incompatible():
+    """ test incompatible droplets in an emulsion """
+    # different type
+    d1 = SphericalDroplet([1], 2)
+    d2 = DiffuseDroplet([1], 2, 1)
+    e = Emulsion([d1, d2])
+    assert len(e) == 2
+    with pytest.raises(TypeError):
+        e.data
+        
+    # same type
+    d1 = SphericalDroplet([1], 2)
+    d2 = SphericalDroplet([1, 2], 2)
+    with pytest.raises(ValueError):
+        e = Emulsion([d1, d2])
+
+        
+    
 def test_emulsion_linked_data():
     """ test whether emulsions link the data to droplets correctly """
     d1 = SphericalDroplet([0, 0], 1)
