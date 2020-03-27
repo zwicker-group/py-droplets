@@ -1,6 +1,4 @@
 '''
-Created on Jul 18, 2018
-
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 '''
 
