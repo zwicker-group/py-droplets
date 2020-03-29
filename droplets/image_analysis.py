@@ -223,8 +223,8 @@ def _locate_droplets_in_mask_cylindrical(grid: CylindricalGrid, img_binary) \
     """        
     assert np.all(img_binary.shape == grid.shape)
     
-    if grid.periodic_z:
-        # locate droplets respecting periodic boundary conditions
+    if grid.periodic[1]:
+        # locate droplets respecting periodic boundary conditions in z-direction
     
         # pad the array to simulate periodic boundary conditions
         dim_z = grid.shape[1]
