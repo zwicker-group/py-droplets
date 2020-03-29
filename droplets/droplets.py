@@ -163,19 +163,12 @@ class DropletBase():
 
         
     def __eq__(self, other):
-        if self.__class__ != other.__class__:
-            return False
+        if not isinstance(other, self.__class__):
+            return NotImplemented
         return np.allclose(self._data_array, other._data_array,
                            rtol=0, atol=0, equal_nan=True)
         
         
-    def __ne__(self, other):
-        if self.__class__ != other.__class__:
-            return True
-        return not np.allclose(self._data_array, other._data_array,
-                               rtol=0, atol=0, equal_nan=True)
-        
-
     def check_data(self):
         """ method that checks the validity and consistency of self.data """
         pass
