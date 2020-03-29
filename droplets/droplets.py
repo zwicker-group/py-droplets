@@ -23,8 +23,8 @@ The details of the classes are explained below:
 
 from abc import abstractmethod, ABCMeta
 import logging
-from typing import (List, Optional, Callable, Dict, Any,  # @UnusedImport
-                    TYPE_CHECKING, TypeVar, Sequence)  
+from typing import (List, Optional, TypeVar, Sequence, Dict,  # @UnusedImport
+                    TYPE_CHECKING)  
 
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
@@ -161,6 +161,20 @@ class DropletBase():
         super().__init_subclass__(**kwargs)
         cls._subclasses[cls.__name__] = cls
 
+        
+    def __eq__(self, other):
+        if self.__class__ != other.__class__:
+            return False
+        return np.allclose(self._data_array, other._data_array,
+                           rtol=0, atol=0, equal_nan=True)
+        
+        
+    def __ne__(self, other):
+        if self.__class__ != other.__class__:
+            return True
+        return not np.allclose(self._data_array, other._data_array,
+                               rtol=0, atol=0, equal_nan=True)
+        
 
     def check_data(self):
         """ method that checks the validity and consistency of self.data """
@@ -176,12 +190,11 @@ class DropletBase():
         arg_list = [f'{key}={value}' for key, value in self._args.items()]
         return f"{self.__class__.__name__}({', '.join(arg_list)})"
     
-    
     __repr__ = __str__
             
             
     @property
-    def _data_array(self):
+    def _data_array(self) -> np.ndarray:
         """ return the data of the droplet in an unstructured array """
         return structured_to_unstructured(self.data)
             
@@ -204,24 +217,10 @@ class DropletBase():
         """ lower and upper bounds on the parameters """
         num = len(self._data_array)
         return np.full(num, -np.inf), np.full(num, np.inf)
+
         
         
-    def __eq__(self, other):
-        if self.__class__ != other.__class__:
-            return False
-        return np.allclose(self._data_array, other._data_array,
-                           rtol=0, atol=0, equal_nan=True)
-        
-        
-    def __ne__(self, other):
-        if self.__class__ != other.__class__:
-            return True
-        return not np.allclose(self._data_array, other._data_array,
-                               rtol=0, atol=0, equal_nan=True)
-        
-        
-        
-class SphericalDroplet(DropletBase):
+class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
     """ Represents a single, spherical droplet
     """
     

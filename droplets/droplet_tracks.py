@@ -12,8 +12,7 @@ Classes representing the time evolution of droplets
 """
 
 import json
-from typing import (List, Optional, Callable, Dict, Any,  # @UnusedImport
-                    Union, TYPE_CHECKING)
+from typing import Optional, Union, TYPE_CHECKING
 
 import numpy as np
 from numpy.lib import recfunctions as rfn

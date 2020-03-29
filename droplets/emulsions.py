@@ -29,8 +29,7 @@ from pde.storage.base import StorageBase
 from pde.tools.misc import display_progress
 from pde.tools.cuboid import Cuboid
 
-from .droplets import (DropletBase, SphericalDroplet,  # @UnusedImport
-                       droplet_from_data)
+from .droplets import SphericalDroplet, droplet_from_data
 
 if TYPE_CHECKING:
     from .trackers import DropletTracker  # @UnusedImport
@@ -76,6 +75,18 @@ class Emulsion(list):
         super().__init__()
         if droplets is not None:
             self.extend(droplets, copy=copy)
+    
+    
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return super().__eq__(other) and self.grid == other.grid
+    
+    
+    def __ne__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return super().__ne__(other) or self.grid != other.grid
     
     
     def __repr__(self):
