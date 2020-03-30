@@ -1,0 +1,8 @@
+coverage:
+  status:
+    patch: off
+ignore:
+  - "**/tests/*"
+  - "**/tests/*.py"
+  - "*/tests/*.py"
+  - "test_*.py"
