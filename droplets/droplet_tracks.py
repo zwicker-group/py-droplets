@@ -528,7 +528,7 @@ class DropletTrackList(list):
         """
         kwargs.setdefault('color', 'k')
         # adjust alpha such that multiple tracks are visible well
-        kwargs.setdefault('alpha', np.exp(-(len(self) - 1) / 30))
+        kwargs.setdefault('alpha', min(1, 30 / len(self)))
         for track in self:
             track.plot(attribute=attribute, **kwargs)
                         
