@@ -37,23 +37,25 @@ class LengthScaleTracker(TrackerBase):
                  verbose: bool = False):
         r"""
         Args:
-            interval: |Arg_tracker_interval|
-            filename (str, optional): Determines the file to which the data is
-                written.
-            method (str): Method used for determining the length scale. Methods
-                are explain in the function
-                :func:`~pde.analysis.get\_length\_scale`.
-            source (int or callable, optional): Determines how a field is
-                extracted from `fields`. If `None`, `fields` is passed as is,
-                assuming it is already a scalar field. This works for the
-                simple, standard case where only a single ScalarField is
-                treated. Alternatively, `source` can be an integer, indicating
-                which field is extracted from an instance of
-                :class:`~pde.fields.FieldCollection`. Lastly,
-                `source` can be a function that takes `fields` as an argument
-                and returns the desired field.
-            verbose (bool): Determines whether errors in determining the length
-                scales are logged.
+            interval:
+                |Arg_tracker_interval|
+            filename (str, optional):
+                Determines the file to which the data is written in JSON format
+            method (str):
+                Method used for determining the length scale. Methods are
+                explain in the function :func:`~pde.analysis.get\_length\_scale`
+            source (int or callable, optional):
+                Determines how a field is extracted from `fields`. If `None`,
+                `fields` is passed as is, assuming it is already a scalar field.
+                This works for the simple, standard case where only a single
+                ScalarField is treated. Alternatively, `source` can be an
+                integer, indicating which field is extracted from an instance of
+                :class:`~pde.fields.FieldCollection`. Lastly, `source` can be a
+                function that takes `fields` as an argument and returns the
+                desired field.
+            verbose (bool):
+                Determines whether errors in determining the length scales are
+                logged.
         """
         super().__init__(interval=interval)
         self.length_scales: List[float] = []
@@ -70,7 +72,8 @@ class LengthScaleTracker(TrackerBase):
         Args:
             field (:class:`~pde.fields.FieldBase`):
                 The current state of the simulation
-            t (float): The associated time
+            t (float):
+                The associated time
         """
         # determine length scale
         from pde.visualization.plotting import extract_field
@@ -115,8 +118,9 @@ class DropletTracker(TrackerBase):
     scalar field. 
     
     Attributes:
-        data (EmulsionTimeCourse): Contains the data of the tracked droplets
-            after the simulation is done.
+        data (:class:`~droplets.emulsions.EmulsionTimeCourse`):
+            Contains the data of the tracked droplets after the simulation is
+            done.
     """
 
     def __init__(self, interval: IntervalData = 1,
@@ -128,22 +132,23 @@ class DropletTracker(TrackerBase):
                  perturbation_modes: int = 0):
         """        
         Args:
-            interval: |Arg_tracker_interval|
-            filename (str, optional): Determines the file to which the final
-                data is written.
-            emulsion_timecourse (EmulsionTimeCourse, optional): Can be an
-                instance of
+            interval:
+                |Arg_tracker_interval|
+            filename (str, optional):
+                Determines the file to which the final data is written.
+            emulsion_timecourse (:class:`EmulsionTimeCourse`, optional):
+                Can be an instance of
                 :class:`~droplets.emulsions.EmulsionTimeCourse` that is
                 used to store the data.
-            source (int or callable, optional): Determines how a field is
-                extracted from `fields`. If `None`, `fields` is passed as is,
-                assuming it is already a scalar field. This works for the
-                simple, standard case where only a single ScalarField is
-                treated. Alternatively, `source` can be an integer, indicating
-                which field is extracted from an instance of
-                :class:`~pde.fields.FieldCollection`. Lastly,
-                `source` can be a function that takes `fields` as an argument
-                and returns the desired field.
+            source (int or callable, optional):
+                Determines how a field is extracted from `fields`. If `None`,
+                `fields` is passed as is, assuming it is already a scalar field.
+                This works for the simple, standard case where only a single
+                ScalarField is treated. Alternatively, `source` can be an
+                integer, indicating which field is extracted from an instance of
+                :class:`~pde.fields.FieldCollection`. Lastly, `source` can be a
+                function that takes `fields` as an argument and returns the
+                desired field.
             minimal_radius (float):
                 Minimal radius of droplets that will be retained.
             refine (bool):
@@ -199,7 +204,8 @@ class DropletTracker(TrackerBase):
         Args:
             field (:class:`~pde.fields.base.FieldBase`):
                 The current state of the simulation
-            t (float): The associated time
+            t (float):
+                The associated time
         """
         from pde.visualization.plotting import extract_field
         from droplets.image_analysis import locate_droplets

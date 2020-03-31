@@ -45,9 +45,11 @@ def test_length_scale_tracker():
     field = ScalarField.from_expression(grid, 'sin(2 * x)')
     
     pde = DiffusionPDE()
-    tracker = LengthScaleTracker(0.05)
+    fp = tempfile.NamedTemporaryFile(suffix='.json')
+    tracker = LengthScaleTracker(0.05, filename=fp.name)
     pde.solve(field, t_range=0.1, backend='numpy', tracker=tracker)
     
     for ls in tracker.length_scales:
         assert ls == pytest.approx(np.pi, rel=1e-3)
+    assert os.stat(fp.name).st_size > 0  # wrote some result
         
