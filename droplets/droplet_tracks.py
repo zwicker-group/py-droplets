@@ -356,14 +356,17 @@ class DropletTrack():
 
         if attribute in {'radius', 'radii'}:
             data = self.get_radii()
+            ylabel = 'Radius'
         elif attribute in {'volume', 'volumes'}:
             data = self.get_volumes()
+            ylabel = 'Volume'
         else:
             data = [getattr(droplet, attribute) for droplet in self.droplets]
+            ylabel = attribute.capitalize()
 
         plt.plot(self.times, data, **kwargs)
         plt.xlabel('Time')
-        plt.ylabel('Radius')
+        plt.ylabel(ylabel)
 
     
     def plot_positions(self, grid: Optional[GridBase] = None,
