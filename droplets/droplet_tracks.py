@@ -265,7 +265,7 @@ class DropletTrack():
     
     
     @classmethod
-    def _from_dataset(cls, dataset) -> "DropletTrack":
+    def _from_hdf_dataset(cls, dataset) -> "DropletTrack":
         """ construct a droplet track by reading data from an hdf5 dataset
         
         Args:
@@ -301,7 +301,7 @@ class DropletTrack():
                 raise RuntimeError('Multiple droplet track were found in the '
                                    f'file {filename})') 
             dataset = fp[list(fp.keys())[0]]  # retrieve the only dataset
-            obj = cls._from_dataset(dataset)
+            obj = cls._from_hdf_dataset(dataset)
             
         return obj
 
@@ -495,7 +495,7 @@ class DropletTrackList(list):
         with h5py.File(filename, "r") as fp:
             for key in sorted(fp.keys()):  # iterate in the stored order
                 dataset = fp[key]
-                obj.append(DropletTrack._from_dataset(dataset))
+                obj.append(DropletTrack._from_hdf_dataset(dataset))
         return obj
     
                 

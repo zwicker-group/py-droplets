@@ -188,7 +188,7 @@ class Emulsion(list):
     
     
     @classmethod
-    def _from_dataset(cls, dataset, grid: Optional[GridBase] = None) \
+    def _from_hdf_dataset(cls, dataset, grid: Optional[GridBase] = None) \
             -> "Emulsion":
         """ construct an emulsion by reading data from an hdf5 dataset
         
@@ -228,7 +228,7 @@ class Emulsion(list):
                 
             # read the actual droplet data
             dataset = fp[list(fp.keys())[0]]  # retrieve the only dataset
-            obj = cls._from_dataset(dataset, grid)
+            obj = cls._from_hdf_dataset(dataset, grid)
             
         return obj
 
@@ -593,9 +593,10 @@ class EmulsionTimeCourse():
         # check grid consistency
         if self.grid is None:
             self.grid = emulsion.grid
-        elif not self.grid.compatible_with(emulsion.grid):
+        elif emulsion.grid and not self.grid.compatible_with(emulsion.grid):
             raise ValueError('Grid of the EmulsionTimeCourse is not compatible '
-                             'with the grid of the emulsion to be added')
+                             'with the grid of the emulsion to be added. '
+                             f'({self.grid} != {emulsion.grid})')
         # add the emulsion
         if copy:
             emulsion = emulsion.copy()
@@ -700,7 +701,7 @@ class EmulsionTimeCourse():
             for key in display_progress(sorted(fp.keys()), total=len(fp),
                                         enabled=progress):
                 dataset = fp[key]
-                obj.append(Emulsion._from_dataset(dataset, grid),
+                obj.append(Emulsion._from_hdf_dataset(dataset, grid),
                            time=dataset.attrs['time'])
         return obj
     
