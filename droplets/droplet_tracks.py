@@ -306,17 +306,17 @@ class DropletTrack():
         return obj
 
 
-    def _write_hdf_dataset(self, fp, key: str = 'droplet_track'):
-        """ write data to a given hdf5 file pointer `fp` """
+    def _write_hdf_dataset(self, hdf_path, key: str = 'droplet_track'):
+        """ write data to a given hdf5 path `hdf_path` """
         if self:
             # emulsion contains at least one droplet
-            dataset = fp.create_dataset(key, data=self.data)
+            dataset = hdf_path.create_dataset(key, data=self.data)
             # self.data ensures that there is only one droplet class
             dataset.attrs['droplet_class'] = self[0].__class__.__name__
             
         else:
             # create empty dataset to indicate empty emulsion
-            dataset = fp.create_dataset(key, shape=tuple())
+            dataset = hdf_path.create_dataset(key, shape=tuple())
             dataset.attrs['droplet_class'] = 'None'
             
         return dataset
