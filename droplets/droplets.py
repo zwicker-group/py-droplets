@@ -103,6 +103,8 @@ class DropletBase():
     
     
     _subclasses: Dict[str, "DropletBase"] = {}  # collect all inheriting classes
+    
+    __slots__ = ['data']
  
 
     @classmethod
@@ -214,9 +216,10 @@ class DropletBase():
         
         
 class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
-    """ Represents a single, spherical droplet
-    """
+    """ Represents a single, spherical droplet """
     
+    __slots__ = ['data']
+
         
     def __init__(self, position: Sequence[float], radius: float):
         r""" 
@@ -454,8 +457,9 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
 
 class DiffuseDroplet(SphericalDroplet):
-    """ Represents a single, spherical droplet with a diffuse interface
-    """
+    """ Represents a single, spherical droplet with a diffuse interface """
+    
+    __slots__ = ['data']
     
         
     def __init__(self, position: Sequence[float],
@@ -549,6 +553,8 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     This acts as an abstract class for which member functions need to specified
     depending on dimensionality. 
     """
+    
+    __slots__ = ['data']
     
 
     def __init__(self, position: List[float],
@@ -704,6 +710,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
     """
     
     dim = 2
+    
+    __slots__ = ['data']
         
                 
     def __init__(self, position: List[float],
@@ -877,6 +885,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
     """
     
     dim = 3
+    
+    __slots__ = ['data']
         
                 
     def __init__(self, position: List[float],

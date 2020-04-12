@@ -1,0 +1,1 @@
+* Think about using __slots__ for droplet classes
