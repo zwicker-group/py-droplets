@@ -417,7 +417,7 @@ class DropletTrack():
                     color = line.get_color()  # ensure colors stays the same
                 line, = plt.plot(xy[s:e + 1, 0], xy[s:e + 1, 1], color=color)
         
-        if arrow:
+        if arrow and len(xy) >= 2:
             size = min(sum(plt.xlim()), sum(plt.ylim()))
             dx = xy[-1] - xy[-2]
             plt.arrow(xy[-2, 0], xy[-2, 1], dx[0], dx[1],

@@ -298,26 +298,32 @@ class Emulsion(list):
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
          
          
-    def get_phasefield(self, label: Optional[str] = None) -> ScalarField:
+    def get_phasefield(self, grid: GridBase = None,
+                       label: Optional[str] = None) -> ScalarField:
         """ create a phase field representing a list of droplets
         
         Args:
-            label (str): Optional label for the returned scalar field
+            grid (:class:`pde.grids.base.GridBase`):
+                The grid on which the phase field is created. If omitted, the
+                grid associated with the emulsion is used.
+            label (str):
+                Optional label for the returned scalar field
             
         Returns:
-            ScalarField: the actual phase field
+            :class:`pde.fields.scalar.ScalarField`: the actual phase field
         """
-        if self.grid is None:
+        if grid is None:
+            grid = self.grid
+        if grid is None:
             raise RuntimeError('Grid needs to be specified')
         
         if len(self) == 0:
-            return ScalarField(self.grid)
+            return ScalarField(grid)
         
         else:
-            result: ScalarField = self[0].get_phase_field(self.grid,
-                                                          label=label)
+            result: ScalarField = self[0].get_phase_field(grid, label=label)
             for d in self[1:]:
-                result += d.get_phase_field(self.grid)  # type: ignore
+                result += d.get_phase_field(grid)  # type: ignore
             np.clip(result.data, 0, 1, out=result.data)
             return result
         

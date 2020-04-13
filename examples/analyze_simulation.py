@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pde.common import ScalarField, UnitGrid, CahnHilliardPDE
+from pde import ScalarField, UnitGrid, CahnHilliardPDE
 from droplets.emulsions import EmulsionTimeCourse
 
 field = ScalarField.random_uniform(UnitGrid([32, 32]), -1, 1)        
