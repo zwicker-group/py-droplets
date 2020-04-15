@@ -37,7 +37,7 @@ Usage
 
 More information
 ----------------
-* Tutorial notebooks in the [tutorials folder](https://github.com/zwicker-group/py-droplets/examples/tutorial)
+* Tutorial notebooks in the [tutorials folder](https://github.com/zwicker-group/py-droplets/tree/master/examples/tutorial)
 * Examples in the [examples folder](https://github.com/zwicker-group/py-droplets/examples)
 * [Full documentation on readthedocs](https://py-droplets.readthedocs.io/)
   or as [a single PDF file](https://py-droplets.readthedocs.io/_/downloads/en/latest/pdf/).
