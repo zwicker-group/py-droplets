@@ -35,8 +35,9 @@ pip install h5py tqdm
 Usage
 -----
 
-Examples illustrating the capabilities of the package can be found in the
- `examples` folder.
-A detailed [documentation is available on readthedocs](https://py-droplets.readthedocs.io/)
-and as [a single PDF file](https://py-droplets.readthedocs.io/_/downloads/en/latest/pdf/).
-
+More information
+----------------
+* Tutorial notebooks in the [tutorials folder](https://github.com/zwicker-group/py-droplets/examples/tutorial)
+* Examples in the [examples folder](https://github.com/zwicker-group/py-droplets/examples)
+* [Full documentation on readthedocs](https://py-droplets.readthedocs.io/)
+  or as [a single PDF file](https://py-droplets.readthedocs.io/_/downloads/en/latest/pdf/).
