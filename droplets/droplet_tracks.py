@@ -422,9 +422,9 @@ class DropletTrack():
             dx = xy[-1] - xy[-2]
             plt.arrow(xy[-2, 0], xy[-2, 1], dx[0], dx[1],
                       head_width=0.02 * size, color=line.get_color())
-        
-        
-        
+
+
+
 class DropletTrackList(list):
     """ a list of instances of :class:`DropletTrack` """
 
