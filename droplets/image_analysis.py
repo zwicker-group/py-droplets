@@ -287,6 +287,7 @@ def locate_droplets_in_mask(grid: GridBase, img_binary) -> Emulsion:
  
 
 def locate_droplets(phase_field: ScalarField,
+                    threshold: Union[float, str] = 0.5,
                     modes: int = 0,
                     minimal_radius: float = 0,
                     refine: bool = False,
@@ -300,6 +301,10 @@ def locate_droplets(phase_field: ScalarField,
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
             Scalar field that describes the concentration field of droplets
+        threshold (float or str):
+            The threshold for binarizing the image. The special value 'auto'
+            takes the mean between the minimum and the maximum of the data as a
+            guess.
         modes (int):
             The number of perturbation modes that should be included.
             If `modes=0`, droplets are assumed to be spherical. Note that the
@@ -323,8 +328,14 @@ def locate_droplets(phase_field: ScalarField,
     if modes > 0 and phase_field.grid.dim not in [2, 3]:
         raise ValueError('Perturbed droplets only supported for 2d and 3d')
     
+    # determine actual threshold
+    if threshold == 'auto':
+        threshold = (phase_field.data.min() + phase_field.data.max()) / 2
+    else:
+        threshold = float(threshold)
+    
     # locate droplets in thresholded image
-    img_binary = (phase_field.data > 0.5)
+    img_binary = (phase_field.data > threshold)
     candidates = locate_droplets_in_mask(phase_field.grid, img_binary)
 
     if minimal_radius > -np.inf:

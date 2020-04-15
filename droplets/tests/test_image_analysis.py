@@ -207,6 +207,28 @@ def test_localization_cylindrical(periodic):
 
 
 
+def test_localization_threshold():
+    """ tests different localization thresholds """
+    pos = np.random.random(2) * 16
+    radius = np.random.uniform(2, 5)
+    width = np.random.uniform(1, 2)
+    d1 = DiffuseDroplet(pos, radius, interface_width=width)
+    
+    grid = UnitGrid((16, 16), periodic=False)
+    field = d1.get_phase_field(grid)
+    
+    for threshold in [0.25, 0.75, 'auto']:
+        emulsion = image_analysis.locate_droplets(field, threshold=threshold,
+                                                  refine=True)
+        assert len(emulsion) == 1
+        d2 = emulsion[0]
+    
+        np.testing.assert_almost_equal(d1.position, d2.position)
+        assert d1.radius == pytest.approx(d2.radius, rel=1e-4)
+        assert d1.interface_width == pytest.approx(d2.interface_width)
+
+
+
 def test_get_length_scale():
     """ test determining the length scale """
     grid = CartesianGrid([[0, 8 * np.pi]], 64, periodic=True)
