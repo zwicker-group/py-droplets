@@ -10,7 +10,7 @@ Basic droplets
 
 The basic droplet classes can be used as follows
 
-.. include:: ../examples/droplets.rst
+.. include:: ../examples/define_droplets.rst
 
 We first create two droplets represented by two different classes. The basic
 class :class:`~droplets.droplets.SphericalDroplet` represents a droplet by its
