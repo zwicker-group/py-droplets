@@ -2,8 +2,6 @@
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 '''
 
-import tempfile
-
 import pytest
 import numpy as np
 
@@ -120,15 +118,16 @@ def test_emulsion_linked_data():
     
     
 @skipUnlessModule("h5py")
-def test_emulsion_io():
+def test_emulsion_io(tmp_path):
     """ test writing and reading emulsions """
-    fp = tempfile.NamedTemporaryFile(suffix='.hdf5')
+    path = tmp_path / 'test_emulsion_io.hdf5'
+    
     es = [Emulsion(),
           Emulsion([DiffuseDroplet([0, 1], 10, 0.5)] * 2),
           Emulsion([droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3])])]
     for e1 in es:
-        e1.to_file(fp.name)
-        e2 = Emulsion.from_file(fp.name)
+        e1.to_file(path)
+        e2 = Emulsion.from_file(path)
         assert e1 == e2
         
         
@@ -158,15 +157,16 @@ def test_timecourse():
         
         
 @skipUnlessModule("h5py")
-def test_timecourse_io():
+def test_timecourse_io(tmp_path):
     """ test writing and reading emulsions time courses """
+    path = tmp_path / 'test_timecourse_io.hdf5'
+    
     e1 = Emulsion()
     e2 = Emulsion([DiffuseDroplet([0, 1], 10, 0.5)] * 2)
     tc1 = emulsions.EmulsionTimeCourse([e1, e2], times=[0, 10])
     
-    fp = tempfile.NamedTemporaryFile(suffix='.hdf5')
-    tc1.to_file(fp.name)
-    tc2 = emulsions.EmulsionTimeCourse.from_file(fp.name, progress=False)
+    tc1.to_file(path)
+    tc2 = emulsions.EmulsionTimeCourse.from_file(path, progress=False)
     assert tc1.times == tc2.times
     assert tc1.emulsions == tc2.emulsions
     assert len(tc2) == 2

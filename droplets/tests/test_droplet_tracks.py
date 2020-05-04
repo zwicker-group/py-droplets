@@ -2,8 +2,6 @@
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 '''
 
-import tempfile
-
 import numpy as np
 
 from pde.grids import UnitGrid
@@ -46,16 +44,17 @@ def test_droplettrack():
 
 
 @skipUnlessModule("h5py")
-def test_droplettrack_io():
+def test_droplettrack_io(tmp_path):
     """ test writing and reading droplet tracks """
+    path = tmp_path / 'test_droplettrack_io.hdf5'
+        
     t1 = DropletTrack()
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
     t2 = DropletTrack(droplets=ds, times=[0, 10])
     
     for t_out in [t1, t2]:
-        fp = tempfile.NamedTemporaryFile(suffix='.hdf5')
-        t_out.to_file(fp.name)
-        t_in = DropletTrack.from_file(fp.name)
+        t_out.to_file(path)
+        t_in = DropletTrack.from_file(path)
         assert t_in == t_out
         assert t_in.times == t_out.times
         assert t_in.droplets == t_out.droplets
@@ -91,16 +90,17 @@ def test_droplettracklist():
 
 
 @skipUnlessModule("h5py")
-def test_droplettracklist_io():
+def test_droplettracklist_io(tmp_path):
     """ test writing and reading droplet tracks """
+    path = tmp_path / 'test_droplettracklist_io.hdf5'
+    
     t1 = DropletTrack()
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
     t2 = DropletTrack(droplets=ds, times=[0, 10])
     tl_out = DropletTrackList([t1, t2])
     
-    fp = tempfile.NamedTemporaryFile(suffix='.hdf5')
-    tl_out.to_file(fp.name)
-    tl_in = DropletTrackList.from_file(fp.name)
+    tl_out.to_file(path)
+    tl_in = DropletTrackList.from_file(path)
     assert tl_in == tl_out
         
 
