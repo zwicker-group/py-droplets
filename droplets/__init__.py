@@ -4,7 +4,7 @@ Functions and classes for analyzing emulsions and droplets
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 '''
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 from .droplets import SphericalDroplet, DiffuseDroplet
 from .droplet_tracks import DropletTrack, DropletTrackList

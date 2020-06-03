@@ -8,7 +8,7 @@ setup(
   package_data={"droplets": ["py.typed"]},
   packages = find_packages(),
   zip_safe=False,  # this is required for mypy to find the py.typed file
-  version = '0.2',
+  version = '0.3',
   license='MIT',
   description = 'Python package for describing and analyzing droplets in experiments and simulations',
   long_description=long_description,
@@ -16,7 +16,7 @@ setup(
   author = 'David Zwicker',
   author_email = 'david.zwicker@ds.mpg.de',
   url = 'https://github.com/zwicker-group/py-droplets',
-  download_url = 'https://github.com/zwicker-group/py-droplets/archive/v0.2.tar.gz',
+  download_url = 'https://github.com/zwicker-group/py-droplets/archive/v0.3.tar.gz',
   keywords = ['emulsions', 'image-analysis'],
   python_requires='>=3.6',
   install_requires=['matplotlib',

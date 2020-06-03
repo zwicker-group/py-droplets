@@ -20,7 +20,6 @@ from typing import (List, Optional, Dict, Sequence, Tuple,  # @UnusedImport
 import numpy as np
 
 from pde.fields import ScalarField
-from pde.fields.base import DataFieldBase
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
 from pde.trackers.base import InfoDict
@@ -28,6 +27,7 @@ from pde.trackers.intervals import IntervalType
 from pde.storage.base import StorageBase
 from pde.tools.misc import display_progress
 from pde.tools.cuboid import Cuboid
+from pde.tools.plotting import plot_on_axes
 
 from .droplets import SphericalDroplet, droplet_from_data
 
@@ -471,18 +471,19 @@ class Emulsion(list):
                 'volume_std': np.std(volumes)}
         
 
-    def plot(self, phase_field: DataFieldBase = None,
-             title: str = '',
+    @plot_on_axes()
+    def plot(self, ax,
+             field: ScalarField = None,
              image_args: Dict[str, Any] = None, 
              repeat_periodically: bool = True,
              **kwargs):
-        """ plot the current emulsion together with a corresponding phase_field 
+        """ plot the current emulsion together with a corresponding field 
         
         Args:
-            phase_field:
+            ax (:class:`matplotlib.axes.Axes`):
+                The axes in which the background is shown
+            field (:class:`pde.fields.scalar.ScalarField`):
                 provides the phase field that is shown as a background
-            title (str):
-                title of the plot
             image_args (dict):
                 additional arguments determining how the phase field in the
                 background is plotted. Acceptable arguments are described in
@@ -494,28 +495,25 @@ class Emulsion(list):
                 Additional keyword arguments are passed to the matplotlib
                 function plotting the droplet outlines
         """
-        import matplotlib.pyplot as plt
-        
         if self.dim != 2:
             raise NotImplementedError(f'Plotting emulsions in {self.dim} '
                                       'dimensions is not implemented.')
         grid_compatible = (self.grid is None or
-                           phase_field is None or
-                           self.grid.compatible_with(phase_field.grid))
+                           field is None or
+                           self.grid.compatible_with(field.grid))
         if not grid_compatible:
-            raise ValueError('Emulsion grid is not compatible with phase field '
-                             'grid')
+            raise ValueError('Emulsion grid is not compatible with field grid')
         grid = self.grid
-         
+        
         # plot background and determine bounds for the droplets
-        if phase_field is not None:
+        if field is not None:
             # plot the phase field and use its bounds
             if image_args is None:
                 image_args = {}
-            phase_field.plot_image(**image_args)
-            plt.autoscale(False)  # fix image bounds to phase field
+            field.plot(kind='image', ax=ax, **image_args)
+            ax.autoscale(False)  # fix image bounds to phase field
             if grid is None:
-                grid = phase_field.grid
+                grid = field.grid
             
         else:
             if isinstance(grid, CartesianGridBase):
@@ -524,28 +522,30 @@ class Emulsion(list):
             else:
                 # determine the bounds from the emulsion data itself
                 bounds = self.bbox.bounds
-            plt.xlim(*bounds[0])
-            plt.ylim(*bounds[1])
-            plt.gca().set_aspect('equal')
+            ax.set_xlim(*bounds[0])
+            ax.set_ylim(*bounds[1])
+            ax.set_aspect('equal')
         
-        # plot all droplets
-        ax = plt.gca()
+        # get patches representing all droplets 
         if grid is None or not repeat_periodically:
             # plot only the droplets themselves
-            for droplet in self:
-                droplet.plot_on_axes(ax, **kwargs)
+            patches = [droplet._get_mpl_patch(**kwargs)
+                       for droplet in self]
         else:
             # plot droplets also in their mirror positions
+            patches = []
             for droplet in self:
                 for p in grid.iter_mirror_points(droplet.position,
                                                  with_self=True, 
                                                  only_periodic=True):
                     # create copy with changed position
-                    d = droplet.copy(position=p)  
-                    d.plot_on_axes(ax, **kwargs)
-                
-        if title:
-            ax.set_title(title)
+                    d = droplet.copy(position=p)
+                    patches.append(d._get_mpl_patch(**kwargs))
+                    
+        # add all patches as a collection
+        import matplotlib as mpl
+        coll = mpl.collections.PatchCollection(patches, match_original=True)
+        ax.add_collection(coll)
 
     
     

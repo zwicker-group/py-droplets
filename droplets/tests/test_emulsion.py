@@ -181,7 +181,7 @@ def test_emulsion_plotting():
           Emulsion([droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3])])]
     for e1 in es:
         e1.plot()
-        e1.plot(field)
+        e1.plot(field=field)
         
     with pytest.raises(NotImplementedError):
         Emulsion().plot()

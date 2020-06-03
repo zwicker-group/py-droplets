@@ -35,6 +35,7 @@ from pde.grids.base import GridBase
 from pde.fields import ScalarField
 from pde.tools.misc import preserve_scalars
 from pde.tools.cuboid import Cuboid
+from pde.tools.plotting import plot_on_axes
 
 
 
@@ -435,7 +436,18 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         return self._get_phase_field(grid)[mask]
     
         
-    def plot_on_axes(self, ax, **kwargs):
+    def _get_mpl_patch(self, **kwargs):
+        """ return the patch representing the droplet for plotting """
+        import matplotlib as mpl
+        
+        if self.dim != 2:
+            raise NotImplementedError('Plotting is only implemented in 2d')
+
+        return mpl.patches.Circle(self.position, self.radius, **kwargs)
+
+        
+    @plot_on_axes()
+    def plot(self, ax, **kwargs):
         """ Plot the droplet
         
         Args:
@@ -445,14 +457,8 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
                 Additional keyword arguments are passed to the matplotlib Circle
                 class to affect the appearance.
         """
-        import matplotlib.pyplot as plt
-        
-        if self.dim != 2:
-            raise NotImplementedError('Plotting is only implemented in 2d')
-
         kwargs.setdefault('fill', False)
-        circle = plt.Circle(self.position, self.radius, **kwargs)
-        ax.add_artist(circle) 
+        ax.add_artist(self._get_mpl_patch(**kwargs))
         
 
 
@@ -848,7 +854,17 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         return np.pi * self.radius * length / 2  # type: ignore
         
         
-    def plot_on_axes(self, ax, **kwargs):
+    def _get_mpl_patch(self, **kwargs):
+        """ return the patch representing the droplet for plotting """
+        import matplotlib as mpl
+
+        φ = np.linspace(0, 2*np.pi, endpoint=False)
+        xy = self.interface_position(φ)
+        return mpl.patches.Polygon(xy, closed=True, **kwargs)
+        
+        
+    @plot_on_axes()
+    def plot(self, ax, **kwargs):
         """ Plot the perturbed droplet
         
         Args:
@@ -858,13 +874,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
                 Additional keyword arguments are passed to the matplotlib plot
                 function to affect the appearance.
         """
-        if self.dim != 2:
-            raise NotImplementedError('Plotting is only implemented in 2d')
-
-        φ = np.linspace(0, 2*np.pi)
-        xy = self.interface_position(φ)
         kwargs.setdefault('color', 'k')
-        ax.plot(xy[:, 0], xy[:, 1], **kwargs)
+        ax.add_patch(self._get_mpl_patch(**kwargs))
         
         
 
