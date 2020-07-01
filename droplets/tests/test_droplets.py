@@ -149,3 +149,14 @@ def test_curvature():
     np.testing.assert_allclose(d.interface_curvature(φs),
                                curvature_analytical(φs), rtol=1e-1)
 
+
+
+def test_from_data():
+    """ test the from_data constructor """
+    for d1 in [droplets.SphericalDroplet((1,), 2),
+               droplets.SphericalDroplet((1, 2), 3),
+               droplets.PerturbedDroplet2D((1, 2), 3, 0.1, [0.1, 0.2]),
+               droplets.PerturbedDroplet3D((1, 2, 3), 4, 0.1, [0.1, 0.2])]:
+        d2 = d1.__class__.from_data(d1.data)
+        assert d1 == d2
+        assert d1 is not d2
