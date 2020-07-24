@@ -1,4 +1,4 @@
-'''
+"""
 Functions for analyzing phase field images of emulsions.
 
 .. autosummary::
@@ -11,16 +11,18 @@ Functions for analyzing phase field images of emulsions.
 
 
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
-'''
+"""
 
 import logging
 import warnings
 from functools import reduce
-from typing import Optional, Dict, Any, Tuple, Union, Sequence
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import numpy as np
-from numpy.lib.recfunctions import (structured_to_unstructured,
-                                    unstructured_to_structured)
+from numpy.lib.recfunctions import (
+    structured_to_unstructured,
+    unstructured_to_structured,
+)
 from scipy import ndimage, optimize
 
 try:
@@ -28,21 +30,25 @@ try:
 except ImportError:
     from numpy.fft import fftn as np_fftn
 
+from pde.fields import ScalarField
 from pde.grids import CylindricalGrid
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
 from pde.grids.spherical import SphericalGridBase
-from pde.fields import ScalarField
 from pde.tools.math import SmoothData1D
 
-from .droplets import (SphericalDroplet, DiffuseDroplet, PerturbedDroplet2D,
-                       PerturbedDroplet3D)
+from .droplets import (
+    DiffuseDroplet,
+    PerturbedDroplet2D,
+    PerturbedDroplet3D,
+    SphericalDroplet,
+)
 from .emulsions import Emulsion
- 
- 
-        
-def _locate_droplets_in_mask_cartesian_single(grid: CartesianGridBase,
-                                              img_binary) -> Emulsion:
+
+
+def _locate_droplets_in_mask_cartesian_single(
+    grid: CartesianGridBase, img_binary
+) -> Emulsion:
     """ locate droplets in a single data set on a Cartesian grid
     
     Args:
@@ -56,25 +62,21 @@ def _locate_droplets_in_mask_cartesian_single(grid: CartesianGridBase,
     if num_labels == 0:
         return Emulsion([], grid=grid)
     indices = range(1, num_labels + 1)
-    
+
     # determine position from binary image and scale it to real space
-    pos = ndimage.measurements.center_of_mass(img_binary, labels,
-                                              index=indices)
+    pos = ndimage.measurements.center_of_mass(img_binary, labels, index=indices)
     pos = grid.cell_to_point(pos)
-    
+
     # determine volume from binary image and scale it to real space
     vol = ndimage.measurements.sum(img_binary, labels, index=indices)
     vol = np.asanyarray(vol) * np.prod(grid.discretization)
 
     # return an emulsion of droplets
-    droplets = (SphericalDroplet.from_volume(p, v)
-                for p, v in zip(pos, vol))
+    droplets = (SphericalDroplet.from_volume(p, v) for p, v in zip(pos, vol))
     return Emulsion(droplets, grid=grid)
 
 
-
-def _locate_droplets_in_mask_cartesian(grid: CartesianGridBase, img_binary) \
-        -> Emulsion:
+def _locate_droplets_in_mask_cartesian(grid: CartesianGridBase, img_binary) -> Emulsion:
     """ locate droplets in a (potentially periodic) data set on a Cartesian grid
     
     This function locates droplets respecting periodic boundary conditions.
@@ -85,24 +87,26 @@ def _locate_droplets_in_mask_cartesian(grid: CartesianGridBase, img_binary) \
     
     Returns:
         Emulsion: A collection of discovered spherical droplets.
-    """        
+    """
     if img_binary.shape != grid.shape:
-        raise ValueError(f'The shape {img_binary.shape} of the data is not '
-                         f'compatible with the grid shape {grid.shape}')
-    
+        raise ValueError(
+            f"The shape {img_binary.shape} of the data is not "
+            f"compatible with the grid shape {grid.shape}"
+        )
+
     if all(grid.periodic):
         # locate droplets respecting periodic boundary conditions
-    
+
         # pad the array to simulate periodic boundary conditions
         shape = grid.shape
         pad = np.c_[shape, shape].astype(np.int)
-        img_binary = np.pad(img_binary, pad, mode='wrap')
-        assert np.all(img_binary.shape == 3 * np.array(shape)) 
-        
+        img_binary = np.pad(img_binary, pad, mode="wrap")
+        assert np.all(img_binary.shape == 3 * np.array(shape))
+
         # locate droplets in the center
         candidates = _locate_droplets_in_mask_cartesian_single(grid, img_binary)
-        grid._logger.info(f'Found {len(candidates)} droplet candidates')
-        
+        grid._logger.info(f"Found {len(candidates)} droplet candidates")
+
         # filter droplets that are inside the central area
         droplets = Emulsion(grid=grid)
         for droplet in candidates:
@@ -111,25 +115,24 @@ def _locate_droplets_in_mask_cartesian(grid: CartesianGridBase, img_binary) \
             # check whether the droplet lies in the original box
             if grid.cuboid.contains_point(droplet.position):
                 droplets.append(droplet)
-        
+
         # filter overlapping droplets (e.g. due to duplicates)
         droplets.remove_overlapping()
-        
+
     elif not any(grid.periodic):
         # simply locate droplets in the mask
         droplets = _locate_droplets_in_mask_cartesian_single(grid, img_binary)
-        
+
     else:
         # TODO: implement logic for cases of mixed boundary conditions
-        raise NotImplementedError('Boundaries with mixed periodicity '
-                                  'cannot be handled, yet')
-        
-    return droplets
- 
- 
+        raise NotImplementedError(
+            "Boundaries with mixed periodicity cannot be handled, yet"
+        )
 
-def _locate_droplets_in_mask_spherical(grid: SphericalGridBase, img_binary) \
-        -> Emulsion:
+    return droplets
+
+
+def _locate_droplets_in_mask_spherical(grid: SphericalGridBase, img_binary) -> Emulsion:
     """ locates droplets in a binary data set on a spherical grid
     
     Args:
@@ -140,12 +143,12 @@ def _locate_droplets_in_mask_spherical(grid: SphericalGridBase, img_binary) \
         Emulsion: A collection of discovered spherical droplets.
     """
     assert np.all(img_binary.shape == grid.shape)
-    
+
     # locate clusters in the binary image
     labels, num_labels = ndimage.label(img_binary)
     if num_labels == 0:
         return Emulsion([], grid=grid)
-    
+
     # locate clusters around origin
     object_slices = ndimage.measurements.find_objects(labels)
     droplet = None
@@ -156,18 +159,18 @@ def _locate_droplets_in_mask_spherical(grid: SphericalGridBase, img_binary) \
             droplet = SphericalDroplet(np.zeros(grid.dim), radius=radius)
         else:
             logger = logging.getLogger(grid.__class__.__module__)
-            logger.warning('Found object not located at origin')
-    
+            logger.warning("Found object not located at origin")
+
     # return an emulsion of droplets
     if droplet:
         return Emulsion([droplet], grid=grid)
     else:
-        return Emulsion([], grid=grid)                                
+        return Emulsion([], grid=grid)
 
 
-
-def _locate_droplets_in_mask_cylindrical_single(grid: CylindricalGrid,
-                                                img_binary) -> Emulsion:
+def _locate_droplets_in_mask_cylindrical_single(
+    grid: CylindricalGrid, img_binary
+) -> Emulsion:
     """ locate droplets in a data set on a single cylindrical grid
     
     Args:
@@ -180,7 +183,7 @@ def _locate_droplets_in_mask_cylindrical_single(grid: CylindricalGrid,
     labels, num_features = ndimage.label(img_binary)
     if num_features == 0:
         return Emulsion([], grid=grid)
-    
+
     # locate clusters on the symmetry axis
     object_slices = ndimage.measurements.find_objects(labels)
     indices = []
@@ -189,27 +192,23 @@ def _locate_droplets_in_mask_cylindrical_single(grid: CylindricalGrid,
             indices.append(index)
         else:
             logger = logging.getLogger(grid.__class__.__module__)
-            logger.warning('Found object not located on symmetry axis')
-    
+            logger.warning("Found object not located on symmetry axis")
+
     # determine position from binary image and scale it to real space
-    pos = ndimage.measurements.center_of_mass(img_binary, labels,
-                                              index=indices)
+    pos = ndimage.measurements.center_of_mass(img_binary, labels, index=indices)
     pos = grid.cell_to_point(pos)
-    
+
     # determine volume from binary image and scale it to real space
     vol_r, dz = grid.cell_volume_data
     cell_volumes = vol_r * dz
     vol = ndimage.measurements.sum(cell_volumes, labels, index=indices)
 
     # return an emulsion of droplets
-    droplets = (SphericalDroplet.from_volume((0, 0, p[2]), v)
-                for p, v in zip(pos, vol))
+    droplets = (SphericalDroplet.from_volume((0, 0, p[2]), v) for p, v in zip(pos, vol))
     return Emulsion(droplets, grid=grid)
 
 
-
-def _locate_droplets_in_mask_cylindrical(grid: CylindricalGrid, img_binary) \
-        -> Emulsion:
+def _locate_droplets_in_mask_cylindrical(grid: CylindricalGrid, img_binary) -> Emulsion:
     """ locate droplets in a data set on a (periodic) cylindrical grid
     
     This function locates droplets respecting periodic boundary conditions.
@@ -220,24 +219,21 @@ def _locate_droplets_in_mask_cylindrical(grid: CylindricalGrid, img_binary) \
     
     Returns:
         Emulsion: A collection of discovered spherical droplets.
-    """        
+    """
     assert np.all(img_binary.shape == grid.shape)
-    
+
     if grid.periodic[1]:
         # locate droplets respecting periodic boundary conditions in z-direction
-    
+
         # pad the array to simulate periodic boundary conditions
         dim_z = grid.shape[1]
-        img_binary = np.pad(img_binary, [[0, 0], [dim_z, dim_z]],
-                            mode='wrap')
-        assert (img_binary.shape[0] == grid.shape[0] and
-                img_binary.shape[1] == 3 * dim_z) 
-        
+        img_binary = np.pad(img_binary, [[0, 0], [dim_z, dim_z]], mode="wrap")
+        assert img_binary.shape[0] == grid.shape[0] and img_binary.shape[1] == 3 * dim_z
+
         # locate droplets in the extended image
-        candidates = _locate_droplets_in_mask_cylindrical_single(grid,
-                                                                 img_binary)
-        grid._logger.info(f'Found {len(candidates)} droplet candidates.')
-         
+        candidates = _locate_droplets_in_mask_cylindrical_single(grid, img_binary)
+        grid._logger.info(f"Found {len(candidates)} droplet candidates.")
+
         # keep droplets that are inside the central area
         droplets = Emulsion(grid=grid)
         for droplet in candidates:
@@ -247,19 +243,18 @@ def _locate_droplets_in_mask_cylindrical(grid: CylindricalGrid, img_binary) \
             if grid.contains_point(droplet.position):
                 droplets.append(droplet)
 
-        grid._logger.info(f'Kept {len(droplets)} central droplets.')
-        
+        grid._logger.info(f"Kept {len(droplets)} central droplets.")
+
         # filter overlapping droplets (e.g. due to duplicates)
         droplets.remove_overlapping()
-        
+
     else:
         # simply locate droplets in the mask
         droplets = _locate_droplets_in_mask_cylindrical_single(grid, img_binary)
-        
+
     return droplets
 
 
-    
 def locate_droplets_in_mask(grid: GridBase, img_binary) -> Emulsion:
     """ locates droplets in a binary image
     
@@ -271,7 +266,7 @@ def locate_droplets_in_mask(grid: GridBase, img_binary) -> Emulsion:
     
     Returns:
         Emulsion: A collection of discovered spherical droplets.
-    """        
+    """
     if isinstance(grid, CartesianGridBase):
         return _locate_droplets_in_mask_cartesian(grid, img_binary)
     elif isinstance(grid, SphericalGridBase):
@@ -279,19 +274,19 @@ def locate_droplets_in_mask(grid: GridBase, img_binary) -> Emulsion:
     elif isinstance(grid, CylindricalGrid):
         return _locate_droplets_in_mask_cylindrical(grid, img_binary)
     elif isinstance(grid, GridBase):
-        raise NotImplementedError('Locating droplets is not possible for grid'
-                                  f'{grid}')
+        raise NotImplementedError(f"Locating droplets is not possible for grid {grid}")
     else:
-        raise ValueError(f'Invalid grid {grid}')
-    
- 
+        raise ValueError(f"Invalid grid {grid}")
 
-def locate_droplets(phase_field: ScalarField,
-                    threshold: Union[float, str] = 0.5,
-                    modes: int = 0,
-                    minimal_radius: float = 0,
-                    refine: bool = False,
-                    interface_width: Optional[float] = None):
+
+def locate_droplets(
+    phase_field: ScalarField,
+    threshold: Union[float, str] = 0.5,
+    modes: int = 0,
+    minimal_radius: float = 0,
+    refine: bool = False,
+    interface_width: Optional[float] = None,
+):
     """ Locates droplets in the phase field
     
     This uses a binarized image to locate clusters of large concentration in the
@@ -326,31 +321,31 @@ def locate_droplets(phase_field: ScalarField,
     assert isinstance(phase_field, ScalarField)
 
     if modes > 0 and phase_field.grid.dim not in [2, 3]:
-        raise ValueError('Perturbed droplets only supported for 2d and 3d')
-    
+        raise ValueError("Perturbed droplets only supported for 2d and 3d")
+
     # determine actual threshold
-    if threshold == 'auto':
+    if threshold == "auto":
         threshold = (phase_field.data.min() + phase_field.data.max()) / 2
     else:
         threshold = float(threshold)
-    
+
     # locate droplets in thresholded image
-    img_binary = (phase_field.data > threshold)
+    img_binary = phase_field.data > threshold
     candidates = locate_droplets_in_mask(phase_field.grid, img_binary)
 
     if minimal_radius > -np.inf:
         candidates.remove_small(minimal_radius)
-    
+
     droplets = []
     for droplet in candidates:
         # check whether we need to add the interface width
         droplet_class = droplet.__class__
         args = {}
-        
+
         # change droplet class when interface width is given
         if interface_width is not None:
             droplet_class = DiffuseDroplet
-            args['interface_width'] = interface_width
+            args["interface_width"] = interface_width
 
         # change droplet class when perturbed droplets are requested
         if modes > 0:
@@ -359,14 +354,15 @@ def locate_droplets(phase_field: ScalarField,
             elif phase_field.grid.dim == 3:
                 droplet_class = PerturbedDroplet3D
             else:
-                raise NotImplementedError(f"Dimension {phase_field.grid.dim} "
-                                           "is not supported")
-            args['amplitudes'] = np.zeros(modes)
-        
+                raise NotImplementedError(
+                    f"Dimension {phase_field.grid.dim} is not supported"
+                )
+            args["amplitudes"] = np.zeros(modes)
+
         # recreate a droplet of the correct class
         if droplet_class != droplet.__class__:
             droplet = droplet_class.from_droplet(droplet, **args)
-            
+
         # refine droplets if necessary
         if refine:
             try:
@@ -374,7 +370,7 @@ def locate_droplets(phase_field: ScalarField,
             except ValueError:
                 continue  # do not add the droplet to the list
         droplets.append(droplet)
-        
+
     # return droplets as an emulsion
     emulsion = Emulsion(droplets, grid=phase_field.grid)
     if minimal_radius > -np.inf:
@@ -382,10 +378,11 @@ def locate_droplets(phase_field: ScalarField,
     return emulsion
 
 
-
-def refine_droplet(phase_field: ScalarField,
-                   droplet: DiffuseDroplet,
-                   least_squares_params: Optional[Dict[str, Any]] = None):
+def refine_droplet(
+    phase_field: ScalarField,
+    droplet: DiffuseDroplet,
+    least_squares_params: Optional[Dict[str, Any]] = None,
+):
     """ Refines droplet parameters by fitting to phase field
     
     This function varies droplet parameters, like position, size,
@@ -409,21 +406,20 @@ def refine_droplet(phase_field: ScalarField,
     assert isinstance(phase_field, ScalarField)
     if least_squares_params is None:
         least_squares_params = {}
-    
+
     if not isinstance(droplet, DiffuseDroplet):
         droplet = DiffuseDroplet.from_droplet(droplet)
     if droplet.interface_width is None:
         droplet.interface_width = phase_field.grid.typical_discretization
-    
+
     # enlarge the mask to also contain the shape change
     mask = droplet.get_phase_field(phase_field.grid, dtype=np.bool)
     dilation_iterations = 1 + int(2 * droplet.interface_width)
-    mask = ndimage.morphology.binary_dilation(
-                                    mask.data, iterations=dilation_iterations)
+    mask = ndimage.morphology.binary_dilation(mask.data, iterations=dilation_iterations)
 
     # apply the mask
     data_mask = phase_field.data[mask]
-    
+
     # determine the coordinate constraints and only vary the free data points
     data_flat = structured_to_unstructured(droplet.data)  # unstructured data
     dtype = droplet.data.dtype
@@ -433,7 +429,7 @@ def refine_droplet(phase_field: ScalarField,
     # determine data bounds
     l, h = droplet.data_bounds
     bounds = l[free], h[free]
-    
+
     def _image_deviation(params):
         """ helper function evaluating the residuals """
         # generate the droplet
@@ -444,26 +440,27 @@ def refine_droplet(phase_field: ScalarField,
         return img - data_mask
 
     # do the least square optimization
-    result = optimize.least_squares(_image_deviation, data_flat[free],
-                                    bounds=bounds, **least_squares_params)
+    result = optimize.least_squares(
+        _image_deviation, data_flat[free], bounds=bounds, **least_squares_params
+    )
     data_flat[free] = result.x
     droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
-    
+
     # normalize the droplet position
     droplet.position = phase_field.grid.normalize_point(droplet.position)
     return droplet
 
 
-
-def get_structure_factor(scalar_field: ScalarField,
-                         smoothing: Union[None, float, str] = 'auto',
-                         wave_numbers: Union[Sequence[float], str] = 'auto',
-                         add_zero: bool = False) \
-                            -> Tuple[np.ndarray, np.ndarray]:
+def get_structure_factor(
+    scalar_field: ScalarField,
+    smoothing: Union[None, float, str] = "auto",
+    wave_numbers: Union[Sequence[float], str] = "auto",
+    add_zero: bool = False,
+) -> Tuple[np.ndarray, np.ndarray]:
     """ Calculates the structure factor associated with a field
     
     Here, the structure factor is basically the power spectral density of the
-    field `scalar_field` normalized so that re-gridding or rescaleing the field
+    field `scalar_field` normalized so that re-gridding or rescaling the field
     does not change the result.
     
     Args:
@@ -487,46 +484,54 @@ def get_structure_factor(scalar_field: ScalarField,
         the associated structure factor
     """
     logger = logging.getLogger(__name__)
-    
+
     if not isinstance(scalar_field, ScalarField):
-        raise TypeError('Length scales can only be calculated for scalar '
-                        f'fields, not {scalar_field.__class__.__name__}')
-    
+        raise TypeError(
+            "Length scales can only be calculated for scalar "
+            f"fields, not {scalar_field.__class__.__name__}"
+        )
+
     grid = scalar_field.grid
     if not isinstance(grid, CartesianGridBase):
-        raise NotImplementedError('Structure factor can currently only be '
-                                  'calculated for Cartesian grids')
+        raise NotImplementedError(
+            "Structure factor can currently only be calculated for Cartesian grids"
+        )
     if not all(grid.periodic):
-        logger.warning('Structure factor calculation assumes periodic boundary '
-                       'conditions, but not all grid dimensions are periodic')
-        
+        logger.warning(
+            "Structure factor calculation assumes periodic boundary "
+            "conditions, but not all grid dimensions are periodic"
+        )
+
     # do the n-dimensional Fourier transform and calculate the structure factor
-    f1 = np_fftn(scalar_field.data, norm='ortho').flat[1:]
+    f1 = np_fftn(scalar_field.data, norm="ortho").flat[1:]
     flat_data = scalar_field.data.flat
-    sf = np.abs(f1)**2 / np.dot(flat_data, flat_data)
+    sf = np.abs(f1) ** 2 / np.dot(flat_data, flat_data)
 
     # an alternative calculation of the structure factor is
     #    f2 = np_ifftn(scalar_field.data, norm='ortho').flat[1:]
     #    sf = (f1 * f2).real
     #    sf /= (scalar_field.data**2).sum()
     # but since this involves two FFT, it is probably slower
-        
+
     # determine the (squared) components of the wave vectors
-    k2s = [np.fft.fftfreq(grid.shape[i], d=grid.discretization[i])**2
-           for i in range(grid.dim)]
-    # calculate the magnitude 
+    k2s = [
+        np.fft.fftfreq(grid.shape[i], d=grid.discretization[i]) ** 2
+        for i in range(grid.dim)
+    ]
+    # calculate the magnitude
     k_mag = np.sqrt(reduce(np.add.outer, k2s)).flat[1:]
-    
-    no_wavenumbers = wave_numbers is None or (isinstance(wave_numbers, str) and
-                                              wave_numbers == 'auto')
-    
-    if smoothing is not None and smoothing != 'none':
+
+    no_wavenumbers = wave_numbers is None or (
+        isinstance(wave_numbers, str) and wave_numbers == "auto"
+    )
+
+    if smoothing is not None and smoothing != "none":
         # construct the smoothed function of the structure factor
-        if smoothing == 'auto':
+        if smoothing == "auto":
             smoothing = k_mag.max() / 128
         smoothing = float(smoothing)  # type: ignore
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
-        
+
         if no_wavenumbers:
             # determine the wave numbers at which to evaluate it
             k_min = 2 / grid.cuboid.size.max()
@@ -538,23 +543,25 @@ def get_structure_factor(scalar_field: ScalarField,
 
         # obtain the smoothed values at these points
         sf = sf_smooth(k_mag)
-        
+
     elif not no_wavenumbers:
-        logger.warning('Argument `wave_numbers` is only used when `smoothing` '
-                       'is enabled.')
-    
+        logger.warning(
+            "Argument `wave_numbers` is only used when `smoothing` is enabled."
+        )
+
     if add_zero:
         sf = np.r_[1, sf]
         k_mag = np.r_[0, k_mag]
-    
+
     return k_mag, sf
 
 
-
-def get_length_scale(scalar_field: ScalarField,
-                     method: str = 'structure_factor_maximum',
-                     full_output: bool = False,
-                     smoothing: Optional[float] = None):
+def get_length_scale(
+    scalar_field: ScalarField,
+    method: str = "structure_factor_maximum",
+    full_output: bool = False,
+    smoothing: Optional[float] = None,
+):
     """ Calculates a length scale associated with a phase field
     
     Args:
@@ -582,60 +589,62 @@ def get_length_scale(scalar_field: ScalarField,
         object with further information is returned. 
     """
     logger = logging.getLogger(__name__)
-    
-    if (method == 'structure_factor_mean' or
-            method == 'structure_factor_average'):
-        # calculate the structure factor 
+
+    if method == "structure_factor_mean" or method == "structure_factor_average":
+        # calculate the structure factor
         k_mag, sf = get_structure_factor(scalar_field)
         length_scale = np.sum(sf) / np.sum(k_mag * sf)
-        
+
         if full_output:
             return length_scale, sf
-    
-    elif (method == 'structure_factor_maximum' or 
-            method == 'structure_factor_peak'):
-        # calculate the structure factor 
+
+    elif method == "structure_factor_maximum" or method == "structure_factor_peak":
+        # calculate the structure factor
         k_mag, sf = get_structure_factor(scalar_field, smoothing=None)
 
         # smooth the structure factor
         if smoothing is None:
             smoothing = 0.01 * scalar_field.grid.typical_discretization
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
-        
+
         # find the maximum
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            
+
             max_est = k_mag[np.argmax(sf)]
             bracket = np.array([0.2, 1, 5]) * max_est
-            logger.debug("Search maximum of structure factor in interval "
-                         f"{bracket}")
+            logger.debug(f"Search maximum of structure factor in interval {bracket}")
             try:
-                result = optimize.minimize_scalar(lambda x: -sf_smooth(x),
-                                                  bracket=bracket)
+                result = optimize.minimize_scalar(
+                    lambda x: -sf_smooth(x), bracket=bracket
+                )
             except Exception:
-                logger.exception('Could not determine maximal structure factor')
+                logger.exception("Could not determine maximal structure factor")
                 length_scale = np.nan
             else:
                 if not result.success:
-                    logger.warning('Maximization of structure factor resulted '
-                                   'in the following message: '
-                                   f'{result.message}')
+                    logger.warning(
+                        "Maximization of structure factor resulted in the following "
+                        f"message: {result.message}"
+                    )
                 length_scale = 1 / result.x
-    
+
         if full_output:
             return length_scale, sf_smooth
-        
+
     else:
-        raise ValueError(f'Method {method} is not defined. Valid values are '
-                         '`structure_factor_mean` and '
-                         '`structure_factor_maximum`')
-    
+        raise ValueError(
+            f"Method {method} is not defined. Valid values are `structure_factor_mean` "
+            "and `structure_factor_maximum`"
+        )
+
     # return only the length scale with out any additional information
     return length_scale
-    
-    
-    
-__all__ = ["locate_droplets", "refine_droplet", "get_structure_factor",
-           "get_length_scale"]    
-    
+
+
+__all__ = [
+    "locate_droplets",
+    "refine_droplet",
+    "get_structure_factor",
+    "get_length_scale",
+]

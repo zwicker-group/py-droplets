@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from droplets import SphericalDroplet, DiffuseDroplet, Emulsion
+from droplets import DiffuseDroplet, Emulsion, SphericalDroplet
 
 # construct two droplets
 drop1 = SphericalDroplet(position=[0, 0], radius=2)
