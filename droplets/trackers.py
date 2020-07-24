@@ -85,15 +85,15 @@ class LengthScaleTracker(TrackerBase):
         scalar_field = extract_field(field, self.source, 0)
 
         try:
-            length_scale = get_length_scale(scalar_field, method=self.method)
+            length = get_length_scale(scalar_field, method=self.method)  # type: ignore
         except Exception:
             if self.verbose:
                 self._logger.exception("Could not determine length scale")
-            length_scale = np.nan
+            length = np.nan
 
         # store data
         self.times.append(t)
-        self.length_scales.append(length_scale)
+        self.length_scales.append(length)
 
     def finalize(self, info: InfoDict = None) -> None:
         """ finalize the tracker, supplying additional information
