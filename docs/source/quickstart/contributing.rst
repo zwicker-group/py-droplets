@@ -19,10 +19,10 @@ define a droplet class that stores additional information by subclassing
 
 Coding style
 """"""""""""
-In terms of coding style, we try to adhere to `PEP8
-<https://www.python.org/dev/peps/pep-0008/>`_ and use `Google Style docstrings
-<https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings>`_.
-The docstring convention might be best `learned by example
+The coding style is enforced using `isort <https://timothycrosley.github.io/isort/>`_
+and `black <https://black.readthedocs.io/>`_. Moreover, we use `Google Style docstrings
+<https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings>`_,
+which might be best `learned by example
 <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_.
 The documentation, including the docstrings, are written using `reStructuredText
 <https://de.wikipedia.org/wiki/ReStructuredText>`_, with examples in the

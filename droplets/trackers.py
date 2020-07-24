@@ -10,15 +10,15 @@ Module defining classes for tracking droplets in simulations.
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
-from typing import Callable, Optional, Union, List  # @UnusedImport
+from typing import Callable, List, Optional, Union  # @UnusedImport
 
 import numpy as np
-
 from pde.fields.base import FieldBase
-from pde.trackers.base import TrackerBase, InfoDict
+from pde.trackers.base import InfoDict, TrackerBase
 from pde.trackers.intervals import IntervalData
 
-    
+from .emulsions import EmulsionTimeCourse
+
 
 class LengthScaleTracker(TrackerBase):
     """ Tracker that stores length scales measured in simulations
@@ -30,11 +30,14 @@ class LengthScaleTracker(TrackerBase):
             The associated length scales     
     """
 
-    def __init__(self, interval: IntervalData = 1,
-                 filename: Optional[str] = None,
-                 method: str = 'structure_factor_mean',
-                 source: Union[None, int, Callable] = None,
-                 verbose: bool = False):
+    def __init__(
+        self,
+        interval: IntervalData = 1,
+        filename: Optional[str] = None,
+        method: str = "structure_factor_mean",
+        source: Union[None, int, Callable] = None,
+        verbose: bool = False,
+    ):
         r"""
         Args:
             interval:
@@ -64,8 +67,7 @@ class LengthScaleTracker(TrackerBase):
         self.method = method
         self.source = source
         self.verbose = verbose
-        
-        
+
     def handle(self, field: FieldBase, t: float):
         """ handle data supplied to this tracker
         
@@ -77,23 +79,22 @@ class LengthScaleTracker(TrackerBase):
         """
         # determine length scale
         from pde.visualization.plotting import extract_field
+
         from .image_analysis import get_length_scale
-                                        
+
         scalar_field = extract_field(field, self.source, 0)
-                                        
+
         try:
-            length_scale = get_length_scale(scalar_field,  # type: ignore
-                                            method=self.method)
+            length = get_length_scale(scalar_field, method=self.method)  # type: ignore
         except Exception:
             if self.verbose:
-                self._logger.exception('Could not determine length scale')
-            length_scale = np.nan
-            
+                self._logger.exception("Could not determine length scale")
+            length = np.nan
+
         # store data
         self.times.append(t)
-        self.length_scales.append(length_scale)
-        
-        
+        self.length_scales.append(length)
+
     def finalize(self, info: InfoDict = None) -> None:
         """ finalize the tracker, supplying additional information
 
@@ -104,12 +105,12 @@ class LengthScaleTracker(TrackerBase):
         super().finalize(info)
         if self.filename:
             import json
-            data = {'times': self.times, 'length_scales': self.length_scales}
-            with open(self.filename, 'w') as fp:
+
+            data = {"times": self.times, "length_scales": self.length_scales}
+            with open(self.filename, "w") as fp:
                 json.dump(data, fp)
-            
-            
-            
+
+
 class DropletTracker(TrackerBase):
     """ Detect droplets in a scalar field during simulations
     
@@ -123,13 +124,16 @@ class DropletTracker(TrackerBase):
             done.
     """
 
-    def __init__(self, interval: IntervalData = 1,
-                 filename: Optional[str] = None,
-                 emulsion_timecourse=None,
-                 source: Union[None, int, Callable] = None,
-                 minimal_radius: float = 0,
-                 refine: bool = False,
-                 perturbation_modes: int = 0):
+    def __init__(
+        self,
+        interval: IntervalData = 1,
+        filename: Optional[str] = None,
+        emulsion_timecourse=None,
+        source: Union[None, int, Callable] = None,
+        minimal_radius: float = 0,
+        refine: bool = False,
+        perturbation_modes: int = 0,
+    ):
         """        
         Args:
             interval:
@@ -159,13 +163,6 @@ class DropletTracker(TrackerBase):
                 considered when refining droplets.
                 
         """
-        try:
-            from droplets.emulsions import EmulsionTimeCourse
-        except ImportError:
-            raise ImportError('The `droplets` package needs to be installed to '
-                              f'use {self.__class__.__name__}. You may install '
-                              'it using `pip install py-droplets`')
-        
         super().__init__(interval=interval)
         if emulsion_timecourse is None:
             self.data = EmulsionTimeCourse()
@@ -176,7 +173,6 @@ class DropletTracker(TrackerBase):
         self.minimal_radius = minimal_radius
         self.refine = refine
         self.perturbation_modes = perturbation_modes
-
 
     def initialize(self, field: FieldBase, info: InfoDict = None) -> float:
         """ 
@@ -192,12 +188,12 @@ class DropletTracker(TrackerBase):
         if self.data.grid is None:
             self.data.grid = field.grid
         elif not self.data.grid.compatible_with(field.grid):
-            raise RuntimeError('Grid of the Emulsion is incompatible with '
-                               'the grid of the current state')
-            
+            raise RuntimeError(
+                "Grid of the Emulsion is incompatible with the grid of current state"
+            )
+
         return super().initialize(field, info)
-        
-        
+
     def handle(self, field: FieldBase, t: float) -> None:
         """ handle data supplied to this tracker
         
@@ -208,16 +204,18 @@ class DropletTracker(TrackerBase):
                 The associated time
         """
         from pde.visualization.plotting import extract_field
-        from droplets.image_analysis import locate_droplets
+
+        from .image_analysis import locate_droplets
 
         scalar_field = extract_field(field, self.source, 0)
-        emulsion = locate_droplets(scalar_field,  # type: ignore
-                                   minimal_radius=self.minimal_radius,
-                                   refine=self.refine,
-                                   modes=self.perturbation_modes)
+        emulsion = locate_droplets(
+            scalar_field,  # type: ignore
+            minimal_radius=self.minimal_radius,
+            refine=self.refine,
+            modes=self.perturbation_modes,
+        )
         self.data.append(emulsion, t)
-        
-        
+
     def finalize(self, info: InfoDict = None) -> None:
         """ finalize the tracker, supplying additional information
 
@@ -228,5 +226,3 @@ class DropletTracker(TrackerBase):
         super().finalize(info)
         if self.filename:
             self.data.to_file(self.filename)
-              
-

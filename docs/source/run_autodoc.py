@@ -7,8 +7,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-OUTPUT_PATH = 'packages'
-
+OUTPUT_PATH = "packages"
 
 
 def replace_in_file(infile, replacements, outfile=None):
@@ -27,40 +26,43 @@ def replace_in_file(infile, replacements, outfile=None):
     """
     if outfile is None:
         outfile = infile
-    
-    with open(infile, 'r') as fp:
+
+    with open(infile, "r") as fp:
         content = fp.read()
-        
+
     for key, value in replacements.items():
         content = content.replace(key, value)
-    
-    with open(outfile, 'w') as fp:
-        fp.write(content)    
+
+    with open(outfile, "w") as fp:
+        fp.write(content)
 
 
-
-def main(folder='droplets'):
+def main(folder="droplets"):
     # remove old files
-    for path in glob.glob(f'{OUTPUT_PATH}/*.rst'):
-        logging.info('Remove file `%s`', path)
+    for path in glob.glob(f"{OUTPUT_PATH}/*.rst"):
+        logging.info("Remove file `%s`", path)
         os.remove(path)
-    
+
     # run sphinx-apidoc
-    sp.check_call(['sphinx-apidoc',
-                   '--maxdepth', '4',
-                   '--output-dir', OUTPUT_PATH,
-                   '--module-first',
-                   f'../../{folder}',  # path of the package
-                   f'../../{folder}/tests',  # ignored path
-                   f'../../{folder}/**/tests'  # ignored path
-                   ])
+    sp.check_call(
+        [
+            "sphinx-apidoc",
+            "--maxdepth",
+            "4",
+            "--output-dir",
+            OUTPUT_PATH,
+            "--module-first",
+            f"../../{folder}",  # path of the package
+            f"../../{folder}/tests",  # ignored path
+            f"../../{folder}/**/tests",  # ignored path
+        ]
+    )
 
     # replace unwanted information
-    for path in glob.glob(f'{OUTPUT_PATH}/*.rst'):
-        logging.info('Patch file `%s`', path)
-        replace_in_file(path, {'Submodules\n----------\n\n': ''})
-    
-    
-    
-if __name__ == '__main__':
+    for path in glob.glob(f"{OUTPUT_PATH}/*.rst"):
+        logging.info("Patch file `%s`", path)
+        replace_in_file(path, {"Submodules\n----------\n\n": ""})
+
+
+if __name__ == "__main__":
     main()

@@ -14,20 +14,29 @@ temporal dynamics.
 """
 
 import json
-from typing import (List, Optional, Dict, Sequence, Tuple,  # @UnusedImport
-                    Iterator, Union, Generator, Any, TYPE_CHECKING)
+from typing import List  # @UnusedImport
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
-
 from pde.fields import ScalarField
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
+from pde.storage.base import StorageBase
+from pde.tools.cuboid import Cuboid
+from pde.tools.misc import display_progress
+from pde.tools.plotting import plot_on_axes
 from pde.trackers.base import InfoDict
 from pde.trackers.intervals import IntervalType
-from pde.storage.base import StorageBase
-from pde.tools.misc import display_progress
-from pde.tools.cuboid import Cuboid
-from pde.tools.plotting import plot_on_axes
 
 from .droplets import SphericalDroplet, droplet_from_data
 
@@ -35,17 +44,18 @@ if TYPE_CHECKING:
     from .trackers import DropletTracker  # @UnusedImport
 
 
-
 DropletSequence = Union[Generator, Sequence[SphericalDroplet]]
-
 
 
 class Emulsion(list):
     """ class representing a collection of droplets in a common system """
 
-    def __init__(self, droplets: DropletSequence = None,
-                 grid: Optional[GridBase] = None,
-                 copy: bool = True):
+    def __init__(
+        self,
+        droplets: DropletSequence = None,
+        grid: Optional[GridBase] = None,
+        copy: bool = True,
+    ):
         """ 
         Args:
             droplets:
@@ -61,44 +71,38 @@ class Emulsion(list):
         if isinstance(droplets, Emulsion):
             self.grid: Optional[GridBase] = droplets.grid
             if grid is not None and self.grid != grid:
-                raise ValueError('Emulsion grid is unequal to given grid')
+                raise ValueError("Emulsion grid is unequal to given grid")
         else:
             self.grid = grid
-            
+
         # determine space dimension
         if grid is not None:
-            self.dim: Optional[int] = grid.dim  # dimension of the space 
+            self.dim: Optional[int] = grid.dim  # dimension of the space
         else:
             self.dim = None
-        
+
         # add all droplets
         super().__init__()
         if droplets is not None:
             self.extend(droplets, copy=copy)
-    
-    
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
         return super().__eq__(other) and self.grid == other.grid
-    
-    
+
     def __ne__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
         return super().__ne__(other) or self.grid != other.grid
-    
-    
+
     def __repr__(self):
-        return (f'{self.__class__.__name__}({super().__repr__()}, '
-                f'grid={self.grid})')
-    
-    
+        return f"{self.__class__.__name__}({super().__repr__()}, grid={self.grid})"
+
     def __add__(self, rhs):
         # return sum of Emulsions as an emulsion
-        return Emulsion(list.__add__(self, rhs))    
-    
-    
+        return Emulsion(list.__add__(self, rhs))
+
     def __getitem__(self, key: Union[int, slice]):
         # return result from extended slicing as Emulsion
         result = list.__getitem__(self, key)
@@ -106,8 +110,7 @@ class Emulsion(list):
             return Emulsion(result, grid=self.grid)
         except TypeError:
             return result
-        
-        
+
     def copy(self, min_radius: float = -1) -> "Emulsion":
         """ return a copy of this emulsion
         
@@ -117,13 +120,12 @@ class Emulsion(list):
                 with exactly min_radius are removed, so `min_radius == 0` can be
                 used to filter vanished droplets.        
         """
-        return self.__class__([droplet.copy() for droplet in self
-                               if droplet.radius > min_radius],
-                              grid=self.grid, copy=False)
-    
-    
-    def extend(self, droplets: DropletSequence,  # type: ignore
-               copy: bool = True):
+        droplets = [droplet.copy() for droplet in self if droplet.radius > min_radius]
+        return self.__class__(droplets, grid=self.grid, copy=False,)
+
+    def extend(  # type: ignore
+        self, droplets: DropletSequence, copy: bool = True,
+    ):
         """ add many droplets to the emulsion
         
         Args:
@@ -132,8 +134,7 @@ class Emulsion(list):
         """
         for droplet in droplets:
             self.append(droplet, copy=copy)
-    
-    
+
     def append(self, droplet: SphericalDroplet, copy: bool = True):
         """ add a droplet to the emulsion
         
@@ -144,13 +145,14 @@ class Emulsion(list):
         if self.dim is None:
             self.dim = droplet.dim
         elif self.dim != droplet.dim:
-            raise ValueError('Cannot append droplet in dimension '
-                             f'{droplet.dim} to emulsion in dimension '
-                             f'{self.dim}')
+            raise ValueError(
+                "Cannot append droplet in dimension "
+                f"{droplet.dim} to emulsion in dimension "
+                f"{self.dim}"
+            )
         if copy:
             droplet = droplet.copy()
         super().append(droplet)
-
 
     @property
     def data(self):
@@ -164,11 +166,12 @@ class Emulsion(list):
             # emulsion contains at least one droplet
             classes = set(d.__class__ for d in self)
             if len(classes) > 1:
-                raise TypeError("Emulsion data cannot be stored contiguously "
-                                "if it contains a multiple of droplet classes: "
-                                f"{', '.join(c.__name__ for c in classes)}")
+                raise TypeError(
+                    "Emulsion data cannot be stored contiguously if it contains a "
+                    f"multiple of droplet classes: "
+                    + ", ".join(c.__name__ for c in classes)
+                )
             return np.array([d.data for d in self])
-        
 
     def get_linked_data(self) -> np.ndarray:
         """ link the data of all droplets in a single array
@@ -176,7 +179,7 @@ class Emulsion(list):
         Returns:
             numpy.ndarray: The array containing all droplet data. If entries in
                 this array are modified, it will be reflected in the droplets.
-        """ 
+        """
         if len(self) == 0:
             data = np.empty(0)
         else:
@@ -185,11 +188,9 @@ class Emulsion(list):
             for i, d in enumerate(self):
                 d.data = data[i]
         return data
-    
-    
+
     @classmethod
-    def _from_hdf_dataset(cls, dataset, grid: Optional[GridBase] = None) \
-            -> "Emulsion":
+    def _from_hdf_dataset(cls, dataset, grid: Optional[GridBase] = None) -> "Emulsion":
         """ construct an emulsion by reading data from an hdf5 dataset
         
         Args:
@@ -198,14 +199,15 @@ class Emulsion(list):
                 information is required to measure distances between droplets.
         """
         # there are values, so the emulsion is not empty
-        droplet_class = dataset.attrs['droplet_class']
-        if droplet_class == 'None':
+        droplet_class = dataset.attrs["droplet_class"]
+        if droplet_class == "None":
             droplets: List[SphericalDroplet] = []
         else:
-            droplets = [droplet_from_data(droplet_class, data)  # type: ignore
-                        for data in dataset]
+            droplets = [
+                droplet_from_data(droplet_class, data)  # type: ignore
+                for data in dataset
+            ]
         return cls(droplets, grid=grid, copy=False)
-
 
     @classmethod
     def from_file(cls, filename: str) -> "Emulsion":
@@ -215,40 +217,38 @@ class Emulsion(list):
             filename (str): Name of the file to read emulsion from
         """
         import h5py
+
         with h5py.File(filename, "r") as fp:
             if len(fp) != 1:
-                raise RuntimeError('Multiple emulsions were found in the file '
-                                   f'{filename})') 
-                
+                raise RuntimeError(f"Multiple emulsions found in file `{filename}`")
+
             # read grid
-            if 'grid' in fp.attrs:
-                grid: Optional[GridBase] = GridBase.from_state(fp.attrs['grid'])
+            if "grid" in fp.attrs:
+                grid: Optional[GridBase] = GridBase.from_state(fp.attrs["grid"])
             else:
                 grid = None
-                
+
             # read the actual droplet data
             dataset = fp[list(fp.keys())[0]]  # retrieve the only dataset
             obj = cls._from_hdf_dataset(dataset, grid)
-            
+
         return obj
 
-
-    def _write_hdf_dataset(self, hdf_path, key: str = 'emulsion'):
+    def _write_hdf_dataset(self, hdf_path, key: str = "emulsion"):
         """ write data to a given hdf5 path `hdf_path` """
         if self:
             # emulsion contains at least one droplet
             dataset = hdf_path.create_dataset(key, data=self.data)
             # self.data ensures that there is only one droplet class
-            dataset.attrs['droplet_class'] = self[0].__class__.__name__
-            
+            dataset.attrs["droplet_class"] = self[0].__class__.__name__
+
         else:
             # create empty dataset to indicate empty emulsion
             dataset = hdf_path.create_dataset(key, shape=tuple())
-            dataset.attrs['droplet_class'] = 'None'
-            
+            dataset.attrs["droplet_class"] = "None"
+
         return dataset
-        
-            
+
     def to_file(self, filename: str):
         """ store data in hdf5 file
 
@@ -256,14 +256,14 @@ class Emulsion(list):
             filename (str): Name of the file to write emulsion to
         """
         import h5py
+
         with h5py.File(filename, "w") as fp:
             # write the grid data
             if self.grid is not None:
-                fp.attrs['grid'] = self.grid.state_serialized
+                fp.attrs["grid"] = self.grid.state_serialized
             # write actual droplet data
             self._write_hdf_dataset(fp)
 
-        
     @property
     def interface_width(self) -> Optional[float]:
         """ float: the average interface width across all droplets
@@ -271,8 +271,8 @@ class Emulsion(list):
         This averages the interface widths of the individual droplets weighted
         by their surface area, i.e., the amount of interface
         """
-        
-        width, area = 0., 0.
+
+        width, area = 0.0, 0.0
         for droplet in self:
             try:
                 interface_width = droplet.interface_width
@@ -283,23 +283,22 @@ class Emulsion(list):
                     a = droplet.surface_area
                     width += interface_width * a
                     area += a
-                
+
         if area == 0:
             return None
         else:
             return width / area
-        
-         
+
     @property
     def bbox(self) -> Cuboid:
         """ Cuboid: bounding box of the emulsion """
         if len(self) == 0:
-            raise RuntimeError('Bounding box of empty emulsion is undefined')
+            raise RuntimeError("Bounding box of empty emulsion is undefined")
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
-         
-         
-    def get_phasefield(self, grid: GridBase = None,
-                       label: Optional[str] = None) -> ScalarField:
+
+    def get_phasefield(
+        self, grid: GridBase = None, label: Optional[str] = None
+    ) -> ScalarField:
         """ create a phase field representing a list of droplets
         
         Args:
@@ -315,19 +314,18 @@ class Emulsion(list):
         if grid is None:
             grid = self.grid
         if grid is None:
-            raise RuntimeError('Grid needs to be specified')
-        
+            raise RuntimeError("Grid needs to be specified")
+
         if len(self) == 0:
             return ScalarField(grid)
-        
+
         else:
             result: ScalarField = self[0].get_phase_field(grid, label=label)
             for d in self[1:]:
                 result += d.get_phase_field(grid)  # type: ignore
             np.clip(result.data, 0, 1, out=result.data)
             return result
-        
-    
+
     def remove_small(self, min_radius: float = -np.inf):
         """ remove droplets that are very small
         
@@ -342,8 +340,7 @@ class Emulsion(list):
         for i in reversed(range(len(self))):
             if self[i].radius <= min_radius:
                 self.pop(i)
-    
-    
+
     def get_pairwise_distances(self, subtract_radius: bool = False):
         """ return the pairwise distance between droplets
         
@@ -356,9 +353,11 @@ class Emulsion(list):
             np.array: a matrix with the distances between all droplets
         """
         if self.grid is None:
+
             def get_distance(p1, p2):
                 """ helper function calculating the distance between points """
                 return np.linalg.norm(p1 - p2)
+
         else:
             get_distance = self.grid.distance_real
 
@@ -375,8 +374,7 @@ class Emulsion(list):
                 dists[i, j] = dists[j, i] = dist
 
         return dists
-    
-    
+
     def get_neighbor_distances(self, subtract_radius: bool = False):
         """ calculates the distance of each droplet to its nearest neighbor
         
@@ -396,23 +394,22 @@ class Emulsion(list):
             return np.zeros((0,))
         elif len(self) == 1:
             return np.full(1, np.nan)
-        
+
         try:
             from scipy.spatial import cKDTree as KDTree
         except ImportError:
             from scipy.spatial import KDTree
-        
+
         # build tree to query the nearest neighbors
-        positions = self.data['position']
+        positions = self.data["position"]
         tree = KDTree(positions)
         dist, index = tree.query(positions, 2)
-        
+
         if subtract_radius:
-            return dist[:, 1] - self.data['radius'][index].sum(axis=1)
+            return dist[:, 1] - self.data["radius"][index].sum(axis=1)
         else:
             return dist[:, 1]
-    
-            
+
     def remove_overlapping(self, min_distance: float = 0):
         """ remove all droplets that are overlapping.
         
@@ -429,7 +426,7 @@ class Emulsion(list):
         # filter duplicates until there are none left
         dists = self.get_pairwise_distances(subtract_radius=True)
         np.fill_diagonal(dists, np.inf)
-        
+
         while len(dists) > 1:
             # find minimal distance
             x, y = np.unravel_index(np.argmin(dists), dists.shape)
@@ -443,14 +440,12 @@ class Emulsion(list):
                     dists = np.delete(np.delete(dists, x, 0), x, 1)
             else:
                 break
-             
-                
+
     @property
     def total_droplet_volume(self) -> float:
         """ float: the total volume of all droplets """
         return sum(droplet.volume for droplet in self)
-    
-    
+
     def get_size_statistics(self) -> Dict[str, float]:
         """ determine size statistics of the current emulsion
         
@@ -458,25 +453,33 @@ class Emulsion(list):
             dict: a dictionary with various size statistics
         """
         if len(self) == 0:
-            return {'count': 0,
-                    'radius_mean': np.nan, 'radius_std': np.nan,
-                    'volume_mean': np.nan, 'volume_std': np.nan}
-             
+            return {
+                "count": 0,
+                "radius_mean": np.nan,
+                "radius_std": np.nan,
+                "volume_mean": np.nan,
+                "volume_std": np.nan,
+            }
+
         radii = [droplet.radius for droplet in self]
         volumes = [droplet.volume for droplet in self]
-        return {'count': len(self),
-                'radius_mean': np.mean(radii),
-                'radius_std': np.std(radii),
-                'volume_mean': np.mean(volumes),
-                'volume_std': np.std(volumes)}
-        
+        return {
+            "count": len(self),
+            "radius_mean": np.mean(radii),
+            "radius_std": np.std(radii),
+            "volume_mean": np.mean(volumes),
+            "volume_std": np.std(volumes),
+        }
 
     @plot_on_axes()
-    def plot(self, ax,
-             field: ScalarField = None,
-             image_args: Dict[str, Any] = None, 
-             repeat_periodically: bool = True,
-             **kwargs):
+    def plot(
+        self,
+        ax,
+        field: ScalarField = None,
+        image_args: Dict[str, Any] = None,
+        repeat_periodically: bool = True,
+        **kwargs,
+    ):
         """ plot the current emulsion together with a corresponding field 
         
         Args:
@@ -496,25 +499,26 @@ class Emulsion(list):
                 function plotting the droplet outlines
         """
         if self.dim != 2:
-            raise NotImplementedError(f'Plotting emulsions in {self.dim} '
-                                      'dimensions is not implemented.')
-        grid_compatible = (self.grid is None or
-                           field is None or
-                           self.grid.compatible_with(field.grid))
+            raise NotImplementedError(
+                f"Plotting emulsions in {self.dim} dimensions is not implemented."
+            )
+        grid_compatible = (
+            self.grid is None or field is None or self.grid.compatible_with(field.grid)
+        )
         if not grid_compatible:
-            raise ValueError('Emulsion grid is not compatible with field grid')
+            raise ValueError("Emulsion grid is not compatible with field grid")
         grid = self.grid
-        
+
         # plot background and determine bounds for the droplets
         if field is not None:
             # plot the phase field and use its bounds
             if image_args is None:
                 image_args = {}
-            field.plot(kind='image', ax=ax, **image_args)
+            field.plot(kind="image", ax=ax, **image_args)
             ax.autoscale(False)  # fix image bounds to phase field
             if grid is None:
                 grid = field.grid
-            
+
         else:
             if isinstance(grid, CartesianGridBase):
                 # determine the bounds from the (2d) grid
@@ -524,34 +528,33 @@ class Emulsion(list):
                 bounds = self.bbox.bounds
             ax.set_xlim(*bounds[0])
             ax.set_ylim(*bounds[1])
-            ax.set_aspect('equal')
-        
-        # get patches representing all droplets 
+            ax.set_aspect("equal")
+
+        # get patches representing all droplets
         if grid is None or not repeat_periodically:
             # plot only the droplets themselves
-            patches = [droplet._get_mpl_patch(**kwargs)
-                       for droplet in self]
+            patches = [droplet._get_mpl_patch(**kwargs) for droplet in self]
         else:
             # plot droplets also in their mirror positions
             patches = []
             for droplet in self:
-                for p in grid.iter_mirror_points(droplet.position,
-                                                 with_self=True, 
-                                                 only_periodic=True):
+                for p in grid.iter_mirror_points(
+                    droplet.position, with_self=True, only_periodic=True
+                ):
                     # create copy with changed position
                     d = droplet.copy(position=p)
                     patches.append(d._get_mpl_patch(**kwargs))
-                    
+
         # add all patches as a collection
         import matplotlib as mpl
+
         coll = mpl.collections.PatchCollection(patches, match_original=True)
         ax.add_collection(coll)
 
-    
-    
-class EmulsionTimeCourse():
+
+class EmulsionTimeCourse:
     """ represents emulsions as a function of time """
-    
+
     def __init__(self, emulsions=None, times=None):
         """
         Args:
@@ -568,24 +571,25 @@ class EmulsionTimeCourse():
 
         self.emulsions = []
         self.times = []
-        
+
         # add all emulsions
         if emulsions:
             for e in emulsions:
                 self.append(Emulsion(e))
-            
+
         # add all times
         if times is not None:
             self.times = list(times)
-            
+
         if len(self.times) != len(self.emulsions):
-            raise ValueError('The list of emulsions and the list of times need '
-                             'to have the same length')
-            
-            
-    def append(self, emulsion: Emulsion,
-               time: Optional[float] = None,
-               copy: bool = True):
+            raise ValueError(
+                "The list of emulsions and the list of times need "
+                "to have the same length"
+            )
+
+    def append(
+        self, emulsion: Emulsion, time: Optional[float] = None, copy: bool = True
+    ):
         """ add an emulsion to the list
         
         Args:
@@ -595,39 +599,38 @@ class EmulsionTimeCourse():
             copy (bool): Whether to copy the emulsion
         """
         emulsion = Emulsion(emulsion)  # make sure this is an emulsion
-        
+
         # check grid consistency
         if self.grid is None:
             self.grid = emulsion.grid
         elif emulsion.grid and not self.grid.compatible_with(emulsion.grid):
-            raise ValueError('Grid of the EmulsionTimeCourse is not compatible '
-                             'with the grid of the emulsion to be added. '
-                             f'({self.grid} != {emulsion.grid})')
+            raise ValueError(
+                "Grid of the EmulsionTimeCourse is not compatible with the grid of the "
+                f"emulsion to be added. ({self.grid} != {emulsion.grid})"
+            )
         # add the emulsion
         if copy:
             emulsion = emulsion.copy()
         self.emulsions.append(emulsion)
-        
+
         if time is None:
             time = 0 if len(self.times) == 0 else self.times[-1] + 1
         self.times.append(time)
-        
-        
+
     def clear(self):
         """ removes all data stored in this instance """
         self.emulsions = []
         self.times = []
-        
-            
+
     def __repr__(self):
-        return (f'{self.__class__.__name__}(emulsions=Array({len(self)}), '
-                f'times=Array({len(self)}), grid={self.grid})')
-    
-    
+        return (
+            f"{self.__class__.__name__}(emulsions=Array({len(self)}), "
+            f"times=Array({len(self)}), grid={self.grid})"
+        )
+
     def __len__(self):
         return len(self.times)
-    
-        
+
     def __getitem__(self, key: Union[int, slice]):
         """ return the information for the given index """
         result = self.emulsions.__getitem__(key)
@@ -636,29 +639,27 @@ class EmulsionTimeCourse():
         else:
             return result
 
-        
     def __iter__(self) -> Iterator[Tuple[float, Emulsion]]:
         """ iterate over the emulsions """
         return iter(self.emulsions)
-            
-            
+
     def items(self):
         """ iterate over all times and emulsions, returning them in pairs """
-        return zip(self.times, self.emulsions)        
-
+        return zip(self.times, self.emulsions)
 
     def __eq__(self, other):
         """ determine whether two EmulsionTimeCourse instance are equal """
-        grids_equal = (self.grid is None or
-                       other.grid is None or
-                       self.grid == other.grid)
-        return (grids_equal and self.times == other.times and
-                self.emulsions == other.emulsions) 
-
+        grids_equal = self.grid is None or other.grid is None or self.grid == other.grid
+        return (
+            grids_equal
+            and self.times == other.times
+            and self.emulsions == other.emulsions
+        )
 
     @classmethod
-    def from_storage(cls, storage: StorageBase, progress: bool = True,
-                     **kwargs) -> "EmulsionTimeCourse":
+    def from_storage(
+        cls, storage: StorageBase, progress: bool = True, **kwargs
+    ) -> "EmulsionTimeCourse":
         r""" create an emulsion time course from a stored phase field
         
         Args:
@@ -674,17 +675,16 @@ class EmulsionTimeCourse():
             EmulsionTimeCourse: an instance describing the emulsion time course
         """
         from .image_analysis import locate_droplets
+
         result = cls()
-        
+
         for t, frame in display_progress(storage, enabled=progress):
             emulsion = locate_droplets(frame, **kwargs)
             result.append(emulsion, time=t)
         return result
-            
 
     @classmethod
-    def from_file(cls, filename: str, progress: bool = True) \
-            -> "EmulsionTimeCourse":
+    def from_file(cls, filename: str, progress: bool = True) -> "EmulsionTimeCourse":
         """ create emulsion time course by reading file
         
         Args:
@@ -695,23 +695,26 @@ class EmulsionTimeCourse():
             EmulsionTimeCourse: an instance describing the emulsion time course
         """
         import h5py
+
         obj = cls()
         with h5py.File(filename, "r") as fp:
             # read grid
-            if 'grid' in fp.attrs:
-                grid: Optional[GridBase] = GridBase.from_state(fp.attrs['grid'])
+            if "grid" in fp.attrs:
+                grid: Optional[GridBase] = GridBase.from_state(fp.attrs["grid"])
             else:
                 grid = None
-                
+
             # load the actual emulsion data and iterate in the right order
-            for key in display_progress(sorted(fp.keys()), total=len(fp),
-                                        enabled=progress):
+            for key in display_progress(
+                sorted(fp.keys()), total=len(fp), enabled=progress
+            ):
                 dataset = fp[key]
-                obj.append(Emulsion._from_hdf_dataset(dataset, grid),
-                           time=dataset.attrs['time'])
+                obj.append(
+                    Emulsion._from_hdf_dataset(dataset, grid),
+                    time=dataset.attrs["time"],
+                )
         return obj
-    
-                
+
     def to_file(self, filename: str, info: InfoDict = None):
         """ store data in hdf5 file
         
@@ -720,12 +723,13 @@ class EmulsionTimeCourse():
             info (dict): can be additional data stored alongside 
         """
         import h5py
+
         with h5py.File(filename, "w") as fp:
             # write the actual emulsion data
             for i, (time, emulsion) in enumerate(self.items()):
                 dataset = emulsion._write_hdf_dataset(fp, f"time_{i:06d}")
-                dataset.attrs['time'] = time
-                
+                dataset.attrs["time"] = time
+
             # write additional information
             if info:
                 for k, v in info.items():
@@ -735,11 +739,13 @@ class EmulsionTimeCourse():
             # present in the info dictionary, but in normal cases these grids
             # should be identical, so we don't handle this case explicitly
             if self.grid is not None:
-                fp.attrs['grid'] = self.grid.state_serialized
-                
-                
-    def tracker(self, interval: Union[int, float, IntervalType] = 1,
-                filename: Optional[str] = None) -> "DropletTracker":
+                fp.attrs["grid"] = self.grid.state_serialized
+
+    def tracker(
+        self,
+        interval: Union[int, float, IntervalType] = 1,
+        filename: Optional[str] = None,
+    ) -> "DropletTracker":
         """ return a tracker that analyzes emulsions during simulations
         
         Args:
@@ -753,9 +759,10 @@ class EmulsionTimeCourse():
                 stored
         """
         from .trackers import DropletTracker  # @Reimport
-        return DropletTracker(emulsion_timecourse=self, filename=filename,
-                              interval=interval)
-        
-                    
-            
+
+        return DropletTracker(
+            emulsion_timecourse=self, filename=filename, interval=interval
+        )
+
+
 __all__ = ["Emulsion", "EmulsionTimeCourse"]
