@@ -332,7 +332,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             ValueError: If the dimension of the space is not 2
         """
         if self.dim != 2:
-            raise ValueError("Interfacial position only supported for 2d " "grids")
+            raise ValueError("Interfacial position only supported for 2d grids")
         pos = self.radius * np.transpose([np.cos(φ), np.sin(φ)])
         return self.position[None, :] + pos
 
