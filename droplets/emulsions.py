@@ -495,8 +495,9 @@ class Emulsion(list):
                 flag determining whether droplets are shown on both sides of
                 periodic boundary conditions. This option can slow down plotting
             **kwargs:
-                Additional keyword arguments are passed to the matplotlib
-                function plotting the droplet outlines
+                Additional keyword arguments are passed to the function creating the
+                patch that represents the droplet. For instance, to only draw the
+                outlines of the droplets, you may need to supply `fill=False`. 
         """
         if self.dim != 2:
             raise NotImplementedError(

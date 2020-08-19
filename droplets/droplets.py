@@ -418,8 +418,9 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             ax (:class:`matplotlib.axes.Axes`):
                 The axes to which the droplet picture is added
             **kwargs:
-                Additional keyword arguments are passed to the matplotlib Circle
-                class to affect the appearance.
+                Additional keyword arguments are passed to the
+                :class:`matplotlib.patches.Circle`, which creates the patch that
+                represents the droplet
         """
         kwargs.setdefault("fill", False)
         ax.add_artist(self._get_mpl_patch(**kwargs))
@@ -821,8 +822,9 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             ax (:class:`matplotlib.axes.Axes`):
                 The axes to which the droplet picture is added
             **kwargs:
-                Additional keyword arguments are passed to the matplotlib plot
-                function to affect the appearance.
+                Additional keyword arguments are passed to the
+                :class:`matplotlib.patches.Polygon`, which creates the patch that
+                represents the droplet.
         """
         kwargs.setdefault("color", "k")
         ax.add_patch(self._get_mpl_patch(**kwargs))
