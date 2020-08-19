@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+
 from pde.grids import UnitGrid
 from pde.tools.misc import skipUnlessModule
 

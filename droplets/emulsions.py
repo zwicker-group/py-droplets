@@ -28,6 +28,7 @@ from typing import (
 )
 
 import numpy as np
+
 from pde.fields import ScalarField
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase

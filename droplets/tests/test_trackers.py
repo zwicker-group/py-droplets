@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+
 from pde import CahnHilliardPDE, CartesianGrid, DiffusionPDE, ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
 

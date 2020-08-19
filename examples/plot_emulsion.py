@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
+
 from droplets import DiffuseDroplet, Emulsion
 
 # create 10 random droplets

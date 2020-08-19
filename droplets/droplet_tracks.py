@@ -16,9 +16,10 @@ from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
+from scipy.ndimage import filters
+
 from pde.grids.base import GridBase
 from pde.trackers.base import InfoDict
-from scipy.ndimage import filters
 
 from .droplets import SphericalDroplet, droplet_from_data
 

@@ -4,8 +4,9 @@
 
 import numpy as np
 import pytest
-from pde.grids import UnitGrid
 from scipy import integrate
+
+from pde.grids import UnitGrid
 
 from .. import droplets
 

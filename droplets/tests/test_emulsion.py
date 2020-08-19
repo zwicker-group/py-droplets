@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+
 from pde import ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
 

@@ -28,13 +28,14 @@ from typing import TYPE_CHECKING, List, Optional, Sequence, TypeVar
 
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
+from scipy import integrate
+
 from pde.fields import ScalarField
 from pde.grids.base import GridBase
 from pde.tools import spherical
 from pde.tools.cuboid import Cuboid
 from pde.tools.misc import preserve_scalars
 from pde.tools.plotting import plot_on_axes
-from scipy import integrate
 
 # work-around to satisfy type checking in python 3.6
 if TYPE_CHECKING:

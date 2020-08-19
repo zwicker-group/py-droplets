@@ -13,6 +13,7 @@ Module defining classes for tracking droplets in simulations.
 from typing import Callable, List, Optional, Union  # @UnusedImport
 
 import numpy as np
+
 from pde.fields.base import FieldBase
 from pde.trackers.base import InfoDict, TrackerBase
 from pde.trackers.intervals import IntervalData
