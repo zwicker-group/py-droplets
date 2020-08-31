@@ -49,8 +49,8 @@ from .emulsions import Emulsion
 def _locate_droplets_in_mask_cartesian_single(
     grid: CartesianGridBase, img_binary
 ) -> Emulsion:
-    """ locate droplets in a single data set on a Cartesian grid
-    
+    """locate droplets in a single data set on a Cartesian grid
+
     Args:
         img_binary (numpy.ndarray): The binary image that is to be analyzed
 
@@ -77,14 +77,14 @@ def _locate_droplets_in_mask_cartesian_single(
 
 
 def _locate_droplets_in_mask_cartesian(grid: CartesianGridBase, img_binary) -> Emulsion:
-    """ locate droplets in a (potentially periodic) data set on a Cartesian grid
-    
+    """locate droplets in a (potentially periodic) data set on a Cartesian grid
+
     This function locates droplets respecting periodic boundary conditions.
-    
+
     Args:
         img_binary (numpy.ndarray):
             The binary image in which the droplets are searched
-    
+
     Returns:
         Emulsion: A collection of discovered spherical droplets.
     """
@@ -133,12 +133,12 @@ def _locate_droplets_in_mask_cartesian(grid: CartesianGridBase, img_binary) -> E
 
 
 def _locate_droplets_in_mask_spherical(grid: SphericalGridBase, img_binary) -> Emulsion:
-    """ locates droplets in a binary data set on a spherical grid
-    
+    """locates droplets in a binary data set on a spherical grid
+
     Args:
         img_binary (numpy.ndarray):
             The binary image in which the droplets are searched
-    
+
     Returns:
         Emulsion: A collection of discovered spherical droplets.
     """
@@ -171,11 +171,11 @@ def _locate_droplets_in_mask_spherical(grid: SphericalGridBase, img_binary) -> E
 def _locate_droplets_in_mask_cylindrical_single(
     grid: CylindricalGrid, img_binary
 ) -> Emulsion:
-    """ locate droplets in a data set on a single cylindrical grid
-    
+    """locate droplets in a data set on a single cylindrical grid
+
     Args:
         img_binary (numpy.ndarray): The binary image that is to be analyzed
-        
+
     Returns:
         Emulsion: A collection of discovered spherical droplets.
     """
@@ -209,14 +209,14 @@ def _locate_droplets_in_mask_cylindrical_single(
 
 
 def _locate_droplets_in_mask_cylindrical(grid: CylindricalGrid, img_binary) -> Emulsion:
-    """ locate droplets in a data set on a (periodic) cylindrical grid
-    
+    """locate droplets in a data set on a (periodic) cylindrical grid
+
     This function locates droplets respecting periodic boundary conditions.
-    
+
     Args:
         img_binary (numpy.ndarray):
             The binary image in which the droplets are searched
-    
+
     Returns:
         Emulsion: A collection of discovered spherical droplets.
     """
@@ -256,14 +256,14 @@ def _locate_droplets_in_mask_cylindrical(grid: CylindricalGrid, img_binary) -> E
 
 
 def locate_droplets_in_mask(grid: GridBase, img_binary) -> Emulsion:
-    """ locates droplets in a binary image
-    
+    """locates droplets in a binary image
+
     This function locates droplets respecting periodic boundary conditions.
-    
+
     Args:
         img_binary (numpy.ndarray):
             The binary image in which the droplets are searched
-    
+
     Returns:
         Emulsion: A collection of discovered spherical droplets.
     """
@@ -287,12 +287,12 @@ def locate_droplets(
     refine: bool = False,
     interface_width: Optional[float] = None,
 ):
-    """ Locates droplets in the phase field
-    
+    """Locates droplets in the phase field
+
     This uses a binarized image to locate clusters of large concentration in the
     phase field, which are interpreted as droplets. Basic quantities, like
     position and size, are determined for these clusters.
-    
+
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
             Scalar field that describes the concentration field of droplets
@@ -310,10 +310,10 @@ def locate_droplets(
         refine (bool):
             Flag determining whether the droplet properties should be refined
             using fitting. This is a potentially slow procedure.
-        interface_width (float, optional): 
+        interface_width (float, optional):
             Interface width of the located droplets, which is also used as a
             starting value for the fitting if droplets are refined.
-            
+
     Returns:
         :class:`~pde.analysis.emulsions.Emulsion`:
         An emulsion containing all detected droplets
@@ -383,13 +383,13 @@ def refine_droplet(
     droplet: DiffuseDroplet,
     least_squares_params: Optional[Dict[str, Any]] = None,
 ):
-    """ Refines droplet parameters by fitting to phase field
-    
+    """Refines droplet parameters by fitting to phase field
+
     This function varies droplet parameters, like position, size,
     interface width, and potential perturbation amplitudes until the overlap
     with the respective phase field region is maximized. Here, we use a
     constraint fitting routine.
-    
+
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
             Phase_field that is being used to refine the droplet
@@ -399,7 +399,7 @@ def refine_droplet(
         least_squares_params (dict):
             Dictionary of parameters that influence the fitting; see the
             documentation of scipy.optimize.least_squares
-            
+
     Returns:
         The refined droplet as an instance of the argument `droplet`
     """
@@ -457,12 +457,12 @@ def get_structure_factor(
     wave_numbers: Union[Sequence[float], str] = "auto",
     add_zero: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """ Calculates the structure factor associated with a field
-    
+    """Calculates the structure factor associated with a field
+
     Here, the structure factor is basically the power spectral density of the
     field `scalar_field` normalized so that re-gridding or rescaling the field
     does not change the result.
-    
+
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):
             The scalar_field being analyzed
@@ -478,7 +478,7 @@ def get_structure_factor(
         add_zero (bool):
             Determines whether the value at k=0 (defined to be 1) should also be
             returned.
-            
+
     Returns:
         (numpy.ndarray, numpy.ndarray): Two arrays giving the wave numbers and
         the associated structure factor
@@ -562,14 +562,14 @@ def get_length_scale(
     full_output: bool = False,
     smoothing: Optional[float] = None,
 ):
-    """ Calculates a length scale associated with a phase field
-    
+    """Calculates a length scale associated with a phase field
+
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):
             The scalar_field being analyzed
         method (str):
             A string determining which method is used to calculate the length
-            scale.Valid options are `structure_factor_maximum` (numerically 
+            scale.Valid options are `structure_factor_maximum` (numerically
             determine the maximum in the structure factor) and
             `structure_factor_mean` (calculate the mean of the structure
             factor).
@@ -581,12 +581,12 @@ def get_length_scale(
             structure factor. If `None` it is automatically determined from the
             typical discretization of the underlying grid. This parameter is
             only used if `method = 'structure_factor_maximum'`
-            
+
     Returns:
         float: The determine length scale
-        
+
         If `full_output = True`, a tuple with the length scale and an additional
-        object with further information is returned. 
+        object with further information is returned.
     """
     logger = logging.getLogger(__name__)
 

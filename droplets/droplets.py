@@ -48,8 +48,8 @@ TDroplet = TypeVar("TDroplet", bound="DropletBase")
 
 
 def get_dtype_field_size(dtype, field_name: str) -> int:
-    """ return the number of elements in a field of structured numpy array
-    
+    """return the number of elements in a field of structured numpy array
+
     Args:
         dtype (list):
             The dtype of the numpy array
@@ -61,16 +61,16 @@ def get_dtype_field_size(dtype, field_name: str) -> int:
 
 
 def iterate_in_pairs(it, fill=0):
-    """ return consecutive pairs from an iterator
-    
-    For instance, `list(pair_iterator('ABCDE', fill='Z'))` returns 
+    """return consecutive pairs from an iterator
+
+    For instance, `list(pair_iterator('ABCDE', fill='Z'))` returns
     `[('A', 'B'), ('C', 'D'), ('E', 'Z')]`
-    
+
     Args:
         it (iterator): The iterator
         fill: The value returned for the second part of the last returned tuple
             if the length of the iterator is odd
-            
+
     Returns:
         This is a generator function that yields pairs of items of the iterator
     """
@@ -90,11 +90,11 @@ def iterate_in_pairs(it, fill=0):
 
 
 class DropletBase:
-    """ represents a generic droplet
-    
+    """represents a generic droplet
+
     The data associated with a droplet is stored in structured array.
     Consequently, the `dtype` of the array determines what information the
-    droplet class stores.     
+    droplet class stores.
     """
 
     _subclasses: Dict[str, "DropletBase"] = {}  # collect all inheriting classes
@@ -103,8 +103,8 @@ class DropletBase:
 
     @classmethod
     def from_data(cls, data: np.recarray) -> "DropletBase":
-        """ create droplet class from a given data
-        
+        """create droplet class from a given data
+
         Args:
             data (:class:`numpy.recarray`):
                 The data array used to initialize the droplet
@@ -118,8 +118,8 @@ class DropletBase:
 
     @classmethod
     def from_droplet(cls, droplet: "DropletBase", **kwargs) -> "DropletBase":
-        r""" return a droplet with data taken from `droplet`
-         
+        r"""return a droplet with data taken from `droplet`
+
         Args:
             droplet (:class:`DropletBase`):
                 Another droplet from which data is copied. This does not be the
@@ -133,8 +133,8 @@ class DropletBase:
         return cls(**args)  # type: ignore
 
     def _init_data(self, **kwargs):
-        """ initializes the `data` attribute if it is not present
-        
+        """initializes the `data` attribute if it is not present
+
         Args:
             **kwargs:
                 Arguments used to determine the dtype of the data array
@@ -181,8 +181,8 @@ class DropletBase:
         return structured_to_unstructured(self.data)
 
     def copy(self: TDroplet, **kwargs) -> TDroplet:
-        r""" return a copy of the current droplet
-        
+        r"""return a copy of the current droplet
+
         Args:
             \**kwargs: Additional arguments an be used to set data of the
                 returned droplet.
@@ -205,7 +205,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
     __slots__ = ["data"]
 
     def __init__(self, position: Sequence[float], radius: float):
-        r""" 
+        r"""
         Args:
             position (:class:`numpy.ndarray`):
                 Position of the droplet center
@@ -242,8 +242,8 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @classmethod
     def from_volume(cls, position: Sequence[float], volume: float):
-        """ Construct a droplet from given volume instead of radius
-        
+        """Construct a droplet from given volume instead of radius
+
         Args:
             position (vector): center of the droplet
             volume (float): volume of the droplet
@@ -296,18 +296,18 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         )
 
     def overlaps(self, other: "SphericalDroplet", grid: GridBase = None) -> bool:
-        """ determine whether another droplet overlaps with this one
-        
+        """determine whether another droplet overlaps with this one
+
         Note that this function so far only compares the distances of the
         droplets to their radii, which does not respect perturbed droplets
-        correctly.        
-        
+        correctly.
+
         Args:
             other (SphericalDroplet): instance of the other droplet
             grid (GridBase): grid that determines how distances are measured,
                 which is for instance important to respect periodic boundary
                 conditions. If omitted, an Eucledian distance is assumed.
-                
+
         Returns:
             bool: whether the droplets overlap or not
         """
@@ -319,8 +319,8 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @preserve_scalars
     def interface_position(self, φ):
-        """ calculates the position of the interface of the droplet
-        
+        """calculates the position of the interface of the droplet
+
         Args:
             φ (float or array): The angle in the polar coordinate system that
                 is used to describe the interface
@@ -328,7 +328,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         Returns:
             An array with the coordinates of the interfacial points associated
             with each angle given by `φ`.
-            
+
         Raises:
             ValueError: If the dimension of the space is not 2
         """
@@ -339,20 +339,19 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @property
     def interface_curvature(self):
-        """ float: the mean curvature of the interface of the droplet
-        """
+        """float: the mean curvature of the interface of the droplet"""
         return 1 / self.radius
 
     def _get_phase_field(self, grid: GridBase, dtype=np.double):
-        """ Creates an image of the droplet on the `grid`
-        
+        """Creates an image of the droplet on the `grid`
+
         Args:
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid used for discretizing the droplet phase field
             dtype:
                 The numpy data type defining the type of the returned image.
                 If `dtype == np.bool`, a binary representation is returned.
-                
+
         Returns:
             An array with data values representing the droplet phase field at
             support points of the `grid`.
@@ -370,8 +369,8 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
     def get_phase_field(
         self, grid: GridBase, label: str = None, dtype=np.double
     ) -> ScalarField:
-        """ Creates an image of the droplet on the `grid`
-        
+        """Creates an image of the droplet on the `grid`
+
         Args:
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid used for discretizing the droplet phase field
@@ -380,7 +379,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             dtype:
                 The numpy data type of the returned array. Typical choices are
                 `numpy.double` and `numpy.bool`.
-        
+
         Returns:
             :class:`~pde.fields.ScalarField`: A scalar field
             representing the droplet
@@ -389,14 +388,14 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         return ScalarField(grid, data=data, label=label)
 
     def get_phase_field_masked(self, grid: GridBase, mask):
-        """ Returns an image of the droplet restricted to the given `mask`
-        
-        Args: 
+        """Returns an image of the droplet restricted to the given `mask`
+
+        Args:
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid used for discretizing the droplet phase field
             mask (array):
                 A binary mask marking the support points whose data is returned
-                
+
         Returns:
             An array with the values at the support points marked in `mask`
         """
@@ -413,8 +412,8 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @plot_on_axes()
     def plot(self, ax, **kwargs):
-        """ Plot the droplet
-        
+        """Plot the droplet
+
         Args:
             ax (:class:`matplotlib.axes.Axes`):
                 The axes to which the droplet picture is added
@@ -435,7 +434,7 @@ class DiffuseDroplet(SphericalDroplet):
     def __init__(
         self, position: Sequence[float], radius: float, interface_width: float = None
     ):
-        """ 
+        """
         Args:
             position (:class:`numpy.ndarray`):
                 Position of the droplet center
@@ -478,15 +477,15 @@ class DiffuseDroplet(SphericalDroplet):
         self.check_data()
 
     def _get_phase_field(self, grid: GridBase, dtype=np.double):
-        """ Creates an image of the droplet on the `grid`
-        
+        """Creates an image of the droplet on the `grid`
+
         Args:
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid used for discretizing the droplet phase field
             dtype:
                 The numpy data type defining the type of the returned image.
                 If `dtype == np.bool`, a binary representation is returned.
-                
+
         Returns:
             An array with data values representing the droplet phase field at
             support points of the `grid`.
@@ -515,10 +514,10 @@ class DiffuseDroplet(SphericalDroplet):
 
 
 class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
-    """ represents a single droplet with a perturbed shape.
-    
+    """represents a single droplet with a perturbed shape.
+
     This acts as an abstract class for which member functions need to specified
-    depending on dimensionality. 
+    depending on dimensionality.
     """
 
     __slots__ = ["data"]
@@ -530,7 +529,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         interface_width: float = None,
         amplitudes: List[float] = None,
     ):
-        """ 
+        """
         Args:
             position (:class:`numpy.ndarray`):
                 Position of the droplet center
@@ -607,10 +606,10 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         raise NotImplementedError
 
     def _get_phase_field(self, grid: GridBase, dtype=np.double):
-        """ create an image of the droplet on the `grid`
-        
+        """create an image of the droplet on the `grid`
+
         `dtype` defines the type of the returned image. If dtype == np.bool, a
-            binary representation is returned. 
+            binary representation is returned.
         """
         if self.dim != grid.dim:
             raise ValueError(
@@ -640,24 +639,24 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     def get_phase_field(
         self, grid: GridBase, label: str = None, dtype=np.double
     ) -> ScalarField:
-        """ create an image of the droplet on the `grid`
-        
+        """create an image of the droplet on the `grid`
+
         `dtype` defines the type of the returned image. If dtype == np.bool, a
             binary representation is returned.
-        `label` sets an identifier for the phase field 
+        `label` sets an identifier for the phase field
         """
         data = self._get_phase_field(grid, dtype=dtype)
         return ScalarField(grid, data=data, label=label)
 
     def get_phase_field_masked(self, grid: GridBase, mask):
-        """ create an image of the droplet on the `grid` and return only the
-        points that are non-zero in the mask """
+        """create an image of the droplet on the `grid` and return only the
+        points that are non-zero in the mask"""
         return self._get_phase_field(grid)[mask]
 
 
 class PerturbedDroplet2D(PerturbedDropletBase):
     r"""Represents a single droplet in two dimensions with a perturbed shape
-    
+
     The shape is described using the distance :math:`R(\phi)` of the interface
     from the `position`, which is a function of the polar angle :math:`\phi`.
     This function is expressed as a truncated series of harmonics:
@@ -665,7 +664,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
     .. math::
         R(\phi) = R_0 + R_0\sum_{n=1}^N \left[ \epsilon^{(1)}_n \sin(n \phi)
                                     + \epsilon^{(2)}_n \cos(n \phi) \right]
-        
+
     where :math:`N` is the number of perturbation modes considered, which is
     given by half the length of the `amplitudes` array. Consequently, amplitudes
     should always be an even number, to consider both `sin` and `cos` terms.
@@ -682,7 +681,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         interface_width: float = None,
         amplitudes: List[float] = None,
     ):
-        r""" 
+        r"""
         Args:
             position (:class:`numpy.ndarray`):
                 Position of the droplet center
@@ -707,8 +706,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_distance(self, φ):
-        """ calculates the distance of the droplet interface to the origin
-        
+        """calculates the distance of the droplet interface to the origin
+
         Args:
             φ (float or array): The angle in the polar coordinate system that
                 is used to describe the interface
@@ -727,8 +726,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_position(self, φ):
-        """ calculates the position of the interface of the droplet
-        
+        """calculates the position of the interface of the droplet
+
         Args:
             φ (float or array): The angle in the polar coordinate system that
                 is used to describe the interface
@@ -743,11 +742,11 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_curvature(self, φ):
-        r""" calculates the mean curvature of the interface of the droplet
-        
+        r"""calculates the mean curvature of the interface of the droplet
+
         For simplicity, the effect of the perturbations are only included to
         linear order in the perturbation amplitudes :math:`\epsilon^{(1/2)}_n`.
-        
+
         Args:
             φ (float or array): The angle in the polar coordinate system that
                 is used to describe the interface
@@ -817,8 +816,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
     @plot_on_axes()
     def plot(self, ax, **kwargs):
-        """ Plot the perturbed droplet
-        
+        """Plot the perturbed droplet
+
         Args:
             ax (:class:`matplotlib.axes.Axes`):
                 The axes to which the droplet picture is added
@@ -832,18 +831,18 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
 
 class PerturbedDroplet3D(PerturbedDropletBase):
-    r""" Represents a single droplet in two dimensions with a perturbed shape
-    
+    r"""Represents a single droplet in two dimensions with a perturbed shape
+
     The shape is described using the distance :math:`R(\theta, \phi)` of the
     interface from the origin as a function of the azimuthal angle
     :math:`\theta` and the polar angle :math:`\phi`. This function is developed
     as a truncated series of spherical harmonics :math:`Y_{l,m}(\theta, \phi)`:
-    
+
     .. math::
         R(\theta, \phi) = R_0 \left[1 + \sum_{l=1}^{N_l}\sum_{m=-l}^l
                                 \epsilon_{l,m} Y_{l,m}(\theta, \phi) \right]
-                            
-    where :math:`N_l` is the number of perturbation modes considered, which is 
+
+    where :math:`N_l` is the number of perturbation modes considered, which is
     deduced from the length of the `amplitudes` array.
     """
 
@@ -858,7 +857,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         interface_width: float = None,
         amplitudes: List[float] = None,
     ):
-        r""" 
+        r"""
         Args:
             position (:class:`numpy.ndarray`):
                 Position of the droplet center
@@ -885,8 +884,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_distance(self, θ, φ):
-        r""" calculates the distance of the droplet interface to the origin
-        
+        r"""calculates the distance of the droplet interface to the origin
+
         Args:
             θ (float or array): Azimuthal angle (in :math:`[0, \pi]`)
             φ (float or array): Polar angle (in :math:`[0, 2\pi]`)
@@ -904,8 +903,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_position(self, θ, φ):
-        r""" calculates the position of the interface of the droplet
-        
+        r"""calculates the position of the interface of the droplet
+
         Args:
             θ (float or array): Azimuthal angle (in :math:`[0, \pi]`)
             φ (float or array): Polar angle (in :math:`[0, 2\pi]`)
@@ -921,11 +920,11 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_curvature(self, θ, φ):
-        r""" calculates the mean curvature of the interface of the droplet
-        
+        r"""calculates the mean curvature of the interface of the droplet
+
         For simplicity, the effect of the perturbations are only included to
         linear order in the perturbation amplitudes :math:`\epsilon_{l,m}`.
-        
+
         Args:
             θ (float or array): Azimuthal angle (in :math:`[0, \pi]`)
             φ (float or array): Polar angle (in :math:`[0, 2\pi]`)
@@ -972,8 +971,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
 
 def droplet_from_data(droplet_class: str, data) -> DropletBase:
-    """ create a droplet instance of the given class using some data
-    
+    """create a droplet instance of the given class using some data
+
     Args:
         droplet_class (str): The name of the class that is used to create the
             droplet instance

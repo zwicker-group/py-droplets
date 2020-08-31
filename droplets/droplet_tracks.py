@@ -28,15 +28,15 @@ if TYPE_CHECKING:
 
 
 def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
-    """ Finds contiguous True regions in the boolean array "condition"
-    
+    """Finds contiguous True regions in the boolean array "condition"
+
     Inspired by http://stackoverflow.com/a/4495197/932593
-    
+
     Args:
         condition (:class:`numpy.ndarray`):
             A one-dimensional boolean array
-            
-    
+
+
     Returns:
         :class:`numpy.ndarray`: A two-dimensional array where the first column
         is the start index of the region and the second column is the end index
@@ -182,8 +182,8 @@ class DropletTrack:
         return zip(self.times, self.droplets)
 
     def append(self, droplet: SphericalDroplet, time: Optional[float] = None):
-        """ append a new droplet with a time code
-        
+        """append a new droplet with a time code
+
         Args:
             droplet (SphericalDroplet): the droplet
             time (float, optional): The time point
@@ -210,13 +210,13 @@ class DropletTrack:
         return self.droplets[idx].position
 
     def get_trajectory(self, smoothing: float = 0):
-        """ return a list of positions over time
-        
+        """return a list of positions over time
+
         Args:
             smoothing (float): Determines the length scale for some gaussian
                 smoothing of the trajectory. Setting this to zero disables
                 smoothing.
-        
+
         Returns:
             numpy.ndarray: An array giving the position of the droplet at each
                 time instance
@@ -237,11 +237,11 @@ class DropletTrack:
         return np.array([droplet.volume for droplet in self.droplets])
 
     def time_overlaps(self, other: "DropletTrack") -> bool:
-        """ determine whether two DropletTrack instances overlaps in time
-        
+        """determine whether two DropletTrack instances overlaps in time
+
         Args:
             other (DropletTrack): The other droplet track
-            
+
         Returns:
             bool: True when both tracks contain droplets at the same time step
         """
@@ -251,8 +251,8 @@ class DropletTrack:
 
     @classmethod
     def _from_hdf_dataset(cls, dataset) -> "DropletTrack":
-        """ construct a droplet track by reading data from an hdf5 dataset
-        
+        """construct a droplet track by reading data from an hdf5 dataset
+
         Args:
             dataset:
                 an HDF5 dataset from which the data of the droplet track is read
@@ -274,8 +274,8 @@ class DropletTrack:
 
     @classmethod
     def from_file(cls, filename: str) -> "DropletTrack":
-        """ create droplet track by reading from file
-        
+        """create droplet track by reading from file
+
         Args:
             filename (str): Name of the file to read emulsion from
         """
@@ -305,7 +305,7 @@ class DropletTrack:
         return dataset
 
     def to_file(self, filename: str, info: InfoDict = None):
-        """ store data in hdf5 file
+        """store data in hdf5 file
 
         Args:
             filename (str): Name of the file to write emulsion to
@@ -321,8 +321,8 @@ class DropletTrack:
                     fp.attrs[k] = json.dumps(v)
 
     def plot(self, attribute: str = "radius", **kwargs):
-        """ plot the time evolution of the droplet
-        
+        """plot the time evolution of the droplet
+
         Args:
             attribute (str):
                 The attribute to plot. Typical values include `radius` and
@@ -353,8 +353,8 @@ class DropletTrack:
     def plot_positions(
         self, grid: Optional[GridBase] = None, arrow: bool = True, **kwargs
     ):
-        """ plot the droplet track
-        
+        """plot the droplet track
+
         Args:
             grid (GridBase, optional): The grid on which the droplets are
                 defined. If given, periodic boundary conditions can be respected
@@ -453,8 +453,8 @@ class DropletTrackList(list):
             return result
 
     def remove_short_tracks(self, min_duration: float = 0):
-        """ remove tracks that a shorter than a minimal duration
-        
+        """remove tracks that a shorter than a minimal duration
+
         Args:
             min_duration (float): The minimal duration a droplet track must have
                 in order to be retained. This is measured in actual time and not
@@ -466,11 +466,11 @@ class DropletTrackList(list):
 
     @classmethod
     def from_file(cls, filename: str) -> "DropletTrackList":
-        """ create droplet track list by reading file
-        
+        """create droplet track list by reading file
+
         Args:
             filename (str): The filename from which the data is read
-            
+
         Returns:
             DropletTrackList: an instance describing the droplet track list
         """
@@ -484,11 +484,11 @@ class DropletTrackList(list):
         return obj
 
     def to_file(self, filename: str, info: InfoDict = None):
-        """ store data in hdf5 file
-        
+        """store data in hdf5 file
+
         Args:
             filename (str): determines the location where the file is written
-            info (dict): can be additional data stored alongside 
+            info (dict): can be additional data stored alongside
         """
         import h5py
 
@@ -503,8 +503,8 @@ class DropletTrackList(list):
                     fp.attrs[k] = json.dumps(v)
 
     def plot(self, attribute: str = "radius", **kwargs):
-        """ plot the time evolution of all droplets
-        
+        """plot the time evolution of all droplets
+
         Args:
             attribute (str):
                 The attribute to plot. Typical values include `radius` and
@@ -520,8 +520,8 @@ class DropletTrackList(list):
             track.plot(attribute=attribute, **kwargs)
 
     def plot_positions(self, **kwargs):
-        """ plot all droplet tracks
-        
+        """plot all droplet tracks
+
         Args:
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot
