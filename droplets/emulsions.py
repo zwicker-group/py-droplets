@@ -686,7 +686,8 @@ class EmulsionTimeCourse:
 
         result = cls()
 
-        for t, frame in display_progress(storage, enabled=progress):
+        it = display_progress(storage.items(), total=len(storage), enabled=progress)
+        for t, frame in it:
             emulsion = locate_droplets(frame, **kwargs)
             result.append(emulsion, time=t)
         return result
