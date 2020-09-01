@@ -121,6 +121,14 @@ def test_conversion_from_emulsion_timecourse():
 
     e = Emulsion([d1, d2])
     etc = EmulsionTimeCourse([e, e], times=times)
-    dtl2 = DropletTrackList.from_emulsion_time_course(etc)
 
+    dtl2 = DropletTrackList.from_emulsion_time_course(etc)
     assert dtl1 == dtl2
+
+    dtl3 = DropletTrackList.from_emulsion_time_course(etc, method="distance")
+    assert dtl1 == dtl3
+
+    dtl4 = DropletTrackList.from_emulsion_time_course(
+        etc, method="distance", max_dist=-1
+    )
+    assert dtl1 != dtl4

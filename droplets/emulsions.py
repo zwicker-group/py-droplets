@@ -146,16 +146,17 @@ class Emulsion(list):
         """add a droplet to the emulsion
 
         Args:
-            droplet (SphericalDroplet): Droplet to add to the emulsion
-            copy (bool, optional): Whether to make a copy of the droplet or not
+            droplet (:class:`droplets.dropelts.SphericalDroplet`):
+                Droplet to add to the emulsion
+            copy (bool, optional):
+                Whether to make a copy of the droplet or not
         """
         if self.dim is None:
             self.dim = droplet.dim
         elif self.dim != droplet.dim:
             raise ValueError(
-                "Cannot append droplet in dimension "
-                f"{droplet.dim} to emulsion in dimension "
-                f"{self.dim}"
+                f"Cannot append droplet in dimension {droplet.dim} to emulsion in "
+                f"dimension {self.dim}"
             )
         if copy:
             droplet = droplet.copy()
@@ -201,9 +202,11 @@ class Emulsion(list):
         """construct an emulsion by reading data from an hdf5 dataset
 
         Args:
-            dataset: an HDF5 dataset from which the data of the emulsion is read
-            grid (GridBase): The grid on which the droplets are defined. This
-                information is required to measure distances between droplets.
+            dataset:
+                an HDF5 dataset from which the data of the emulsion is read
+            grid (:class:`pde.grids.base.GridBase`):
+                The grid on which the droplets are defined. This information is required
+                to measure distances between droplets.
         """
         # there are values, so the emulsion is not empty
         droplet_class = dataset.attrs["droplet_class"]
@@ -666,15 +669,19 @@ class EmulsionTimeCourse:
 
     @classmethod
     def from_storage(
-        cls, storage: StorageBase, progress: bool = True, **kwargs
+        cls, storage: StorageBase, refine: bool = False, progress: bool = None, **kwargs
     ) -> "EmulsionTimeCourse":
         r"""create an emulsion time course from a stored phase field
 
         Args:
             storage (:class:`~pde.storage.base.StorageBase`):
                 The phase fields for many time instances
+            refine (bool):
+                Flag determining whether the droplet properties should be refined
+                using fitting. This is a potentially slow procedure.
             progress (bool):
-                Whether to show the progress of the process
+                Whether to show the progress of the process. If `None`, the progress is
+                only shown when `refine` is `True`.
             \**kwargs:
                 All other parameters are forwarded to the
                 :meth:`~droplets.image_analysis.locate_droplets`.
@@ -684,13 +691,16 @@ class EmulsionTimeCourse:
         """
         from .image_analysis import locate_droplets
 
-        result = cls()
+        if progress is None:
+            progress = refine  # show progress only when refining by default
 
-        it = display_progress(storage.items(), total=len(storage), enabled=progress)
-        for t, frame in it:
-            emulsion = locate_droplets(frame, **kwargs)
-            result.append(emulsion, time=t)
-        return result
+        # obtain the emulsion data for all frames
+        emulsions = (
+            locate_droplets(frame, refine=refine, **kwargs)
+            for frame in display_progress(storage, enabled=progress)
+        )
+
+        return cls(emulsions, times=storage.times)
 
     @classmethod
     def from_file(cls, filename: str, progress: bool = True) -> "EmulsionTimeCourse":

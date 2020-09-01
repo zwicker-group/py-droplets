@@ -12,11 +12,14 @@ Classes representing the time evolution of droplets
 """
 
 import json
+import logging
+from typing import List  # @UnusedImport
 from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
 from scipy.ndimage import filters
+from scipy.spatial import distance
 
 from pde.grids.base import GridBase
 from pde.trackers.base import InfoDict
@@ -35,7 +38,6 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
     Args:
         condition (:class:`numpy.ndarray`):
             A one-dimensional boolean array
-
 
     Returns:
         :class:`numpy.ndarray`: A two-dimensional array where the first column
@@ -185,7 +187,7 @@ class DropletTrack:
         """append a new droplet with a time code
 
         Args:
-            droplet (SphericalDroplet): the droplet
+            droplet (:class:`droplets.droplets.SphericalDroplet`): the droplet
             time (float, optional): The time point
         """
         if self.dim is not None and droplet.dim != self.dim:
@@ -200,8 +202,8 @@ class DropletTrack:
             time = 0 if len(self.times) == 0 else self.times[-1] + 1
         self.times.append(time)
 
-    def get_position(self, time: float):
-        """ numpy.ndarray: returns the droplet position at a specific time """
+    def get_position(self, time: float) -> np.ndarray:
+        """ :class:`numpy.ndarray`: returns the droplet position at a specific time """
         try:
             idx = self.times.index(time)
         except AttributeError:
@@ -209,16 +211,16 @@ class DropletTrack:
             idx = np.nonzero(self.times == time)[0][0]
         return self.droplets[idx].position
 
-    def get_trajectory(self, smoothing: float = 0):
+    def get_trajectory(self, smoothing: float = 0) -> np.ndarray:
         """return a list of positions over time
 
         Args:
-            smoothing (float): Determines the length scale for some gaussian
-                smoothing of the trajectory. Setting this to zero disables
-                smoothing.
+            smoothing (float):
+                Determines the length scale for some gaussian smoothing of the
+                trajectory. Setting this to zero disables smoothing.
 
         Returns:
-            numpy.ndarray: An array giving the position of the droplet at each
+            :class:`numpy.ndarray`: An array giving the position of the droplet at each
                 time instance
         """
         trajectory = np.array([droplet.position for droplet in self.droplets])
@@ -229,11 +231,11 @@ class DropletTrack:
         return trajectory
 
     def get_radii(self) -> np.ndarray:
-        """ returns the droplet radius for each time point """
+        """:class:`numpy.ndarray`: returns the droplet radius for each time point """
         return np.array([droplet.radius for droplet in self.droplets])
 
     def get_volumes(self) -> np.ndarray:
-        """ returns the droplet volume for each time point """
+        """:class:`numpy.ndarray`: returns the droplet volume for each time point """
         return np.array([droplet.volume for droplet in self.droplets])
 
     def time_overlaps(self, other: "DropletTrack") -> bool:
@@ -417,31 +419,105 @@ class DropletTrackList(list):
     """ a list of instances of :class:`DropletTrack` """
 
     @classmethod
-    def from_emulsion_time_course(cls, time_course: "EmulsionTimeCourse"):
-        """ create the instance from an emulsion time course """
+    def from_emulsion_time_course(
+        cls, time_course: "EmulsionTimeCourse", method: str = "overlap", **kwargs
+    ):
+        r"""create the instance from an emulsion time course
+
+        Args:
+            time_course (:class:`droplets.emulsions.EmulsionTimeCourse`):
+                A collection of temporally arranged emulsions
+            method (str):
+                The method used for tracking droplet identities. Possible methods are
+                "overlap" (adding droplets that overlap with those in previous frames)
+                and "distance" (matching droplets to minimize center-to-center
+                distances).
+            **kwargs:
+                Additional parameters for the tracking algorithm. Currently, one can
+                only specify a maximal distance (using `max_dist`) for the "distance"
+                method.
+        """
         # get tracks, i.e. clearly overlapping droplets
         tracks = cls()
+        logger = logging.getLogger(cls.__name__)
+
+        # determine the tracking method
+        if method == "overlap":
+            # track droplets by their physical overlap
+
+            def match_tracks(emulsion, tracks_alive, time):
+                """ helper function adding emulsions to the tracks """
+                found_multiple_overlap = False
+                for droplet in emulsion:
+                    # determine which old tracks could be extended
+                    overlaps: List[DropletTrack] = []
+                    for track in tracks_alive:
+                        if track.last.overlaps(droplet, time_course.grid):
+                            overlaps.append(track)
+
+                    if len(overlaps) == 1:
+                        overlaps[0].append(droplet, time=time)
+                    else:
+                        if len(overlaps) > 1:
+                            found_multiple_overlap = True
+                        tracks.append(DropletTrack(droplets=[droplet], times=[time]))
+
+                if found_multiple_overlap:
+                    logger.debug(f"Found multiple overlapping droplet(s) at t={time}")
+
+        elif method == "distance":
+            # track droplets by their physical distance
+
+            max_dist = kwargs.pop("max_dist", np.inf)
+
+            def match_tracks(emulsion, tracks_alive, time):
+                """ helper function adding emulsions to the tracks """
+                added = set()
+
+                # calculate the distance between droplets
+                if tracks_alive:
+                    if time_course.grid is None:
+                        metric = "euclidean"
+                    else:
+                        metric = time_course.grid.distance_real
+                    points_prev = [track.last.position for track in tracks_alive]
+                    points_now = [droplet.position for droplet in emulsion]
+                    dists = distance.cdist(points_prev, points_now, metric=metric)
+
+                    # impose a cutoff distance
+                    dists[dists > max_dist] = np.inf
+
+                    # add all matching droplets
+                    while True:
+                        i, j = np.unravel_index(np.argmin(dists), dists.shape)
+                        if np.isinf(dists[i, j]):
+                            break  # no more matches
+                        added.add(j)
+                        tracks_alive[i].append(emulsion[j], time=time)
+                        dists[i, :] = np.inf
+                        dists[:, j] = np.inf
+
+                # add droplets that have not been matched
+                for i, droplet in enumerate(emulsion):
+                    if i not in added:
+                        tracks.append(DropletTrack(droplets=[droplet], times=[time]))
+
+        else:
+            raise ValueError(f"Unknown tracking method {method}")
+
+        # check kwargs
+        if kwargs:
+            logger.warning(f"Unused keyword arguments: {kwargs}")
+
+        # add all emulsions successively using the given algorithm
         t_last = None
         for t, emulsion in time_course.items():
-            # determine live tracks
-            tracks_alive = [track for track in tracks if track.end <= t_last]
-
-            # handle all droplets in the emulsion
-            for droplet in emulsion:
-                overlap_count = 0
-                overlap_track: Optional[DropletTrack] = None
-                # iterate over all active tracks
-                for track in tracks_alive:
-                    if track.last.overlaps(droplet, time_course.grid):
-                        overlap_count += 1
-                        overlap_track = track
-
-                if overlap_count == 1:
-                    overlap_track.append(droplet, time=t)  # type: ignore
-                else:
-                    tracks.append(DropletTrack(droplets=[droplet], times=[t]))
-
+            # determine tracks from the last frame that have not yet been extended
+            tracks_alive = [track for track in tracks if track.end == t_last]
+            # match all tracks with the current emulsion
+            match_tracks(emulsion, tracks_alive, time=t)
             t_last = t
+
         return tracks
 
     def __getitem__(self, key: Union[int, slice]):
@@ -452,13 +528,14 @@ class DropletTrackList(list):
         else:
             return result
 
-    def remove_short_tracks(self, min_duration: float = 0):
+    def remove_short_tracks(self, min_duration: float = 0) -> None:
         """remove tracks that a shorter than a minimal duration
 
         Args:
-            min_duration (float): The minimal duration a droplet track must have
-                in order to be retained. This is measured in actual time and not
-                in the number of time steps stored in the track
+            min_duration (float):
+                The minimal duration a droplet track must have in order to be retained.
+                This is measured in actual time and not in the number of time steps
+                stored in the track.
         """
         for i in reversed(range(len(self))):
             if self[i].duration <= min_duration:
@@ -472,7 +549,7 @@ class DropletTrackList(list):
             filename (str): The filename from which the data is read
 
         Returns:
-            DropletTrackList: an instance describing the droplet track list
+            :class:`DropletTrackList`: an instance describing the droplet track list
         """
         import h5py
 
