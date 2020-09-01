@@ -90,44 +90,31 @@ def _locate_droplets_in_mask_cartesian(grid: CartesianGridBase, img_binary) -> E
     """
     if img_binary.shape != grid.shape:
         raise ValueError(
-            f"The shape {img_binary.shape} of the data is not "
-            f"compatible with the grid shape {grid.shape}"
+            f"The shape {img_binary.shape} of the data is not compatible with the grid "
+            f"shape {grid.shape}"
         )
 
-    if all(grid.periodic):
-        # locate droplets respecting periodic boundary conditions
+    # pad the array to simulate periodic boundary conditions
+    offset = np.array([dim if p else 0 for p, dim in zip(grid.periodic, grid.shape)])
+    pad = np.c_[offset, offset].astype(np.int)
+    img_binary_padded = np.pad(img_binary, pad, mode="wrap")
+    assert np.all(img_binary_padded.shape == np.array(grid.shape) + 2 * offset)
 
-        # pad the array to simulate periodic boundary conditions
-        shape = grid.shape
-        pad = np.c_[shape, shape].astype(np.int)
-        img_binary = np.pad(img_binary, pad, mode="wrap")
-        assert np.all(img_binary.shape == 3 * np.array(shape))
+    # locate droplets in the padded image
+    candidates = _locate_droplets_in_mask_cartesian_single(grid, img_binary_padded)
+    grid._logger.info(f"Found {len(candidates)} droplet candidates")
 
-        # locate droplets in the center
-        candidates = _locate_droplets_in_mask_cartesian_single(grid, img_binary)
-        grid._logger.info(f"Found {len(candidates)} droplet candidates")
+    # only retain droplets that are inside the central area
+    droplets = Emulsion(grid=grid)
+    for droplet in candidates:
+        # correct for the additional padding of the array
+        droplet.position -= offset
+        # check whether the droplet lies in the original box
+        if grid.cuboid.contains_point(droplet.position):
+            droplets.append(droplet)
 
-        # filter droplets that are inside the central area
-        droplets = Emulsion(grid=grid)
-        for droplet in candidates:
-            # correct for the additional padding of the array
-            droplet.position -= grid.cuboid.size
-            # check whether the droplet lies in the original box
-            if grid.cuboid.contains_point(droplet.position):
-                droplets.append(droplet)
-
-        # filter overlapping droplets (e.g. due to duplicates)
-        droplets.remove_overlapping()
-
-    elif not any(grid.periodic):
-        # simply locate droplets in the mask
-        droplets = _locate_droplets_in_mask_cartesian_single(grid, img_binary)
-
-    else:
-        # TODO: implement logic for cases of mixed boundary conditions
-        raise NotImplementedError(
-            "Boundaries with mixed periodicity cannot be handled, yet"
-        )
+    # filter overlapping droplets (e.g. due to duplicates)
+    droplets.remove_overlapping()
 
     return droplets
 
@@ -319,8 +306,9 @@ def locate_droplets(
         An emulsion containing all detected droplets
     """
     assert isinstance(phase_field, ScalarField)
+    dim = phase_field.grid.dim  # dimensionality of the space
 
-    if modes > 0 and phase_field.grid.dim not in [2, 3]:
+    if modes > 0 and dim not in [2, 3]:
         raise ValueError("Perturbed droplets only supported for 2d and 3d")
 
     # determine actual threshold
@@ -349,14 +337,12 @@ def locate_droplets(
 
         # change droplet class when perturbed droplets are requested
         if modes > 0:
-            if phase_field.grid.dim == 2:
+            if dim == 2:
                 droplet_class = PerturbedDroplet2D
-            elif phase_field.grid.dim == 3:
+            elif dim == 3:
                 droplet_class = PerturbedDroplet3D
             else:
-                raise NotImplementedError(
-                    f"Dimension {phase_field.grid.dim} is not supported"
-                )
+                raise NotImplementedError(f"Dimension {dim} is not supported")
             args["amplitudes"] = np.zeros(modes)
 
         # recreate a droplet of the correct class
