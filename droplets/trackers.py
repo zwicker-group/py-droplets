@@ -94,7 +94,7 @@ class LengthScaleTracker(TrackerBase):
 
         # store data
         self.times.append(t)
-        self.length_scales.append(length)
+        self.length_scales.append(length)  # type: ignore
 
     def finalize(self, info: InfoDict = None) -> None:
         """finalize the tracker, supplying additional information

@@ -263,7 +263,7 @@ def locate_droplets(
     minimal_radius: float = 0,
     refine: bool = False,
     interface_width: Optional[float] = None,
-):
+) -> Emulsion:
     """Locates droplets in the phase field
 
     This uses a binarized image to locate clusters of large concentration in the
@@ -292,8 +292,7 @@ def locate_droplets(
             starting value for the fitting if droplets are refined.
 
     Returns:
-        :class:`~pde.analysis.emulsions.Emulsion`:
-        An emulsion containing all detected droplets
+        :class:`~droplets.emulsions.Emulsion`: All detected droplets
     """
     assert isinstance(phase_field, ScalarField)
     dim = phase_field.grid.dim  # dimensionality of the space
@@ -358,7 +357,7 @@ def refine_droplet(
     phase_field: ScalarField,
     droplet: DiffuseDroplet,
     least_squares_params: Optional[Dict[str, Any]] = None,
-):
+) -> DiffuseDroplet:
     """Refines droplet parameters by fitting to phase field
 
     This function varies droplet parameters, like position, size,
@@ -377,7 +376,8 @@ def refine_droplet(
             documentation of scipy.optimize.least_squares
 
     Returns:
-        The refined droplet as an instance of the argument `droplet`
+        :class:`droplets.droplets.DiffuseDroplet`: The refined droplet as an instance of
+        the argument `droplet`
     """
     assert isinstance(phase_field, ScalarField)
     if least_squares_params is None:
@@ -537,7 +537,7 @@ def get_length_scale(
     method: str = "structure_factor_maximum",
     full_output: bool = False,
     smoothing: Optional[float] = None,
-):
+) -> Union[float, Tuple[float, Any]]:
     """Calculates a length scale associated with a phase field
 
     Args:
@@ -615,7 +615,7 @@ def get_length_scale(
         )
 
     # return only the length scale with out any additional information
-    return length_scale
+    return length_scale  # type: ignore
 
 
 __all__ = [
