@@ -24,7 +24,7 @@ The details of the classes are explained below:
 import logging
 from abc import ABCMeta, abstractmethod
 from typing import Dict  # @UnusedImport
-from typing import TYPE_CHECKING, List, Optional, Sequence, TypeVar
+from typing import TYPE_CHECKING, List, Optional, TypeVar
 
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
