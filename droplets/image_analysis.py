@@ -129,7 +129,6 @@ def _locate_droplets_in_mask_spherical(
     for slices in object_slices:
         if slices[0].start == 0:  # contains point around origin
             radius = grid.cell_to_point(slices[0].stop).flat[-1]
-            radius += grid.axes_bounds[0][0]  # add inner radius
             droplet = SphericalDroplet(np.zeros(grid.dim), radius=radius)
         else:
             logger = logging.getLogger(grid.__class__.__module__)
@@ -423,7 +422,10 @@ def refine_droplet(
     droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
 
     # normalize the droplet position
-    droplet.position = phase_field.grid.normalize_point(droplet.position)
+    grid = phase_field.grid
+    coords = grid.point_from_cartesian(droplet.position)
+    droplet.position = grid.point_to_cartesian(grid.normalize_point(coords))
+
     return droplet
 
 
