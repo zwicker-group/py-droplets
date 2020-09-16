@@ -187,3 +187,32 @@ def test_from_data():
         d2 = d1.__class__.from_data(d1.data)
         assert d1 == d2
         assert d1 is not d2
+
+
+def test_triangulation_2d():
+    """ test the 2d triangulation of droplets """
+    d1 = droplets.SphericalDroplet([1, 3], 5)
+    d2 = droplets.PerturbedDroplet2D([2, 4], 5, amplitudes=[0.1, 0.2, 0.1, 0.2])
+    for drop in [d1, d2]:
+        tri = drop.get_triangulation(0.1)
+        l = sum(
+            np.linalg.norm(tri["vertices"][i] - tri["vertices"][j])
+            for i, j in tri["lines"]
+        )
+        assert l == pytest.approx(drop.surface_area, rel=1e-3), drop
+
+
+def test_triangulation_3d():
+    """ test the 3d triangulation of droplets """
+    d1 = droplets.SphericalDroplet([1, 2, 3], 5)
+    d2 = droplets.PerturbedDroplet3D([2, 3, 4], 5, amplitudes=[0.1, 0.2, 0.1, 0.2])
+    for drop in [d1, d2]:
+        tri = drop.get_triangulation(1)
+        vertices = tri["vertices"]
+        vol = 0
+        for a, b, c in tri["triangles"]:
+            # calculate the total volume by adding the volumes of the tetrahedra
+            mat = np.c_[vertices[a], vertices[b], vertices[c], drop.position]
+            mat = np.vstack([mat, np.ones(4)])
+            vol += abs(np.linalg.det(mat) / 6)
+        assert vol == pytest.approx(drop.volume, rel=0.1), drop

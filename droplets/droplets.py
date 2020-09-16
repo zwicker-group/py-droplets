@@ -23,9 +23,10 @@ The details of the classes are explained below:
 
 import logging
 from abc import ABCMeta, abstractmethod
-from typing import Dict  # @UnusedImport
-from typing import TYPE_CHECKING, List, Optional, TypeVar
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar
 
+import h5py
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 from scipy import integrate
@@ -273,7 +274,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
     def position(self, value: np.ndarray):
         value = np.asanyarray(value)
         if len(value) != self.dim:
-            raise ValueError(f"Length of position must be {self.dim}")
+            raise ValueError(f"The dimension of the position must be {self.dim}")
         self.data["position"] = value
 
     @property
@@ -333,12 +334,15 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         return distance < self.radius + other.radius  # type: ignore
 
     @preserve_scalars
-    def interface_position(self, φ) -> np.ndarray:
-        """calculates the position of the interface of the droplet
+    def interface_position(self, *args) -> np.ndarray:
+        r"""calculates the position of the interface of the droplet
 
         Args:
-            φ (float or :class:`numpy.ndarray`):
-                The angle in the polar coordinates describing the interface position
+            *args (float or :class:`numpy.ndarray`):
+                The angles identifying the interface points. For 2d droplets, this is
+                simply the angle in polar coordinates. For 3d droplets, both the
+                azimuthal angle θ (in :math:`[0, \pi]`) and the polar angle φ (in
+                :math:`[0, 2\pi]`) need to be specified.
 
         Returns:
             :class:`numpy.ndarray`: An array with the coordinates of the interfacial
@@ -347,9 +351,24 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         Raises:
             ValueError: If the dimension of the space is not 2
         """
-        if self.dim != 2:
-            raise ValueError("Interfacial position only supported for 2d grids")
-        pos = self.radius * np.transpose([np.cos(φ), np.sin(φ)])
+        if self.dim != len(args) + 1:
+            raise ValueError(f"Interfacial position requires {self.dim - 1} angles")
+
+        if self.dim == 2:
+            # spherical droplet in two dimensions
+            φ = args[0]
+            pos = self.radius * np.transpose([np.cos(φ), np.sin(φ)])
+
+        elif self.dim == 3:
+            # spherical droplet in three dimensions
+            θ, φ = args[0], args[1]
+            r = np.full_like(θ, self.radius)
+            pos = spherical.points_spherical_to_cartesian(np.c_[r, θ, φ])
+
+        else:
+            raise NotImplementedError(f"Cannot calculate {self.dim}d position")
+
+        # shift the droplet center
         return self.position[None, :] + pos
 
     @property
@@ -416,6 +435,44 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             marked in `mask`
         """
         return self._get_phase_field(grid)[mask]
+
+    def get_triangulation(self, typical_length: float = 1) -> Dict[str, Any]:
+        """obtain a triangulated shape of the droplet surface
+
+        Args:
+            typical_length (float):
+                The length of a typical triangulation element. This affects the
+                resolution of the triangulation.
+
+        Returns:
+            dict: A dictionary containing information about the triangulation. The exact
+            details depend on the dimension of the problem.
+        """
+        if self.dim == 2:
+            num = max(3, int(np.ceil(self.surface_area / typical_length)))
+            angles = np.linspace(0, 2 * np.pi, num + 1, endpoint=True)
+            vertices = self.interface_position(angles)
+            lines = np.c_[np.arange(num), np.arange(1, num + 1) % num]
+            return {"vertices": vertices, "lines": lines}
+
+        elif self.dim == 3:
+            # estimate the number of triangles covering the surface
+            try:
+                surface_area = self.surface_area
+            except (NotImplementedError, AttributeError):
+                # estimate surface area from 3d spherical droplet
+                surface_area = spherical.surface_from_radius(self.radius, dim=3)
+            num_est = (4 * surface_area) / (np.sqrt(3) * typical_length ** 2)
+            tri = triangulated_spheres.get_triangulation(num_est)
+
+            φ, θ = tri["angles"][:, 0], tri["angles"][:, 1]
+            return {
+                "vertices": self.interface_position(θ, φ),
+                "triangles": tri["cells"],
+            }
+
+        else:
+            raise NotImplementedError(f"Triangulation not implemented for {self.dim}d")
 
     def _get_mpl_patch(self, **kwargs):
         """ return the patch representing the droplet for plotting """
@@ -1047,6 +1104,49 @@ def droplet_from_data(droplet_class: str, data) -> DropletBase:
     """
     cls = DropletBase._subclasses[droplet_class]
     return cls(**{key: data[key] for key in data.dtype.names})  # type: ignore
+
+
+class _TriangulatedSpheres:
+    """helper class for handling stored data about triangulated spheres """
+
+    def __init__(self):
+        self.path = Path(__file__).resolve().parent / "resources" / "spheres_3d.hdf5"
+        self.num_list = np.zeros((0,))
+        self.data: Optional[Dict[int, Dict[str, Any]]] = None
+
+    def _load(self):
+        """load the stored resource """
+        logger = logging.getLogger(__name__)
+        logger.info("Open resource `%s`", self.path)
+        with h5py.File(self.path, "r") as f:
+            self.num_list = np.array(f.attrs["num_list"])
+            self.data = {}
+            for num in self.num_list:
+                group = f[str(num)]
+                tri = {
+                    "points": np.array(group["points"]),
+                    "angles": np.array(group["angles"]),
+                    "cells": np.array(group["cells"]),
+                }
+                self.data[num] = tri
+
+    def get_triangulation(self, num_est: int = 1) -> Dict[str, Any]:
+        """get a triangulation of a sphere
+
+        Args:
+            num_est (int): The rough number of vertices in the triangulation
+
+        Returns:
+            dict: A dictionary with information about the triangulation
+        """
+        if self.data is None:
+            self._load()
+
+        index = np.argmin((self.num_list - num_est) ** 2)
+        return self.data[self.num_list[index]]  # type: ignore
+
+
+triangulated_spheres = _TriangulatedSpheres()
 
 
 __all__ = [
