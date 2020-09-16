@@ -435,11 +435,11 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         """
         return self._get_phase_field(grid)[mask]
 
-    def get_triangulation(self, typical_length: float = 1) -> Dict[str, Any]:
+    def get_triangulation(self, resolution: float = 1) -> Dict[str, Any]:
         """obtain a triangulated shape of the droplet surface
 
         Args:
-            typical_length (float):
+            resolution (float):
                 The length of a typical triangulation element. This affects the
                 resolution of the triangulation.
 
@@ -448,7 +448,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             details depend on the dimension of the problem.
         """
         if self.dim == 2:
-            num = max(3, int(np.ceil(self.surface_area / typical_length)))
+            num = max(3, int(np.ceil(self.surface_area / resolution)))
             angles = np.linspace(0, 2 * np.pi, num + 1, endpoint=True)
             vertices = self.interface_position(angles)
             lines = np.c_[np.arange(num), np.arange(1, num + 1) % num]
@@ -461,7 +461,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             except (NotImplementedError, AttributeError):
                 # estimate surface area from 3d spherical droplet
                 surface_area = spherical.surface_from_radius(self.radius, dim=3)
-            num_est = (4 * surface_area) / (np.sqrt(3) * typical_length ** 2)
+            num_est = (4 * surface_area) / (np.sqrt(3) * resolution ** 2)
             tri = triangulated_spheres.get_triangulation(num_est)
 
             φ, θ = tri["angles"][:, 0], tri["angles"][:, 1]
