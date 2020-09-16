@@ -7,6 +7,7 @@ import pytest
 from scipy import integrate
 
 from pde.grids import UnitGrid
+from pde.tools.misc import skipUnlessModule
 
 from .. import droplets
 
@@ -189,6 +190,7 @@ def test_from_data():
         assert d1 is not d2
 
 
+@skipUnlessModule("h5py")
 def test_triangulation_2d():
     """ test the 2d triangulation of droplets """
     d1 = droplets.SphericalDroplet([1, 3], 5)
@@ -202,6 +204,7 @@ def test_triangulation_2d():
         assert l == pytest.approx(drop.surface_area, rel=1e-3), drop
 
 
+@skipUnlessModule("h5py")
 def test_triangulation_3d():
     """ test the 3d triangulation of droplets """
     d1 = droplets.SphericalDroplet([1, 2, 3], 5)

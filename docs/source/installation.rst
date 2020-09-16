@@ -56,6 +56,9 @@ package can also be installed from github sources, as `described in its
 documentation 
 <https://py-pde.readthedocs.io/en/latest/installation.html#installing-from-source>`_.  
 
+A small subset of the package will only be available if extra optional packages are
+installed. Currently, this only concerns the `h5py` package for reading hdf files.
+
 
 Downloading the package
 -----------------------

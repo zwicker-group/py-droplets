@@ -37,6 +37,9 @@ setup(
     keywords=["emulsions", "image-analysis"],
     python_requires=">=3.6",
     install_requires=["matplotlib", "numpy", "numba", "scipy", "sympy", "py-pde"],
+    extras_require={
+        "hdf": ["h5py>=2"],
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

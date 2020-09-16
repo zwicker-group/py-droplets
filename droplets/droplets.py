@@ -26,7 +26,6 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar
 
-import h5py
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 from scipy import integrate
@@ -1116,6 +1115,8 @@ class _TriangulatedSpheres:
 
     def _load(self):
         """load the stored resource """
+        import h5py
+
         logger = logging.getLogger(__name__)
         logger.info("Open resource `%s`", self.path)
         with h5py.File(self.path, "r") as f:
