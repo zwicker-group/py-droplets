@@ -373,16 +373,15 @@ class DropletTrack:
             return
 
         if self.dim != 2:
-            raise NotImplementedError(
-                "Plotting only implemented for two-dimensional grids"
-            )
+            raise NotImplementedError("Plotting is only implemented for 2d grids")
 
         # obtain droplet positions as a function of time
         xy = self.get_trajectory()
 
         if grid is None:
             # simply plot the trajectory
-            (line,) = ax.plot(xy[:, 0], xy[:, 1], **kwargs)
+            cx, cy = xy[:, 0], xy[:, 1]
+            (line,) = ax.plot(cx, cy, **kwargs)
 
         else:
             # use the grid to detect wrapping around
@@ -400,16 +399,17 @@ class DropletTrack:
                     color = kwargs.get("color")
                 else:
                     color = line.get_color()  # ensure colors stays the same
-                (line,) = ax.plot(xy[s : e + 1, 0], xy[s : e + 1, 1], color=color)
+                cx, cy = xy[s : e + 1, 0], xy[s : e + 1, 1]
+                (line,) = ax.plot(cx, cy, color=color)
 
-        if arrow and len(xy) >= 2:
+        if arrow and len(cx) >= 2:
+            # add arrow head to last segment
             size = min(sum(ax.get_xlim()), sum(ax.get_ylim()))
-            dx = xy[-1] - xy[-2]
             ax.arrow(
-                xy[-2, 0],
-                xy[-2, 1],
-                dx[0],
-                dx[1],
+                cx[-2],
+                cy[-2],
+                cx[-1] - cx[-2],
+                cy[-1] - cy[-2],
                 head_width=0.02 * size,
                 color=line.get_color(),
             )
