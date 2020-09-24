@@ -34,7 +34,7 @@ from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
 from pde.storage.base import StorageBase
 from pde.tools.cuboid import Cuboid
-from pde.tools.misc import display_progress
+from pde.tools.output import display_progress
 from pde.tools.plotting import plot_on_axes
 from pde.trackers.base import InfoDict
 from pde.trackers.intervals import IntervalType

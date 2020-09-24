@@ -14,7 +14,7 @@ Classes representing the time evolution of droplets
 import json
 import logging
 from typing import List  # @UnusedImport
-from typing import TYPE_CHECKING, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -22,12 +22,13 @@ from scipy.ndimage import filters
 from scipy.spatial import distance
 
 from pde.grids.base import GridBase
+from pde.storage.base import StorageBase
+from pde.tools.output import display_progress
+from pde.tools.plotting import plot_on_axes
 from pde.trackers.base import InfoDict
 
 from .droplets import SphericalDroplet, droplet_from_data
-
-if TYPE_CHECKING:
-    from .emulsions import EmulsionTimeCourse  # @UnusedImport
+from .emulsions import EmulsionTimeCourse
 
 
 def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
@@ -322,19 +323,18 @@ class DropletTrack:
                 for k, v in info.items():
                     fp.attrs[k] = json.dumps(v)
 
-    def plot(self, attribute: str = "radius", **kwargs):
+    @plot_on_axes()
+    def plot(self, attribute: str = "radius", ax=None, **kwargs):
         """plot the time evolution of the droplet
 
         Args:
             attribute (str):
                 The attribute to plot. Typical values include `radius` and
                 `volume`, but others might be defined on the droplet class.
-            **kwargs:
-                Additional keyword arguments are passed to the matplotlib plot
-                function to affect the appearance.
+            {PLOT_ARGS}
+            \**kwargs:
+                All remaining parameters are forwarded to the `ax.plot` method
         """
-        import matplotlib.pyplot as plt
-
         if len(self.times) == 0:
             return
 
@@ -348,12 +348,13 @@ class DropletTrack:
             data = [getattr(droplet, attribute) for droplet in self.droplets]
             ylabel = attribute.capitalize()
 
-        plt.plot(self.times, data, **kwargs)
-        plt.xlabel("Time")
-        plt.ylabel(ylabel)
+        ax.plot(self.times, data, **kwargs)
+        ax.set_xlabel("Time")
+        ax.set_ylabel(ylabel)
 
+    @plot_on_axes()
     def plot_positions(
-        self, grid: Optional[GridBase] = None, arrow: bool = True, **kwargs
+        self, grid: Optional[GridBase] = None, arrow: bool = True, ax=None, **kwargs
     ):
         """plot the droplet track
 
@@ -363,12 +364,11 @@ class DropletTrack:
                 in the plotting.
             arrow (bool, optional): Flag determining whether an arrow head is
                 shown to indicate the direction of the droplet drift.
+            {PLOT_ARGS}
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot
                 function to affect the appearance.
         """
-        import matplotlib.pyplot as plt
-
         if len(self.times) == 0:
             return
 
@@ -382,7 +382,7 @@ class DropletTrack:
 
         if grid is None:
             # simply plot the trajectory
-            (line,) = plt.plot(xy[:, 0], xy[:, 1], **kwargs)
+            (line,) = ax.plot(xy[:, 0], xy[:, 1], **kwargs)
 
         else:
             # use the grid to detect wrapping around
@@ -400,12 +400,12 @@ class DropletTrack:
                     color = kwargs.get("color")
                 else:
                     color = line.get_color()  # ensure colors stays the same
-                (line,) = plt.plot(xy[s : e + 1, 0], xy[s : e + 1, 1], color=color)
+                (line,) = ax.plot(xy[s : e + 1, 0], xy[s : e + 1, 1], color=color)
 
         if arrow and len(xy) >= 2:
-            size = min(sum(plt.xlim()), sum(plt.ylim()))
+            size = min(sum(ax.get_xlim()), sum(ax.get_ylim()))
             dx = xy[-1] - xy[-2]
-            plt.arrow(
+            ax.arrow(
                 xy[-2, 0],
                 xy[-2, 1],
                 dx[0],
@@ -418,11 +418,23 @@ class DropletTrack:
 class DropletTrackList(list):
     """ a list of instances of :class:`DropletTrack` """
 
+    def __getitem__(self, key: Union[int, slice]):
+        """ return the droplets identified by the given index/slice """
+        result = super().__getitem__(key)
+        if isinstance(key, slice):
+            return self.__class__(result)
+        else:
+            return result
+
     @classmethod
     def from_emulsion_time_course(
-        cls, time_course: "EmulsionTimeCourse", method: str = "overlap", **kwargs
+        cls,
+        time_course: "EmulsionTimeCourse",
+        method: str = "overlap",
+        progress: bool = False,
+        **kwargs,
     ):
-        r"""create the instance from an emulsion time course
+        r"""obtain droplet tracks from an emulsion time course
 
         Args:
             time_course (:class:`droplets.emulsions.EmulsionTimeCourse`):
@@ -432,10 +444,15 @@ class DropletTrackList(list):
                 "overlap" (adding droplets that overlap with those in previous frames)
                 and "distance" (matching droplets to minimize center-to-center
                 distances).
+            progress (bool):
+                Whether to show the progress of the process.
             **kwargs:
                 Additional parameters for the tracking algorithm. Currently, one can
                 only specify a maximal distance (using `max_dist`) for the "distance"
                 method.
+
+        Returns:
+            :class:`DropletTrackList`: the resulting droplet tracks
         """
         # get tracks, i.e. clearly overlapping droplets
         tracks = cls()
@@ -511,7 +528,9 @@ class DropletTrackList(list):
 
         # add all emulsions successively using the given algorithm
         t_last = None
-        for t, emulsion in time_course.items():
+        for t, emulsion in display_progress(
+            time_course.items(), total=len(time_course), enabled=progress
+        ):
             # determine tracks from the last frame that have not yet been extended
             tracks_alive = [track for track in tracks if track.end == t_last]
             # match all tracks with the current emulsion
@@ -520,26 +539,41 @@ class DropletTrackList(list):
 
         return tracks
 
-    def __getitem__(self, key: Union[int, slice]):
-        """ return the droplets identified by the given index/slice """
-        result = super().__getitem__(key)
-        if isinstance(key, slice):
-            return self.__class__(result)
-        else:
-            return result
+    @classmethod
+    def from_storage(
+        cls,
+        storage: StorageBase,
+        refine: bool = False,
+        method: str = "overlap",
+        progress: bool = None,
+    ):
+        r"""obtain droplet tracks from stored scalar field data
 
-    def remove_short_tracks(self, min_duration: float = 0) -> None:
-        """remove tracks that a shorter than a minimal duration
+        This method first determines an emulsion time course and than collects tracks by
+        tracking droplets.
 
         Args:
-            min_duration (float):
-                The minimal duration a droplet track must have in order to be retained.
-                This is measured in actual time and not in the number of time steps
-                stored in the track.
+            storage (:class:`~pde.storage.base.StorageBase`):
+                The phase fields for many time instances
+            refine (bool):
+                Flag determining whether the droplet properties should be refined
+                using fitting. This is a potentially slow procedure.
+            method (str):
+                The method used for tracking droplet identities. Possible methods are
+                "overlap" (adding droplets that overlap with those in previous frames)
+                and "distance" (matching droplets to minimize center-to-center
+                distances).
+            progress (bool):
+                Whether to show the progress of the process. If `None`, the progress is
+                not shown, except for the first step if `refine` is `True`.
+
+        Returns:
+            :class:`DropletTrackList`: the resulting droplet tracks
         """
-        for i in reversed(range(len(self))):
-            if self[i].duration <= min_duration:
-                self.pop(i)
+        etc = EmulsionTimeCourse.from_storage(storage, refine=refine, progress=progress)
+        if progress is None:
+            progress = False
+        return cls.from_emulsion_time_course(etc, method=method, progress=progress)
 
     @classmethod
     def from_file(cls, filename: str) -> "DropletTrackList":
@@ -579,13 +613,28 @@ class DropletTrackList(list):
                 for k, v in info.items():
                     fp.attrs[k] = json.dumps(v)
 
-    def plot(self, attribute: str = "radius", **kwargs):
+    def remove_short_tracks(self, min_duration: float = 0) -> None:
+        """remove tracks that a shorter than a minimal duration
+
+        Args:
+            min_duration (float):
+                The minimal duration a droplet track must have in order to be retained.
+                This is measured in actual time and not in the number of time steps
+                stored in the track.
+        """
+        for i in reversed(range(len(self))):
+            if self[i].duration <= min_duration:
+                self.pop(i)
+
+    @plot_on_axes()
+    def plot(self, attribute: str = "radius", ax=None, **kwargs):
         """plot the time evolution of all droplets
 
         Args:
             attribute (str):
                 The attribute to plot. Typical values include `radius` and
                 `volume`, but others might be defined on the droplet class.
+            {PLOT_ARGS}
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot
                 function to affect the appearance.
@@ -594,18 +643,20 @@ class DropletTrackList(list):
         # adjust alpha such that multiple tracks are visible well
         kwargs.setdefault("alpha", min(0.8, 20 / len(self)))
         for track in self:
-            track.plot(attribute=attribute, **kwargs)
+            track.plot(attribute=attribute, ax=ax, **kwargs)
 
-    def plot_positions(self, **kwargs):
+    @plot_on_axes()
+    def plot_positions(self, ax=None, **kwargs):
         """plot all droplet tracks
 
         Args:
+            {PLOT_ARGS}
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot
                 function to affect the appearance.
         """
         for track in self:
-            track.plot_positions(**kwargs)
+            track.plot_positions(ax=ax, **kwargs)
 
 
 __all__ = ["DropletTrack", "DropletTrackList"]
