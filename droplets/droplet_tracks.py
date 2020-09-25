@@ -333,7 +333,9 @@ class DropletTrack:
                 `volume`, but others might be defined on the droplet class.
             {PLOT_ARGS}
             \**kwargs:
-                All remaining parameters are forwarded to the `ax.plot` method
+                All remaining parameters are forwarded to the `ax.plot` method. For
+                example, passing `color=None`, will use different colors for different
+                droplets.
         """
         if len(self.times) == 0:
             return
@@ -367,7 +369,8 @@ class DropletTrack:
             {PLOT_ARGS}
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot
-                function to affect the appearance.
+                function to affect the appearance. For example, passing `color=None`,
+                will use different colors for different droplets.
         """
         if len(self.times) == 0:
             return
@@ -393,10 +396,10 @@ class DropletTrack:
                 segments.append(close)
 
             # plot the individual segments
-            line = None
+            line, cx = None, []
             for s, e in contiguous_true_regions(segments):
                 if line is None:
-                    color = kwargs.get("color")
+                    color = kwargs.get("color", "k")
                 else:
                     color = line.get_color()  # ensure colors stays the same
                 cx, cy = xy[s : e + 1, 0], xy[s : e + 1, 1]
