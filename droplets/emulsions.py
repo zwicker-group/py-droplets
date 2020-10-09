@@ -332,7 +332,7 @@ class Emulsion(list):
         else:
             result: ScalarField = self[0].get_phase_field(grid, label=label)
             for d in self[1:]:
-                result += d.get_phase_field(grid)  # type: ignore
+                result += d.get_phase_field(grid)
             np.clip(result.data, 0, 1, out=result.data)
             return result
 
