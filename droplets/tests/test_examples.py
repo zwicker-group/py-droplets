@@ -9,7 +9,6 @@ import sys
 from pathlib import Path
 from typing import List  # @UnusedImport
 
-import numba as nb
 import pytest
 
 from pde.tools.misc import module_available
@@ -22,8 +21,8 @@ if not module_available("matplotlib"):
     SKIP_EXAMPLES.append("plot_emulsion.py")
 
 
+@pytest.mark.no_cover
 @pytest.mark.skipif(sys.platform == "win32", reason="Assumes unix setup")
-@pytest.mark.skipif(nb.config.DISABLE_JIT, reason="pytest seems to check code coverage")
 @pytest.mark.parametrize("path", EXAMPLES)
 def test_example(path):
     """ runs an example script given by path """
