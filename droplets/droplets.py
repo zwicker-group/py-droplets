@@ -839,7 +839,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             with each angle given by `φ`.
         """
         dist = np.ones(φ.shape, dtype=np.double)
-        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):
+        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φ)
             if b != 0:
@@ -878,7 +878,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             with each angle given by `φ`.
         """
         curv_radius = np.ones(φ.shape, dtype=np.double)
-        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):
+        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             factor = n * n - 1
             if a != 0:
                 curv_radius -= a * factor * np.sin(n * φ)
@@ -906,7 +906,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
         dist = np.ones(φs.shape, dtype=np.double)
         dist_dφ = np.zeros(φs.shape, dtype=np.double)
-        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):
+        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φs)
                 dist_dφ += a * n * np.cos(n * φs)
@@ -924,7 +924,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
     def surface_area_approx(self) -> float:
         """ float: surface area of the droplet (quadratic in amplitudes) """
         length = 4
-        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):
+        for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             length += n ** 2 * (a ** 2 + b ** 2)
         return np.pi * self.radius * length / 2  # type: ignore
 
@@ -973,8 +973,9 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             interface_width (float, optional):
                 Width of the interface
             amplitudes (:class:`numpy.ndarray`):
-                Perturbation amplitudes :math:`\epsilon_{l,m}`. The length of
-                the array needs to be 0, 3, 8, 15, 24, ... to capture
+                Perturbation amplitudes :math:`\epsilon_{l,m}`. Note that the zero-th
+                mode, which would only change the radius, is skipped. Consequently, the
+                length of the array needs to be 0, 3, 8, 15, 24, ... to capture
                 perturbations of the highest mode consistently.
         """
         super().__init__(position, radius, interface_width, amplitudes)
@@ -1003,7 +1004,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         """
         assert θ.shape == φ.shape
         dist = np.ones(φ.shape, dtype=np.double)
-        for k, a in enumerate(self.amplitudes, 1):
+        for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)
         return self.radius * dist
@@ -1042,7 +1043,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         """
         Yk = spherical.spherical_harmonic_real_k
         correction = 0
-        for k, a in enumerate(self.amplitudes, 1):
+        for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 l, _ = spherical.spherical_index_lm(k)
                 hk = (l ** 2 + l - 2) / 2

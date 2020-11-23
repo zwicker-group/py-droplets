@@ -332,7 +332,7 @@ class DropletTrack:
                 The attribute to plot. Typical values include `radius` and
                 `volume`, but others might be defined on the droplet class.
             {PLOT_ARGS}
-            \**kwargs:
+            **kwargs:
                 All remaining parameters are forwarded to the `ax.plot` method. For
                 example, passing `color=None`, will use different colors for different
                 droplets.
