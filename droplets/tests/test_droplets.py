@@ -6,10 +6,9 @@ import numpy as np
 import pytest
 from scipy import integrate
 
+from droplets import droplets
 from pde.grids import UnitGrid
 from pde.tools.misc import skipUnlessModule
-
-from .. import droplets
 
 
 def test_simple_droplet():
