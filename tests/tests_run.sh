@@ -1,16 +1,15 @@
 #!/bin/bash
 
-export PYTHONPATH=../../py-pde:$PYTHONPATH
-export NUMBA_WARNINGS=1
-export MPLBACKEND="agg"
+# add likely path to py-pde package
+export PYTHONPATH=../py-pde:$PYTHONPATH
 
 if [ ! -z $1 ] 
 then 
-	# test pattern was specified 
-	echo 'Run unittests with pattern '$1
-	python3 -m pytest -rs -k "$1" . ..
+    # test pattern was specified 
+    echo 'Run unittests with pattern '$1':'
+    ./run_tests.py --unit --pattern "$1"
 else
-	# test pattern was not specified
-	echo 'Run all unittests'
-    python3 -m pytest -rs . ..
+    # test pattern was not specified
+    echo 'Run all unittests:'
+    ./run_tests.py --unit
 fi
