@@ -640,9 +640,17 @@ class DropletTrackList(list):
             {PLOT_ARGS}
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot
-                function to affect the appearance.
+                function to affect the appearance. The special value `color="cycle"`
+                implies that the default color cycle is used for the tracks, using
+                different colors for different tracks.
         """
-        kwargs.setdefault("color", "k")
+        # choose a suitable color for the tracks
+        if "color" in kwargs:
+            if kwargs["color"] == "cycle":
+                kwargs.pop("color")  # if color is None, use the default color cycle
+        else:
+            kwargs["color"] = "k"  # use black by default
+
         # adjust alpha such that multiple tracks are visible well
         kwargs.setdefault("alpha", min(0.8, 20 / len(self)))
         for track in self:
