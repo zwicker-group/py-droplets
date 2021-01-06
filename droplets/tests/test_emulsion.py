@@ -5,9 +5,10 @@
 import numpy as np
 import pytest
 
-from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emulsions
 from pde import ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
+
+from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emulsions
 
 
 def test_empty_emulsion():

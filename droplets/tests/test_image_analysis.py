@@ -6,11 +6,12 @@ import numpy as np
 import pytest
 from numpy.lib.recfunctions import structured_to_unstructured
 
+from pde import ScalarField
+from pde.grids import CartesianGrid, CylindricalGrid, PolarGrid, SphericalGrid, UnitGrid
+
 from droplets import image_analysis
 from droplets.droplets import DiffuseDroplet, PerturbedDroplet2D, PerturbedDroplet3D
 from droplets.emulsions import Emulsion
-from pde import ScalarField
-from pde.grids import CartesianGrid, CylindricalGrid, PolarGrid, SphericalGrid, UnitGrid
 
 
 @pytest.mark.parametrize("size", [16, 17])

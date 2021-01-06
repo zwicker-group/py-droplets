@@ -1,7 +1,7 @@
-'py-phasesep' python package
+'py-droplets' python package
 ============================
 
-The `py-phasesep` python package provides methods and classes useful for 
+The `py-droplets` python package provides methods and classes useful for 
 studying phase separation phenomena using phase field methods.
 
 

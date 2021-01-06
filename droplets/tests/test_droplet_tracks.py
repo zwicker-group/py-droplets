@@ -4,11 +4,12 @@
 
 import numpy as np
 
+from pde.grids import UnitGrid
+from pde.tools.misc import skipUnlessModule
+
 from droplets.droplet_tracks import DropletTrack, DropletTrackList
 from droplets.droplets import DiffuseDroplet, SphericalDroplet
 from droplets.emulsions import Emulsion, EmulsionTimeCourse
-from pde.grids import UnitGrid
-from pde.tools.misc import skipUnlessModule
 
 
 def test_droplettrack():

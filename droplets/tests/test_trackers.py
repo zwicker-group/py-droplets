@@ -5,10 +5,11 @@
 import numpy as np
 import pytest
 
-from droplets import LengthScaleTracker, SphericalDroplet
-from droplets.emulsions import EmulsionTimeCourse
 from pde import CahnHilliardPDE, CartesianGrid, DiffusionPDE, ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
+
+from droplets import LengthScaleTracker, SphericalDroplet
+from droplets.emulsions import EmulsionTimeCourse
 
 
 @skipUnlessModule("h5py")

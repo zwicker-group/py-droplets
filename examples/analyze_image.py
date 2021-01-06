@@ -2,8 +2,9 @@
 
 from pathlib import Path
 
-from droplets.image_analysis import locate_droplets
 from pde.fields import ScalarField
+
+from droplets.image_analysis import locate_droplets
 
 img_path = Path(__file__).parent / "resources" / "emulsion.png"
 field = ScalarField.from_image(img_path)

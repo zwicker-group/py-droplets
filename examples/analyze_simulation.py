@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from droplets.emulsions import EmulsionTimeCourse
 from pde import CahnHilliardPDE, ScalarField, UnitGrid
+
+from droplets.emulsions import EmulsionTimeCourse
 
 field = ScalarField.random_uniform(UnitGrid([32, 32]), -1, 1)
 pde = CahnHilliardPDE()
