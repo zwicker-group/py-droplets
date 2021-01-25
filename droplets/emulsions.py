@@ -52,6 +52,8 @@ DropletSequence = Union[Generator, Sequence[SphericalDroplet]]
 class Emulsion(list):
     """ class representing a collection of droplets in a common system """
 
+    _show_projection_warning: bool = True
+
     def __init__(
         self,
         droplets: DropletSequence = None,
@@ -518,8 +520,10 @@ class Emulsion(list):
                 f"Plotting emulsions in {self.dim} dimensions is not implemented."
             )
         elif self.dim > 2:
-            logger = logging.getLogger(self.__class__.__name__)
-            logger.warning("A projection on the first two axes is shown.")
+            if Emulsion._show_projection_warning:
+                logger = logging.getLogger(self.__class__.__name__)
+                logger.warning("A projection on the first two axes is shown.")
+                Emulsion._show_projection_warning = False
 
         grid_compatible = (
             self.grid is None or field is None or self.grid.compatible_with(field.grid)
