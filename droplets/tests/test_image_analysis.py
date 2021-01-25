@@ -103,7 +103,7 @@ def test_localization_perturbed_3d(periodic):
     pos = np.random.uniform(-2, 2, size=3)
     radius = np.random.uniform(2, 3)
     width = np.random.uniform(0.5, 1.5)
-    ampls = np.random.uniform(-0.01, 0.01, size=8)
+    ampls = np.random.uniform(-0.01, 0.01, size=3)
     d1 = PerturbedDroplet3D(pos, radius, interface_width=width, amplitudes=ampls)
 
     a = np.random.random(3) - size / 2
