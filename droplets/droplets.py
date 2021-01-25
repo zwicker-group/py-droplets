@@ -473,14 +473,27 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         else:
             raise NotImplementedError(f"Triangulation not implemented for {self.dim}d")
 
-    def _get_mpl_patch(self, **kwargs):
-        """ return the patch representing the droplet for plotting """
+    def _get_mpl_patch(self, dim=None, **kwargs):
+        """return the patch representing the droplet for plotting
+
+        Args:
+            dim (int, optional): The dimension in which the data is plotted. If omitted,
+                the actual physical dimension is assumed
+        """
         import matplotlib as mpl
 
-        if self.dim != 2:
+        if dim is None:
+            dim = self.dim
+
+        if dim != 2:
             raise NotImplementedError("Plotting is only implemented in 2d")
 
-        return mpl.patches.Circle(self.position, self.radius, **kwargs)
+        if self.dim == 1:
+            position = (self.position[0], 0)
+        else:
+            position = self.position[:dim]
+
+        return mpl.patches.Circle(position, self.radius, **kwargs)
 
     @plot_on_axes()
     def plot(self, ax=None, **kwargs):
@@ -928,9 +941,20 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             length += n ** 2 * (a ** 2 + b ** 2)
         return np.pi * self.radius * length / 2  # type: ignore
 
-    def _get_mpl_patch(self, **kwargs):
-        """ return the patch representing the droplet for plotting """
+    def _get_mpl_patch(self, dim=2, **kwargs):
+        """return the patch representing the droplet for plotting
+
+        Args:
+            dim (int, optional): The dimension in which the data is plotted. If omitted,
+                the actual physical dimension is assumed
+        """
         import matplotlib as mpl
+
+        if dim is None:
+            dim = self.dim
+
+        if dim != 2:
+            raise NotImplementedError("Plotting is only implemented in 2d")
 
         φ = np.linspace(0, 2 * np.pi, endpoint=False)
         xy = self.interface_position(φ)
@@ -1076,6 +1100,15 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         if len(self.amplitudes) > 0:
             volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius ** 2
         return volume
+
+    def _get_mpl_patch(self, dim=None, **kwargs):
+        """return the patch representing the droplet for plotting
+
+        Args:
+            dim (int, optional): The dimension in which the data is plotted. If omitted,
+                the actual physical dimension is assumed
+        """
+        raise NotImplementedError("Plotting PerturbedDroplet3D is not implemented")
 
 
 def droplet_from_data(droplet_class: str, data) -> DropletBase:

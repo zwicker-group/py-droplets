@@ -14,6 +14,7 @@ temporal dynamics.
 """
 
 import json
+import logging
 from typing import List  # @UnusedImport
 from typing import (
     TYPE_CHECKING,
@@ -492,6 +493,9 @@ class Emulsion(list):
     ):
         """plot the current emulsion together with a corresponding field
 
+        If the emulsion is defined in a 3d geometry, only a projection on the first two
+        axes is shown.
+
         Args:
             ax (:class:`matplotlib.axes.Axes`):
                 The axes in which the background is shown
@@ -509,10 +513,14 @@ class Emulsion(list):
                 patch that represents the droplet. For instance, to only draw the
                 outlines of the droplets, you may need to supply `fill=False`.
         """
-        if self.dim != 2:
+        if self.dim is None or self.dim <= 1:
             raise NotImplementedError(
                 f"Plotting emulsions in {self.dim} dimensions is not implemented."
             )
+        elif self.dim > 2:
+            logger = logging.getLogger(self.__class__.__name__)
+            logger.warning("A projection on the first two axes is shown.")
+
         grid_compatible = (
             self.grid is None or field is None or self.grid.compatible_with(field.grid)
         )
@@ -544,7 +552,7 @@ class Emulsion(list):
         # get patches representing all droplets
         if grid is None or not repeat_periodically:
             # plot only the droplets themselves
-            patches = [droplet._get_mpl_patch(**kwargs) for droplet in self]
+            patches = [droplet._get_mpl_patch(dim=2, **kwargs) for droplet in self]
         else:
             # plot droplets also in their mirror positions
             patches = []
@@ -554,7 +562,7 @@ class Emulsion(list):
                 ):
                     # create copy with changed position
                     d = droplet.copy(position=p)
-                    patches.append(d._get_mpl_patch(**kwargs))
+                    patches.append(d._get_mpl_patch(dim=2, **kwargs))
 
         # add all patches as a collection
         import matplotlib as mpl

@@ -177,14 +177,30 @@ def test_timecourse_io(tmp_path):
 @skipUnlessModule("matplotlib")
 def test_emulsion_plotting():
     """ test plotting emulsions """
+    # 1d emulsion
+    e1 = Emulsion([DiffuseDroplet([1], 10, 0.5)] * 2)
+    with pytest.raises(NotImplementedError):
+        e1.plot()
+
+    # 2d emulsion
     field = ScalarField(UnitGrid([10, 10], periodic=True))
     es = [
         Emulsion([DiffuseDroplet([0, 1], 10, 0.5)] * 2),
-        Emulsion([droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3])]),
+        Emulsion([droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3, 4])]),
     ]
-    for e1 in es:
-        e1.plot()
-        e1.plot(field=field)
+    for e2 in es:
+        e2.plot()
+        e2.plot(field=field)
+
+    # 3d emulsion
+    field = ScalarField(UnitGrid([5, 5, 5], periodic=True))
+    e3 = Emulsion([DiffuseDroplet([0, 1, 2], 10, 0.5)] * 2)
+    e3.plot()
+    e3.plot(field=field)
+
+    e3 = Emulsion([droplets.PerturbedDroplet3D([0, 1, 2], 3, 1, [1, 2, 3, 4, 5, 6])])
+    with pytest.raises(NotImplementedError):
+        e3.plot()
 
     with pytest.raises(NotImplementedError):
         Emulsion().plot()
