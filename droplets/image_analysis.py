@@ -79,12 +79,12 @@ def _locate_droplets_in_mask_cartesian(
     indices = range(1, num_labels + 1)
 
     # create and emulsion from this of droplets
-    grid._logger.info(f"Found {num_labels} droplet candidates")
+    grid._logger.info(f"Found {num_labels} droplet candidate(s)")
 
     # determine position from binary image and scale it to real space
     positions = ndimage.measurements.center_of_mass(mask_padded, labels, index=indices)
     # correct for the additional padding of the array
-    positions = grid.cell_to_point(positions) - offset
+    positions = grid.cell_to_point(positions - offset)
 
     # determine volume from binary image and scale it to real space
     volumes = ndimage.measurements.sum(mask_padded, labels, index=indices)
@@ -99,7 +99,13 @@ def _locate_droplets_in_mask_cartesian(
 
     # filter overlapping droplets (e.g. due to duplicates)
     emulsion = Emulsion(droplets, grid=grid)
+    num_candidates = len(emulsion)
+    if num_candidates < num_labels:
+        grid._logger.info(f"Only {num_candidates} candidate(s) inside bounds")
+
     emulsion.remove_overlapping()
+    if len(emulsion) < num_candidates:
+        grid._logger.info(f"Only {num_candidates} candidate(s) not overlapping")
 
     return emulsion
 

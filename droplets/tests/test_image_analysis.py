@@ -53,7 +53,7 @@ def test_localization_sym_rect(periodic):
 
     a = np.random.random(2) - size / 2
     b = np.random.random(2) + size / 2
-    grid = CartesianGrid(np.c_[a, b], size, periodic=periodic)
+    grid = CartesianGrid(np.c_[a, b], 3 * size, periodic=periodic)
     field = d1.get_phase_field(grid)
 
     emulsion = image_analysis.locate_droplets(field, refine=True)
