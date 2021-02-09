@@ -25,6 +25,7 @@ jobs:
         pip install h5py
         
     - name: Test types with mypy
+      continue-on-error: true
       run: |
         pip install mypy
         python -m mypy --config-file tests/mypy.ini --pretty --package droplets
