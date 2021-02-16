@@ -37,11 +37,11 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
     Inspired by http://stackoverflow.com/a/4495197/932593
 
     Args:
-        condition (:class:`numpy.ndarray`):
+        condition (:class:`~numpy.ndarray`):
             A one-dimensional boolean array
 
     Returns:
-        :class:`numpy.ndarray`: A two-dimensional array where the first column
+        :class:`~numpy.ndarray`: A two-dimensional array where the first column
         is the start index of the region and the second column is the end index
     """
     if len(condition) == 0:
@@ -204,7 +204,7 @@ class DropletTrack:
         self.times.append(time)
 
     def get_position(self, time: float) -> np.ndarray:
-        """ :class:`numpy.ndarray`: returns the droplet position at a specific time """
+        """ :class:`~numpy.ndarray`: returns the droplet position at a specific time """
         try:
             idx = self.times.index(time)
         except AttributeError:
@@ -221,7 +221,7 @@ class DropletTrack:
                 trajectory. Setting this to zero disables smoothing.
 
         Returns:
-            :class:`numpy.ndarray`: An array giving the position of the droplet at each
+            :class:`~numpy.ndarray`: An array giving the position of the droplet at each
                 time instance
         """
         trajectory = np.array([droplet.position for droplet in self.droplets])
@@ -232,11 +232,11 @@ class DropletTrack:
         return trajectory
 
     def get_radii(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: returns the droplet radius for each time point """
+        """:class:`~numpy.ndarray`: returns the droplet radius for each time point """
         return np.array([droplet.radius for droplet in self.droplets])
 
     def get_volumes(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: returns the droplet volume for each time point """
+        """:class:`~numpy.ndarray`: returns the droplet volume for each time point """
         return np.array([droplet.volume for droplet in self.droplets])
 
     def time_overlaps(self, other: "DropletTrack") -> bool:

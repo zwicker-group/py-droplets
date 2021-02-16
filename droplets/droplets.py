@@ -177,7 +177,7 @@ class DropletBase:
 
     @property
     def _data_array(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: the data of the droplet in an unstructured array """
+        """:class:`~numpy.ndarray`: the data of the droplet in an unstructured array """
         return structured_to_unstructured(self.data)
 
     def copy(self: TDroplet, **kwargs) -> TDroplet:
@@ -194,7 +194,7 @@ class DropletBase:
 
     @property
     def data_bounds(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: lower and upper bounds on the parameters """
+        """:class:`~numpy.ndarray`: lower and upper bounds on the parameters """
         num = len(self._data_array)
         return np.full(num, -np.inf), np.full(num, np.inf)
 
@@ -207,7 +207,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
     def __init__(self, position: np.ndarray, radius: float):
         r"""
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 Position of the droplet center
             radius (float):
                 Radius of the droplet
@@ -228,7 +228,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         """determine the dtype representing this droplet class
 
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 The position vector of the droplet. This is used to determine the space
                 dimension.
 
@@ -256,7 +256,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         """Construct a droplet from given volume instead of radius
 
         Args:
-            position (:class:`numpy.ndarray`): center of the droplet
+            position (:class:`~numpy.ndarray`): center of the droplet
             volume (float): volume of the droplet
             interface_width (float, optional): width of the interface
         """
@@ -266,7 +266,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @property
     def position(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: the position of the droplet """
+        """:class:`~numpy.ndarray`: the position of the droplet """
         return self.data["position"]
 
     @position.setter
@@ -337,14 +337,14 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         r"""calculates the position of the interface of the droplet
 
         Args:
-            *args (float or :class:`numpy.ndarray`):
+            *args (float or :class:`~numpy.ndarray`):
                 The angles identifying the interface points. For 2d droplets, this is
                 simply the angle in polar coordinates. For 3d droplets, both the
                 azimuthal angle θ (in :math:`[0, \pi]`) and the polar angle φ (in
                 :math:`[0, 2\pi]`) need to be specified.
 
         Returns:
-            :class:`numpy.ndarray`: An array with the coordinates of the interfacial
+            :class:`~numpy.ndarray`: An array with the coordinates of the interfacial
             points associated with each angle given by `φ`.
 
         Raises:
@@ -386,7 +386,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
                 If `dtype == np.bool`, a binary representation is returned.
 
         Returns:
-            :class:`numpy.ndarray`: An array with data values representing the droplet
+            :class:`~numpy.ndarray`: An array with data values representing the droplet
             phase field at support points of the `grid`.
         """
         if self.dim != grid.dim:
@@ -426,11 +426,11 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         Args:
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid used for discretizing the droplet phase field
-            mask (:class:`numpy.ndarray`):
+            mask (:class:`~numpy.ndarray`):
                 A binary mask marking the support points whose data is returned
 
         Returns:
-            :class:`numpy.ndarray`: An array with the values at the support points
+            :class:`~numpy.ndarray`: An array with the values at the support points
             marked in `mask`
         """
         return self._get_phase_field(grid)[mask]
@@ -520,7 +520,7 @@ class DiffuseDroplet(SphericalDroplet):
     ):
         """
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 Position of the droplet center
             radius (float):
                 Radius of the droplet
@@ -533,7 +533,7 @@ class DiffuseDroplet(SphericalDroplet):
 
     @property
     def data_bounds(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: lower and upper bounds on the parameters """
+        """:class:`~numpy.ndarray`: lower and upper bounds on the parameters """
         l, h = super().data_bounds
         l[self.dim + 1] = 0  # interface width must be non-negative
         return l, h
@@ -543,7 +543,7 @@ class DiffuseDroplet(SphericalDroplet):
         """determine the dtype representing this droplet class
 
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 The position vector of the droplet. This is used to determine the space
                 dimension.
 
@@ -582,7 +582,7 @@ class DiffuseDroplet(SphericalDroplet):
                 If `dtype == np.bool`, a binary representation is returned.
 
         Returns:
-            :class:`numpy.ndarray`: An array with data values representing the droplet
+            :class:`~numpy.ndarray`: An array with data values representing the droplet
             phase field at support points of the `grid`.
         """
         if self.dim != grid.dim:
@@ -626,13 +626,13 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     ):
         """
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 Position of the droplet center
             radius (float):
                 Radius of the droplet
             interface_width (float, optional):
                 Width of the interface
-            amplitudes (:class:`numpy.ndarray`):
+            amplitudes (:class:`~numpy.ndarray`):
                 The amplitudes of the perturbations
         """
         self._init_data(position=position, amplitudes=amplitudes)
@@ -650,10 +650,10 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         """determine the dtype representing this droplet class
 
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 The position vector of the droplet. This is used to determine the space
                 dimension.
-            amplitudes (:class:`numpy.ndarray`):
+            amplitudes (:class:`~numpy.ndarray`):
                 The perturbation amplitudes used to determine their size
 
         Returns:
@@ -669,7 +669,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
     @property
     def data_bounds(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: lower and upper bounds on the parameters """
+        """:class:`~numpy.ndarray`: lower and upper bounds on the parameters """
         l, h = super().data_bounds
         n = self.dim + 2
         # relative perturbation amplitudes must be between [-1, 1]
@@ -685,7 +685,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
     @property
     def amplitudes(self) -> np.ndarray:
-        """:class:`numpy.ndarray`: the perturbation amplitudes """
+        """:class:`~numpy.ndarray`: the perturbation amplitudes """
         return np.atleast_1d(self.data["amplitudes"])
 
     @amplitudes.setter
@@ -724,7 +724,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
                 If `dtype == np.bool`, a binary representation is returned.
 
         Returns:
-            :class:`numpy.ndarray`: An array with data values representing the droplet
+            :class:`~numpy.ndarray`: An array with data values representing the droplet
             phase field at support points of the `grid`.
         """
         if self.dim != grid.dim:
@@ -779,11 +779,11 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         Args:
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid used for discretizing the droplet phase field
-            mask (:class:`numpy.ndarray`):
+            mask (:class:`~numpy.ndarray`):
                 A binary mask marking the support points whose data is returned
 
         Returns:
-            :class:`numpy.ndarray`: An array with the values at the support points
+            :class:`~numpy.ndarray`: An array with the values at the support points
             marked in `mask`
         """
         return self._get_phase_field(grid)[mask]
@@ -818,13 +818,13 @@ class PerturbedDroplet2D(PerturbedDropletBase):
     ):
         r"""
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 Position of the droplet center
             radius (float):
                 Radius of the droplet
             interface_width (float, optional):
                 Width of the interface
-            amplitudes (:class:`numpy.ndarray`):
+            amplitudes (:class:`~numpy.ndarray`):
                 (dimensionless) perturbation amplitudes
                 :math:`\{\epsilon^{(1)}_1, \epsilon^{(2)}_1, \epsilon^{(1)}_2,
                 \epsilon^{(2)}_2, \epsilon^{(1)}_3, \epsilon^{(2)}_3, \dots \}`.
@@ -990,13 +990,13 @@ class PerturbedDroplet3D(PerturbedDropletBase):
     ):
         r"""
         Args:
-            position (:class:`numpy.ndarray`):
+            position (:class:`~numpy.ndarray`):
                 Position of the droplet center
             radius (float):
                 Radius of the droplet
             interface_width (float, optional):
                 Width of the interface
-            amplitudes (:class:`numpy.ndarray`):
+            amplitudes (:class:`~numpy.ndarray`):
                 Perturbation amplitudes :math:`\epsilon_{l,m}`. Note that the zero-th
                 mode, which would only change the radius, is skipped. Consequently, the
                 length of the array needs to be 0, 3, 8, 15, 24, ... to capture

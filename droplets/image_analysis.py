@@ -54,7 +54,7 @@ def _locate_droplets_in_mask_cartesian(
     This function locates droplets respecting periodic boundary conditions.
 
     Args:
-        mask (:class:`numpy.ndarray`):
+        mask (:class:`~numpy.ndarray`):
             The binary image (or mask) in which the droplets are searched
 
     Returns:
@@ -116,7 +116,7 @@ def _locate_droplets_in_mask_spherical(
     """locates droplets in a binary data set on a spherical grid
 
     Args:
-        mask (:class:`numpy.ndarray`):
+        mask (:class:`~numpy.ndarray`):
             The binary image (or mask) in which the droplets are searched
 
     Returns:
@@ -153,7 +153,7 @@ def _locate_droplets_in_mask_cylindrical_single(
     """locate droplets in a data set on a single cylindrical grid
 
     Args:
-        mask (:class:`numpy.ndarray`):
+        mask (:class:`~numpy.ndarray`):
             The binary image (or mask) in which the droplets are searched
 
     Returns:
@@ -196,7 +196,7 @@ def _locate_droplets_in_mask_cylindrical(
     This function locates droplets respecting periodic boundary conditions.
 
     Args:
-        mask (:class:`numpy.ndarray`):
+        mask (:class:`~numpy.ndarray`):
             The binary image (or mask) in which the droplets are searched
 
     Returns:
@@ -243,7 +243,7 @@ def locate_droplets_in_mask(grid: GridBase, mask: np.ndarray) -> Emulsion:
     This function locates droplets respecting periodic boundary conditions.
 
     Args:
-        mask (:class:`numpy.ndarray`):
+        mask (:class:`~numpy.ndarray`):
             The binary image (or mask) in which the droplets are searched
 
     Returns:
