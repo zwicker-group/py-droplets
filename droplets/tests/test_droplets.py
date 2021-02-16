@@ -26,8 +26,8 @@ def test_simple_droplet():
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_random_droplet(dim):
     """ tests simple droplet """
-    pos = np.random.randn(dim)
-    radius = 1 + np.random.random()
+    pos = np.random.uniform(0, 10, dim)
+    radius = np.random.uniform(2, 3)
     d1 = droplets.SphericalDroplet(pos, radius)
     d2 = droplets.SphericalDroplet(np.zeros(dim), radius)
     d2.position = pos
@@ -41,11 +41,16 @@ def test_random_droplet(dim):
     assert d1 == d3
     assert d1 is not d3
 
-    vol = np.random.random()
-    d1.volume = vol
-    assert d1.volume == pytest.approx(vol)
+    vol = np.random.uniform(10, 30)
+    d2.volume = vol
+    assert d2.volume == pytest.approx(vol)
 
-    d1.get_phase_field(UnitGrid([10] * dim))
+    f = d1.get_phase_field(UnitGrid([10] * dim), vmin=0.2, vmax=0.8, label="test")
+    assert f.label == "test"
+    assert np.all(f.data >= 0.2)
+    assert np.all(f.data <= 0.8)
+    assert np.any(f.data == 0.2)
+    assert np.any(f.data == 0.8)
 
 
 def test_perturbed_droplet_2d():

@@ -45,10 +45,10 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
         is the start index of the region and the second column is the end index
     """
     if len(condition) == 0:
-        return []
+        return np.empty((0, 2), dtype=np.intc)
 
     # convert condition array to integer
-    condition = np.asarray(condition, np.int)
+    condition = np.asarray(condition, np.intc)
 
     # Find the indices of changes in "condition"
     d = np.diff(condition)
@@ -67,7 +67,7 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
         idx = np.r_[idx, condition.size]
 
     # Reshape the result into two columns
-    return idx.reshape(-1, 2)
+    return idx.reshape(-1, 2).astype(np.intc)
 
 
 class DropletTrack:
@@ -210,7 +210,7 @@ class DropletTrack:
         except AttributeError:
             # assume that self.times is a numpy array
             idx = np.nonzero(self.times == time)[0][0]
-        return self.droplets[idx].position
+        return self.droplets[idx].position  # type: ignore
 
     def get_trajectory(self, smoothing: float = 0) -> np.ndarray:
         """return a list of positions over time
@@ -347,7 +347,7 @@ class DropletTrack:
             data = self.get_volumes()
             ylabel = "Volume"
         else:
-            data = [getattr(droplet, attribute) for droplet in self.droplets]
+            data = np.array([getattr(droplet, attribute) for droplet in self.droplets])
             ylabel = attribute.capitalize()
 
         ax.plot(self.times, data, **kwargs)
@@ -397,11 +397,13 @@ class DropletTrack:
 
             # plot the individual segments
             line, cx = None, []
-            for s, e in contiguous_true_regions(segments):
+            for s, e in contiguous_true_regions(np.array(segments)):
+
                 if line is None:
                     color = kwargs.get("color", "k")
                 else:
                     color = line.get_color()  # ensure colors stays the same
+
                 cx, cy = xy[s : e + 1, 0], xy[s : e + 1, 1]
                 (line,) = ax.plot(cx, cy, color=color)
 
