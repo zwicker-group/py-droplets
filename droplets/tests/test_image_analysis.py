@@ -118,7 +118,7 @@ def test_localization_perturbed_3d(periodic):
 
     msg = "size=%d, periodic=%s, %s != %s" % (size, periodic, d1, d2)
     np.testing.assert_almost_equal(d1.position, d2.position, decimal=1, err_msg=msg)
-    assert d1.radius == pytest.approx(d2.radius, rel=1e-5)
+    assert d1.radius == pytest.approx(d2.radius, rel=1e-4)
     assert d1.interface_width == pytest.approx(d2.interface_width, rel=1e-3)
     np.testing.assert_allclose(
         d1.amplitudes[3:], d2.amplitudes[3:], rtol=0.5, err_msg=msg
