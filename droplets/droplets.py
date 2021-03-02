@@ -101,7 +101,7 @@ class DropletBase:
 
     __slots__ = ["data"]
 
-    data: np.ndarray  # all information about the droplet
+    data: np.recarray  # all information about the droplet in a record array
 
     @classmethod
     def from_data(cls, data: np.recarray) -> "DropletBase":
@@ -586,7 +586,7 @@ class DiffuseDroplet(SphericalDroplet):
             interface_width = self.interface_width
 
         # calculate distances from droplet center
-        dist = grid.polar_coordinates_real(self.position)
+        dist: np.ndarray = grid.polar_coordinates_real(self.position, ret_angle=False)  # type: ignore
 
         # make the image
         if interface_width == 0 or dtype == np.bool_:
@@ -669,7 +669,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     @property
     def modes(self) -> int:
         """int: number of perturbation modes """
-        shape = self.data.dtype.fields["amplitudes"][0].shape  # type: ignore
+        shape = self.data.dtype.fields["amplitudes"][0].shape
         return int(shape[0]) if shape else 1
 
     @property
