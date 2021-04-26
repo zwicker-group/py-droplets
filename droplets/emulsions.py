@@ -135,7 +135,7 @@ class Emulsion(list):
         self,
         droplets: DropletSequence,
         copy: bool = True,
-    ):
+    ) -> None:
         """add many droplets to the emulsion
 
         Args:
@@ -145,7 +145,7 @@ class Emulsion(list):
         for droplet in droplets:
             self.append(droplet, copy=copy)
 
-    def append(self, droplet: SphericalDroplet, copy: bool = True):
+    def append(self, droplet: SphericalDroplet, copy: bool = True) -> None:
         """add a droplet to the emulsion
 
         Args:
@@ -166,8 +166,8 @@ class Emulsion(list):
         super().append(droplet)
 
     @property
-    def data(self):
-        """numpy.ndarray: an array containing the data of the full emulsion
+    def data(self) -> Optional[np.ndarray]:
+        """:class:`~numpy.ndarray`: an array containing the data of the full emulsion
 
         This requires all droplets to be of the same class
         """
@@ -188,12 +188,13 @@ class Emulsion(list):
         """link the data of all droplets in a single array
 
         Returns:
-            numpy.ndarray: The array containing all droplet data. If entries in
+            :class:`~numpy.ndarray`: The array containing all droplet data. If entries in
                 this array are modified, it will be reflected in the droplets.
         """
         if len(self) == 0:
             data = np.empty(0)
         else:
+            assert self.data is not None
             data = self.data  # create an array with all the droplet data
             # link back to droplets
             for i, d in enumerate(self):
@@ -262,7 +263,7 @@ class Emulsion(list):
 
         return dataset
 
-    def to_file(self, filename: str):
+    def to_file(self, filename: str) -> None:
         """store data in hdf5 file
 
         Args:
@@ -304,7 +305,7 @@ class Emulsion(list):
 
     @property
     def bbox(self) -> Cuboid:
-        """ Cuboid: bounding box of the emulsion """
+        """ :class:`Cuboid`: bounding box of the emulsion """
         if len(self) == 0:
             raise RuntimeError("Bounding box of empty emulsion is undefined")
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
@@ -322,7 +323,7 @@ class Emulsion(list):
                 Optional label for the returned scalar field
 
         Returns:
-            :class:`pde.fields.scalar.ScalarField`: the actual phase field
+            :class:`~pde.fields.scalar.ScalarField`: the actual phase field
         """
         if grid is None:
             grid = self.grid
@@ -339,7 +340,7 @@ class Emulsion(list):
             np.clip(result.data, 0, 1, out=result.data)
             return result
 
-    def remove_small(self, min_radius: float = -np.inf):
+    def remove_small(self, min_radius: float = -np.inf) -> None:
         """remove droplets that are very small
 
         The emulsions is modified in-place.
@@ -354,7 +355,7 @@ class Emulsion(list):
             if self[i].radius <= min_radius:
                 self.pop(i)
 
-    def get_pairwise_distances(self, subtract_radius: bool = False):
+    def get_pairwise_distances(self, subtract_radius: bool = False) -> np.ndarray:
         """return the pairwise distance between droplets
 
         Args:
@@ -363,7 +364,7 @@ class Emulsion(list):
                 center.
 
         Returns:
-            np.array: a matrix with the distances between all droplets
+            :class:`~numpy.ndarray`: a matrix with the distances between all droplets
         """
         if self.grid is None:
 
@@ -388,7 +389,7 @@ class Emulsion(list):
 
         return dists
 
-    def get_neighbor_distances(self, subtract_radius: bool = False):
+    def get_neighbor_distances(self, subtract_radius: bool = False) -> np.ndarray:
         """calculates the distance of each droplet to its nearest neighbor
 
         Warning: Nearest neighbors are defined by comparing the distances
@@ -400,7 +401,7 @@ class Emulsion(list):
                 the surfaces instead of the positions
 
         Returns:
-            np.array: a vector with a distance for each droplet
+            :class:`~numpy.ndarray`: a vector with a distance for each droplet
         """
         # handle simple cases
         if len(self) == 0:
@@ -414,16 +415,17 @@ class Emulsion(list):
             from scipy.spatial import KDTree
 
         # build tree to query the nearest neighbors
+        assert self.data is not None
         positions = self.data["position"]
         tree = KDTree(positions)
         dist, index = tree.query(positions, 2)
 
         if subtract_radius:
-            return dist[:, 1] - self.data["radius"][index].sum(axis=1)
+            return dist[:, 1] - self.data["radius"][index].sum(axis=1)  # type: ignore
         else:
-            return dist[:, 1]
+            return dist[:, 1]  # type: ignore
 
-    def remove_overlapping(self, min_distance: float = 0):
+    def remove_overlapping(self, min_distance: float = 0) -> None:
         """remove all droplets that are overlapping.
 
         If a pair of overlapping droplets was found, the smaller one of these
@@ -612,7 +614,7 @@ class EmulsionTimeCourse:
 
     def append(
         self, emulsion: Emulsion, time: Optional[float] = None, copy: bool = True
-    ):
+    ) -> None:
         """add an emulsion to the list
 
         Args:
@@ -640,7 +642,7 @@ class EmulsionTimeCourse:
             time = 0 if len(self.times) == 0 else self.times[-1] + 1
         self.times.append(time)
 
-    def clear(self):
+    def clear(self) -> None:
         """ removes all data stored in this instance """
         self.emulsions = []
         self.times = []
@@ -746,7 +748,7 @@ class EmulsionTimeCourse:
                 )
         return obj
 
-    def to_file(self, filename: str, info: InfoDict = None):
+    def to_file(self, filename: str, info: InfoDict = None) -> None:
         """store data in hdf5 file
 
         Args:

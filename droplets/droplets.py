@@ -134,7 +134,17 @@ class DropletBase:
         args.update(kwargs)
         return cls(**args)  # type: ignore
 
-    def _init_data(self, **kwargs):
+    @classmethod
+    @abstractmethod
+    def get_dtype(cls, **kwargs):
+        """determine the dtype representing this droplet class
+
+        Returns:
+            :class:`numpy.dtype`: the (structured) dtype associated with this class
+        """
+        pass
+
+    def _init_data(self, **kwargs) -> None:
         """initializes the `data` attribute if it is not present
 
         Args:
@@ -196,7 +206,7 @@ class DropletBase:
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
-        """:class:`~numpy.ndarray`: lower and upper bounds on the parameters """
+        """tuple: lower and upper bounds on the parameters """
         num = len(self._data_array)
         return np.full(num, -np.inf), np.full(num, np.inf)
 
@@ -226,7 +236,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             raise ValueError("Radius must be positive")
 
     @classmethod
-    def get_dtype(cls, position: np.ndarray):
+    def get_dtype(cls, **kwargs):
         """determine the dtype representing this droplet class
 
         Args:
@@ -237,7 +247,8 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         Returns:
             :class:`numpy.dtype`: the (structured) dtype associated with this class
         """
-        position = np.atleast_1d(position)
+        position = np.atleast_1d(kwargs.pop("position"))
+        assert not kwargs  # no more keyword arguments
         dim = len(position)
         return [("position", float, (dim,)), ("radius", float)]
 
@@ -247,8 +258,8 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         return get_dtype_field_size(self.data.dtype, "position")
 
     @property
-    def data_bounds(self):
-        """ lower and upper bounds on the parameters """
+    def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
+        """tuple: lower and upper bounds on the parameters """
         l, h = super().data_bounds
         l[self.dim] = 0  # radius must be non-negative
         return l, h
@@ -522,13 +533,13 @@ class DiffuseDroplet(SphericalDroplet):
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
-        """:class:`~numpy.ndarray`: lower and upper bounds on the parameters """
+        """tuple: lower and upper bounds on the parameters """
         l, h = super().data_bounds
         l[self.dim + 1] = 0  # interface width must be non-negative
         return l, h
 
     @classmethod
-    def get_dtype(cls, position: np.ndarray):
+    def get_dtype(cls, **kwargs):
         """determine the dtype representing this droplet class
 
         Args:
@@ -539,7 +550,7 @@ class DiffuseDroplet(SphericalDroplet):
         Returns:
             :class:`numpy.dtype`: the (structured) dtype associated with this class
         """
-        dtype = super().get_dtype(position=position)
+        dtype = super().get_dtype(**kwargs)
         return dtype + [("interface_width", float)]
 
     @property
@@ -635,7 +646,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
             raise ValueError(f"Space dimension must be {self.__class__.dim}")
 
     @classmethod
-    def get_dtype(cls, position: np.ndarray, amplitudes: np.ndarray = None):
+    def get_dtype(cls, **kwargs):
         """determine the dtype representing this droplet class
 
         Args:
@@ -648,17 +659,20 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         Returns:
             :class:`numpy.dtype`: the (structured) dtype associated with this class
         """
-        dtype = super().get_dtype(position=position)
-
+        # extract data
+        amplitudes = kwargs.pop("amplitudes")
         if amplitudes is None:
             modes = 0
         else:
             modes = len(amplitudes)
+
+        # create dtype
+        dtype = super().get_dtype(**kwargs)
         return dtype + [("amplitudes", float, (modes,))]
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
-        """:class:`~numpy.ndarray`: lower and upper bounds on the parameters """
+        """tuple: lower and upper bounds on the parameters """
         l, h = super().data_bounds
         n = self.dim + 2
         # relative perturbation amplitudes must be between [-1, 1]

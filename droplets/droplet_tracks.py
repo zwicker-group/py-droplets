@@ -164,8 +164,8 @@ class DropletTrack:
             return None
 
     @property
-    def data(self):
-        """ numpy.ndarray: an array containing the data of the full track """
+    def data(self) -> Optional[np.ndarray]:
+        """ :class:`~numpy.ndarray`: an array containing the data of the full track """
         if len(self) == 0:
             return None
         else:
@@ -184,7 +184,7 @@ class DropletTrack:
         """ iterate over all times and droplets, returning them in pairs """
         return zip(self.times, self.droplets)
 
-    def append(self, droplet: SphericalDroplet, time: Optional[float] = None):
+    def append(self, droplet: SphericalDroplet, time: Optional[float] = None) -> None:
         """append a new droplet with a time code
 
         Args:
@@ -307,7 +307,7 @@ class DropletTrack:
 
         return dataset
 
-    def to_file(self, filename: str, info: InfoDict = None):
+    def to_file(self, filename: str, info: InfoDict = None) -> None:
         """store data in hdf5 file
 
         Args:
@@ -438,7 +438,7 @@ class DropletTrackList(list):
         method: str = "overlap",
         progress: bool = False,
         **kwargs,
-    ):
+    ) -> "DropletTrackList":
         r"""obtain droplet tracks from an emulsion time course
 
         Args:
@@ -551,7 +551,7 @@ class DropletTrackList(list):
         refine: bool = False,
         method: str = "overlap",
         progress: bool = None,
-    ):
+    ) -> "DropletTrackList":
         r"""obtain droplet tracks from stored scalar field data
 
         This method first determines an emulsion time course and than collects tracks by
@@ -599,7 +599,7 @@ class DropletTrackList(list):
                 obj.append(DropletTrack._from_hdf_dataset(dataset))
         return obj
 
-    def to_file(self, filename: str, info: InfoDict = None):
+    def to_file(self, filename: str, info: InfoDict = None) -> None:
         """store data in hdf5 file
 
         Args:
