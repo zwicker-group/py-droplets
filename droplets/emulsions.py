@@ -480,10 +480,10 @@ class Emulsion(list):
         volumes = [droplet.volume for droplet in self]
         return {
             "count": len(self),
-            "radius_mean": np.mean(radii),  # type: ignore
-            "radius_std": np.std(radii),  # type: ignore
-            "volume_mean": np.mean(volumes),  # type: ignore
-            "volume_std": np.std(volumes),  # type: ignore
+            "radius_mean": np.mean(radii),
+            "radius_std": np.std(radii),
+            "volume_mean": np.mean(volumes),
+            "volume_std": np.std(volumes),
         }
 
     @plot_on_axes()
