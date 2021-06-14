@@ -1,7 +1,7 @@
 Installation
 ############
 
-This `py-droplets` package is developed for python 3.6+ and should run on all
+This `py-droplets` package is developed for python 3.7+ and should run on all
 common platforms.
 The code is tested under Linux, Windows, and macOS.
 
@@ -42,7 +42,7 @@ numpy        >=1.16    Array library used for storing data
 numba        >=0.43    Just-in-time compilation to accelerate numerics
 scipy        >=1.2     Miscellaneous scientific functions
 sympy        >=1.4     Dealing with user-defined mathematical expressions
-py-pde       >=0.4     Simulating partial differential equations
+py-pde       >=0.14    Simulating partial differential equations
 ===========  ========= =========
 
 These package can be installed via your operating system's package manager, e.g.

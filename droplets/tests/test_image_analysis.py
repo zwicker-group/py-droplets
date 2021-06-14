@@ -7,7 +7,7 @@ import pytest
 from numpy.lib.recfunctions import structured_to_unstructured
 
 from pde import ScalarField
-from pde.grids import CartesianGrid, CylindricalGrid, PolarGrid, SphericalGrid, UnitGrid
+from pde.grids import CartesianGrid, CylindricalSymGrid, PolarSymGrid, SphericalSymGrid, UnitGrid
 
 from droplets import image_analysis
 from droplets.droplets import DiffuseDroplet, PerturbedDroplet2D, PerturbedDroplet3D
@@ -132,7 +132,7 @@ def test_localization_polar():
     d1 = DiffuseDroplet((0, 0), radius, interface_width=width)
 
     grid_radius = 6 + 2 * np.random.random()
-    grid = PolarGrid(grid_radius, 16)
+    grid = PolarSymGrid(grid_radius, 16)
     field = d1.get_phase_field(grid)
 
     emulsion = image_analysis.locate_droplets(field, refine=True)
@@ -154,7 +154,7 @@ def test_localization_spherical():
     d1 = DiffuseDroplet((0, 0, 0), radius, interface_width=width)
 
     grid_radius = 6 + 2 * np.random.random()
-    grid = SphericalGrid(grid_radius, 16)
+    grid = SphericalSymGrid(grid_radius, 16)
     field = d1.get_phase_field(grid)
 
     emulsion = image_analysis.locate_droplets(field, refine=True)
@@ -179,7 +179,7 @@ def test_localization_cylindrical(periodic):
 
     grid_radius = 6 + 2 * np.random.random()
     bounds_z = np.random.uniform(1, 2, size=2) * np.array([-4, 4])
-    grid = CylindricalGrid(grid_radius, bounds_z, (16, 32), periodic_z=periodic)
+    grid = CylindricalSymGrid(grid_radius, bounds_z, (16, 32), periodic_z=periodic)
     field = d1.get_phase_field(grid)
 
     emulsion = image_analysis.locate_droplets(field, refine=True)

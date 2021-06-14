@@ -31,10 +31,10 @@ except ImportError:
     from numpy.fft import fftn as np_fftn
 
 from pde.fields import ScalarField
-from pde.grids import CylindricalGrid
+from pde.grids import CylindricalSymGrid
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
-from pde.grids.spherical import SphericalGridBase
+from pde.grids.spherical import SphericalSymGridBase
 from pde.tools.math import SmoothData1D
 from pde.tools.typing import NumberOrArray
 
@@ -112,7 +112,7 @@ def _locate_droplets_in_mask_cartesian(
 
 
 def _locate_droplets_in_mask_spherical(
-    grid: SphericalGridBase, mask: np.ndarray
+    grid: SphericalSymGridBase, mask: np.ndarray
 ) -> Emulsion:
     """locates droplets in a binary data set on a spherical grid
 
@@ -149,7 +149,7 @@ def _locate_droplets_in_mask_spherical(
 
 
 def _locate_droplets_in_mask_cylindrical_single(
-    grid: CylindricalGrid, mask: np.ndarray
+    grid: CylindricalSymGrid, mask: np.ndarray
 ) -> Emulsion:
     """locate droplets in a data set on a single cylindrical grid
 
@@ -193,7 +193,7 @@ def _locate_droplets_in_mask_cylindrical_single(
 
 
 def _locate_droplets_in_mask_cylindrical(
-    grid: CylindricalGrid, mask: np.ndarray
+    grid: CylindricalSymGrid, mask: np.ndarray
 ) -> Emulsion:
     """locate droplets in a data set on a (periodic) cylindrical grid
 
@@ -255,9 +255,9 @@ def locate_droplets_in_mask(grid: GridBase, mask: np.ndarray) -> Emulsion:
     """
     if isinstance(grid, CartesianGridBase):
         return _locate_droplets_in_mask_cartesian(grid, mask)
-    elif isinstance(grid, SphericalGridBase):
+    elif isinstance(grid, SphericalSymGridBase):
         return _locate_droplets_in_mask_spherical(grid, mask)
-    elif isinstance(grid, CylindricalGrid):
+    elif isinstance(grid, CylindricalSymGrid):
         return _locate_droplets_in_mask_cylindrical(grid, mask)
     elif isinstance(grid, GridBase):
         raise NotImplementedError(f"Locating droplets is not possible for grid {grid}")
