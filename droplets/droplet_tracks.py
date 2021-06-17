@@ -24,7 +24,7 @@ from scipy.spatial import distance
 from pde.grids.base import GridBase
 from pde.storage.base import StorageBase
 from pde.tools.output import display_progress
-from pde.tools.plotting import plot_on_axes
+from pde.tools.plotting import PlotReference, plot_on_axes
 from pde.trackers.base import InfoDict
 
 from .droplets import SphericalDroplet, droplet_from_data
@@ -71,7 +71,7 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
 
 
 class DropletTrack:
-    """ information about a single droplet over multiple time steps """
+    """information about a single droplet over multiple time steps"""
 
     def __init__(self, droplets=None, times=None):
         """
@@ -102,7 +102,7 @@ class DropletTrack:
             )
 
     def __repr__(self):
-        """ human-readable representation of a droplet track """
+        """human-readable representation of a droplet track"""
         class_name = self.__class__.__name__
         if len(self.times) == 0:
             return f"{class_name}([])"
@@ -112,11 +112,11 @@ class DropletTrack:
             return f"{class_name}(timespan={self.start}..{self.end})"
 
     def __len__(self):
-        """ number of time points """
+        """number of time points"""
         return len(self.times)
 
     def __getitem__(self, key: Union[int, slice]):
-        """ return the droplets identified by the given index/slice """
+        """return the droplets identified by the given index/slice"""
         result = self.droplets.__getitem__(key)
         if isinstance(key, slice):
             return self.__class__(droplets=result, times=self.times[key])
@@ -124,22 +124,22 @@ class DropletTrack:
             return result
 
     def __eq__(self, other):
-        """ determine whether two DropletTracks instance are equal """
+        """determine whether two DropletTracks instance are equal"""
         return self.times == other.times and self.droplets == other.droplets
 
     @property
     def start(self) -> float:
-        """ float: first time point """
+        """float: first time point"""
         return self.times[0]  # type: ignore
 
     @property
     def end(self) -> float:
-        """ float: last time point """
+        """float: last time point"""
         return self.times[-1]  # type: ignore
 
     @property
     def duration(self) -> float:
-        """ float: total duration of the track """
+        """float: total duration of the track"""
         if len(self.times) > 0:
             return self.end - self.start
         else:
@@ -147,17 +147,17 @@ class DropletTrack:
 
     @property
     def first(self) -> SphericalDroplet:
-        """ SphericalDroplet: first droplet instance """
+        """SphericalDroplet: first droplet instance"""
         return self.droplets[0]  # type: ignore
 
     @property
     def last(self) -> SphericalDroplet:
-        """ SphericalDroplet: last droplet instance """
+        """SphericalDroplet: last droplet instance"""
         return self.droplets[-1]  # type: ignore
 
     @property
     def dim(self) -> Optional[int]:
-        """ return the space dimension of the droplets """
+        """return the space dimension of the droplets"""
         try:
             return self.last.dim
         except IndexError:
@@ -165,7 +165,7 @@ class DropletTrack:
 
     @property
     def data(self) -> Optional[np.ndarray]:
-        """ :class:`~numpy.ndarray`: an array containing the data of the full track """
+        """:class:`~numpy.ndarray`: an array containing the data of the full track"""
         if len(self) == 0:
             return None
         else:
@@ -177,11 +177,11 @@ class DropletTrack:
             return result
 
     def __iter__(self):
-        """ iterate over all droplets """
+        """iterate over all droplets"""
         return iter(self.droplets)
 
     def items(self):
-        """ iterate over all times and droplets, returning them in pairs """
+        """iterate over all times and droplets, returning them in pairs"""
         return zip(self.times, self.droplets)
 
     def append(self, droplet: SphericalDroplet, time: Optional[float] = None) -> None:
@@ -204,7 +204,7 @@ class DropletTrack:
         self.times.append(time)
 
     def get_position(self, time: float) -> np.ndarray:
-        """ :class:`~numpy.ndarray`: returns the droplet position at a specific time """
+        """:class:`~numpy.ndarray`: returns the droplet position at a specific time"""
         try:
             idx = self.times.index(time)
         except AttributeError:
@@ -232,11 +232,11 @@ class DropletTrack:
         return trajectory
 
     def get_radii(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: returns the droplet radius for each time point """
+        """:class:`~numpy.ndarray`: returns the droplet radius for each time point"""
         return np.array([droplet.radius for droplet in self.droplets])
 
     def get_volumes(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: returns the droplet volume for each time point """
+        """:class:`~numpy.ndarray`: returns the droplet volume for each time point"""
         return np.array([droplet.volume for droplet in self.droplets])
 
     def time_overlaps(self, other: "DropletTrack") -> bool:
@@ -293,7 +293,7 @@ class DropletTrack:
         return obj
 
     def _write_hdf_dataset(self, hdf_path, key: str = "droplet_track"):
-        """ write data to a given hdf5 path `hdf_path` """
+        """write data to a given hdf5 path `hdf_path`"""
         if self:
             # emulsion contains at least one droplet
             dataset = hdf_path.create_dataset(key, data=self.data)
@@ -324,7 +324,7 @@ class DropletTrack:
                     fp.attrs[k] = json.dumps(v)
 
     @plot_on_axes()
-    def plot(self, attribute: str = "radius", ax=None, **kwargs):
+    def plot(self, attribute: str = "radius", ax=None, **kwargs) -> PlotReference:
         """plot the time evolution of the droplet
 
         Args:
@@ -336,9 +336,13 @@ class DropletTrack:
                 All remaining parameters are forwarded to the `ax.plot` method. For
                 example, passing `color=None`, will use different colors for different
                 droplets.
+
+        Returns:
+            :class:`~pde.tools.plotting.PlotReference`: Contains information about the
+            plot
         """
         if len(self.times) == 0:
-            return
+            return PlotReference(ax, None)
 
         if attribute in {"radius", "radii"}:
             data = self.get_radii()
@@ -350,9 +354,10 @@ class DropletTrack:
             data = np.array([getattr(droplet, attribute) for droplet in self.droplets])
             ylabel = attribute.capitalize()
 
-        ax.plot(self.times, data, **kwargs)
+        (line,) = ax.plot(self.times, data, **kwargs)
         ax.set_xlabel("Time")
         ax.set_ylabel(ylabel)
+        return PlotReference(ax, line, {"attribute": attribute})
 
     @plot_on_axes()
     def plot_positions(
@@ -421,10 +426,10 @@ class DropletTrack:
 
 
 class DropletTrackList(list):
-    """ a list of instances of :class:`DropletTrack` """
+    """a list of instances of :class:`DropletTrack`"""
 
     def __getitem__(self, key: Union[int, slice]):
-        """ return the droplets identified by the given index/slice """
+        """return the droplets identified by the given index/slice"""
         result = super().__getitem__(key)
         if isinstance(key, slice):
             return self.__class__(result)
@@ -468,7 +473,7 @@ class DropletTrackList(list):
             # track droplets by their physical overlap
 
             def match_tracks(emulsion, tracks_alive, time):
-                """ helper function adding emulsions to the tracks """
+                """helper function adding emulsions to the tracks"""
                 found_multiple_overlap = False
                 for droplet in emulsion:
                     # determine which old tracks could be extended
@@ -493,7 +498,7 @@ class DropletTrackList(list):
             max_dist = kwargs.pop("max_dist", np.inf)
 
             def match_tracks(emulsion, tracks_alive, time):
-                """ helper function adding emulsions to the tracks """
+                """helper function adding emulsions to the tracks"""
                 added = set()
 
                 # calculate the distance between droplets

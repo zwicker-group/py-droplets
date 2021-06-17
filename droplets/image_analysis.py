@@ -416,7 +416,7 @@ def refine_droplet(
     bounds = l[free], h[free]
 
     def _image_deviation(params):
-        """ helper function evaluating the residuals """
+        """helper function evaluating the residuals"""
         # generate the droplet
         data_flat[free] = params
         droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
