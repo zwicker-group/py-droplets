@@ -162,7 +162,7 @@ class DropletBase:
             self.data = np.recarray(1, dtype=dtype)[0]
 
     def __init_subclass__(cls, **kwargs):  # @NoSelf
-        """ register all subclassess to reconstruct them later """
+        """register all subclassess to reconstruct them later"""
         super().__init_subclass__(**kwargs)
         cls._subclasses[cls.__name__] = cls
 
@@ -174,7 +174,7 @@ class DropletBase:
         )
 
     def check_data(self):
-        """ method that checks the validity and consistency of self.data """
+        """method that checks the validity and consistency of self.data"""
         pass
 
     @property
@@ -189,7 +189,7 @@ class DropletBase:
 
     @property
     def _data_array(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: the data of the droplet in an unstructured array """
+        """:class:`~numpy.ndarray`: the data of the droplet in an unstructured array"""
         return structured_to_unstructured(self.data)  # type: ignore
 
     def copy(self: TDroplet, **kwargs) -> TDroplet:
@@ -206,13 +206,13 @@ class DropletBase:
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
-        """tuple: lower and upper bounds on the parameters """
+        """tuple: lower and upper bounds on the parameters"""
         num = len(self._data_array)
         return np.full(num, -np.inf), np.full(num, np.inf)
 
 
 class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
-    """ Represents a single, spherical droplet """
+    """Represents a single, spherical droplet"""
 
     __slots__ = ["data"]
 
@@ -231,7 +231,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         self.check_data()
 
     def check_data(self):
-        """ method that checks the validity and consistency of self.data """
+        """method that checks the validity and consistency of self.data"""
         if self.radius < 0:
             raise ValueError("Radius must be positive")
 
@@ -254,12 +254,12 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @property
     def dim(self) -> int:
-        """int: the spatial dimension this droplet is embedded in """
+        """int: the spatial dimension this droplet is embedded in"""
         return get_dtype_field_size(self.data.dtype, "position")
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
-        """tuple: lower and upper bounds on the parameters """
+        """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         l[self.dim] = 0  # radius must be non-negative
         return l, h
@@ -279,7 +279,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @property
     def position(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: the position of the droplet """
+        """:class:`~numpy.ndarray`: the position of the droplet"""
         return self.data["position"]  # type: ignore
 
     @position.setter
@@ -291,7 +291,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @property
     def radius(self) -> float:
-        """float: the radius of the droplet """
+        """float: the radius of the droplet"""
         return float(self.data["radius"])
 
     @radius.setter
@@ -301,22 +301,22 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
     @property
     def volume(self) -> float:
-        """float: volume of the droplet """
+        """float: volume of the droplet"""
         return spherical.volume_from_radius(self.radius, self.dim)
 
     @volume.setter
     def volume(self, volume: float):
-        """set the radius from a supplied volume """
+        """set the radius from a supplied volume"""
         self.radius = spherical.radius_from_volume(volume, self.dim)
 
     @property
     def surface_area(self) -> float:
-        """float: surface area of the droplet """
+        """float: surface area of the droplet"""
         return spherical.surface_from_radius(self.radius, self.dim)
 
     @property
     def bbox(self) -> Cuboid:
-        """:class:`~pde.tools.cuboid.Cuboid`: bounding box of the droplet """
+        """:class:`~pde.tools.cuboid.Cuboid`: bounding box of the droplet"""
         return Cuboid.from_points(
             self.position - self.radius, self.position + self.radius
         )
@@ -511,7 +511,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
 
 
 class DiffuseDroplet(SphericalDroplet):
-    """ Represents a single, spherical droplet with a diffuse interface """
+    """Represents a single, spherical droplet with a diffuse interface"""
 
     __slots__ = ["data"]
 
@@ -533,7 +533,7 @@ class DiffuseDroplet(SphericalDroplet):
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
-        """tuple: lower and upper bounds on the parameters """
+        """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         l[self.dim + 1] = 0  # interface width must be non-negative
         return l, h
@@ -555,7 +555,7 @@ class DiffuseDroplet(SphericalDroplet):
 
     @property
     def interface_width(self) -> Optional[float]:
-        """float: the width of the interface of this droplet """
+        """float: the width of the interface of this droplet"""
         if np.isnan(self.data["interface_width"]):
             return None
         else:
@@ -672,7 +672,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
-        """tuple: lower and upper bounds on the parameters """
+        """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         n = self.dim + 2
         # relative perturbation amplitudes must be between [-1, 1]
@@ -682,13 +682,13 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
     @property
     def modes(self) -> int:
-        """int: number of perturbation modes """
+        """int: number of perturbation modes"""
         shape = self.data.dtype.fields["amplitudes"][0].shape
         return int(shape[0]) if shape else 1
 
     @property
     def amplitudes(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: the perturbation amplitudes """
+        """:class:`~numpy.ndarray`: the perturbation amplitudes"""
         return np.atleast_1d(self.data["amplitudes"])
 
     @amplitudes.setter
@@ -869,19 +869,19 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
     @property
     def volume(self) -> float:
-        """ float: volume of the droplet """
+        """float: volume of the droplet"""
         term = 1 + np.sum(self.amplitudes ** 2) / 2
         return np.pi * self.radius ** 2 * term  # type: ignore
 
     @volume.setter
     def volume(self, volume: float):
-        """ set volume keeping relative perturbations """
+        """set volume keeping relative perturbations"""
         term = 1 + np.sum(self.amplitudes ** 2) / 2
         self.radius = np.sqrt(volume / (np.pi * term))
 
     @property
     def surface_area(self) -> float:
-        """ float: surface area of the droplet """
+        """float: surface area of the droplet"""
         # discretize surface for simple approximation to integral
         φs, dφ = np.linspace(0, 2 * np.pi, 256, endpoint=False, retstep=True)
 
@@ -903,7 +903,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
     @property
     def surface_area_approx(self) -> float:
-        """ float: surface area of the droplet (quadratic in amplitudes) """
+        """float: surface area of the droplet (quadratic in amplitudes)"""
         length = 4
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             length += n ** 2 * (a ** 2 + b ** 2)
@@ -1044,10 +1044,10 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @property
     def volume(self) -> float:
-        """ float: volume of the droplet (determined numerically) """
+        """float: volume of the droplet (determined numerically)"""
 
         def integrand(θ, φ):
-            """ helper function calculating the integrand """
+            """helper function calculating the integrand"""
             r = self.interface_distance(θ, φ)
             return r ** 3 * np.sin(θ) / 3
 
@@ -1058,12 +1058,12 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @volume.setter
     def volume(self, volume: float):
-        """ set volume keeping relative perturbations """
+        """set volume keeping relative perturbations"""
         raise NotImplementedError("Cannot set volume")
 
     @property
     def volume_approx(self) -> float:
-        """ float: approximate volume to linear order in the perturbation """
+        """float: approximate volume to linear order in the perturbation"""
         volume = spherical.volume_from_radius(self.radius, 3)
         if len(self.amplitudes) > 0:
             volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius ** 2
@@ -1092,7 +1092,7 @@ def droplet_from_data(droplet_class: str, data) -> DropletBase:
 
 
 class _TriangulatedSpheres:
-    """helper class for handling stored data about triangulated spheres """
+    """helper class for handling stored data about triangulated spheres"""
 
     def __init__(self):
         self.path = Path(__file__).resolve().parent / "resources" / "spheres_3d.hdf5"
@@ -1100,7 +1100,7 @@ class _TriangulatedSpheres:
         self.data: Optional[Dict[int, Dict[str, Any]]] = None
 
     def _load(self):
-        """load the stored resource """
+        """load the stored resource"""
         import h5py
 
         logger = logging.getLogger(__name__)

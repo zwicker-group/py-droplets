@@ -50,7 +50,7 @@ DropletSequence = Union[Generator, Sequence[SphericalDroplet]]
 
 
 class Emulsion(list):
-    """ class representing a collection of droplets in a common system """
+    """class representing a collection of droplets in a common system"""
 
     _show_projection_warning: bool = True
 
@@ -249,7 +249,7 @@ class Emulsion(list):
         return obj
 
     def _write_hdf_dataset(self, hdf_path, key: str = "emulsion"):
-        """ write data to a given hdf5 path `hdf_path` """
+        """write data to a given hdf5 path `hdf_path`"""
         if self:
             # emulsion contains at least one droplet
             dataset = hdf_path.create_dataset(key, data=self.data)
@@ -305,7 +305,7 @@ class Emulsion(list):
 
     @property
     def bbox(self) -> Cuboid:
-        """ :class:`Cuboid`: bounding box of the emulsion """
+        """:class:`Cuboid`: bounding box of the emulsion"""
         if len(self) == 0:
             raise RuntimeError("Bounding box of empty emulsion is undefined")
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
@@ -369,7 +369,7 @@ class Emulsion(list):
         if self.grid is None:
 
             def get_distance(p1, p2):
-                """ helper function calculating the distance between points """
+                """helper function calculating the distance between points"""
                 return np.linalg.norm(p1 - p2)
 
         else:
@@ -458,7 +458,7 @@ class Emulsion(list):
 
     @property
     def total_droplet_volume(self) -> float:
-        """ float: the total volume of all droplets """
+        """float: the total volume of all droplets"""
         return sum(droplet.volume for droplet in self)
 
     def get_size_statistics(self) -> Dict[str, float]:
@@ -578,7 +578,7 @@ class Emulsion(list):
 
 
 class EmulsionTimeCourse:
-    """ represents emulsions as a function of time """
+    """represents emulsions as a function of time"""
 
     def __init__(self, emulsions=None, times=None):
         """
@@ -643,7 +643,7 @@ class EmulsionTimeCourse:
         self.times.append(time)
 
     def clear(self) -> None:
-        """ removes all data stored in this instance """
+        """removes all data stored in this instance"""
         self.emulsions = []
         self.times = []
 
@@ -657,7 +657,7 @@ class EmulsionTimeCourse:
         return len(self.times)
 
     def __getitem__(self, key: Union[int, slice]):
-        """ return the information for the given index """
+        """return the information for the given index"""
         result = self.emulsions.__getitem__(key)
         if isinstance(key, slice):
             return self.__class__(emulsions=result, times=self.times[key])
@@ -665,15 +665,15 @@ class EmulsionTimeCourse:
             return result
 
     def __iter__(self) -> Iterator[Tuple[float, Emulsion]]:
-        """ iterate over the emulsions """
+        """iterate over the emulsions"""
         return iter(self.emulsions)
 
     def items(self):
-        """ iterate over all times and emulsions, returning them in pairs """
+        """iterate over all times and emulsions, returning them in pairs"""
         return zip(self.times, self.emulsions)
 
     def __eq__(self, other):
-        """ determine whether two EmulsionTimeCourse instance are equal """
+        """determine whether two EmulsionTimeCourse instance are equal"""
         grids_equal = self.grid is None or other.grid is None or self.grid == other.grid
         return (
             grids_equal

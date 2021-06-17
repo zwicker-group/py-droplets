@@ -7,7 +7,13 @@ import pytest
 from numpy.lib.recfunctions import structured_to_unstructured
 
 from pde import ScalarField
-from pde.grids import CartesianGrid, CylindricalSymGrid, PolarSymGrid, SphericalSymGrid, UnitGrid
+from pde.grids import (
+    CartesianGrid,
+    CylindricalSymGrid,
+    PolarSymGrid,
+    SphericalSymGrid,
+    UnitGrid,
+)
 
 from droplets import image_analysis
 from droplets.droplets import DiffuseDroplet, PerturbedDroplet2D, PerturbedDroplet3D
@@ -17,7 +23,7 @@ from droplets.emulsions import Emulsion
 @pytest.mark.parametrize("size", [16, 17])
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_sym_unit(size, periodic):
-    """ tests simple droplets localization in 2d """
+    """tests simple droplets localization in 2d"""
     pos = np.random.random(2) * size
     radius = np.random.uniform(2, 5)
     width = np.random.uniform(1, 2)
@@ -43,7 +49,7 @@ def test_localization_sym_unit(size, periodic):
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_sym_rect(periodic):
-    """ tests simple droplets localization in 2d with a rectangular grid"""
+    """tests simple droplets localization in 2d with a rectangular grid"""
     size = 16
 
     pos = np.random.uniform(-4, 4, size=2)
@@ -70,7 +76,7 @@ def test_localization_sym_rect(periodic):
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_perturbed_2d(periodic):
-    """ tests localization of perturbed 2d droplets """
+    """tests localization of perturbed 2d droplets"""
     size = 16
 
     pos = np.random.uniform(-4, 4, size=2)
@@ -97,7 +103,7 @@ def test_localization_perturbed_2d(periodic):
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_perturbed_3d(periodic):
-    """ tests localization of perturbed 3d droplets """
+    """tests localization of perturbed 3d droplets"""
     size = 8
 
     pos = np.random.uniform(-2, 2, size=3)
@@ -126,7 +132,7 @@ def test_localization_perturbed_3d(periodic):
 
 
 def test_localization_polar():
-    """ tests simple droplets localization in polar grid """
+    """tests simple droplets localization in polar grid"""
     radius = np.random.uniform(2, 3)
     width = np.random.uniform(0.5, 1.5)
     d1 = DiffuseDroplet((0, 0), radius, interface_width=width)
@@ -148,7 +154,7 @@ def test_localization_polar():
 
 
 def test_localization_spherical():
-    """ tests simple droplets localization in spherical grid """
+    """tests simple droplets localization in spherical grid"""
     radius = np.random.uniform(2, 3)
     width = np.random.uniform(0.5, 1.5)
     d1 = DiffuseDroplet((0, 0, 0), radius, interface_width=width)
@@ -171,7 +177,7 @@ def test_localization_spherical():
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_cylindrical(periodic):
-    """ tests simple droplets localization in cylindrical grid """
+    """tests simple droplets localization in cylindrical grid"""
     pos = (0, 0, np.random.uniform(-4, 4))
     radius = np.random.uniform(2, 3)
     width = np.random.uniform(0.5, 1.5)
@@ -195,7 +201,7 @@ def test_localization_cylindrical(periodic):
 
 
 def test_localization_threshold():
-    """ tests different localization thresholds """
+    """tests different localization thresholds"""
     pos = np.random.random(2) * 16
     radius = np.random.uniform(2, 5)
     width = np.random.uniform(1, 2)
@@ -217,7 +223,7 @@ def test_localization_threshold():
 
 
 def test_get_length_scale():
-    """ test determining the length scale """
+    """test determining the length scale"""
     grid = CartesianGrid([[0, 8 * np.pi]], 64, periodic=True)
     c = ScalarField(grid, np.sin(grid.axes_coords[0]))
     for method in ["structure_factor_mean", "structure_factor_maximum"]:
@@ -226,7 +232,7 @@ def test_get_length_scale():
 
 
 def test_emulsion_processing():
-    """ test identifying emulsions in phase fields """
+    """test identifying emulsions in phase fields"""
     grid = UnitGrid([32, 32], periodic=True)
 
     e1 = Emulsion(
@@ -248,7 +254,7 @@ def test_emulsion_processing():
 
 
 def test_structure_factor_random():
-    """ test the structure factor function for random input """
+    """test the structure factor function for random input"""
     g1 = CartesianGrid([[0, 10]] * 2, 64, periodic=True)
     f1 = ScalarField.random_colored(g1, -2)
 

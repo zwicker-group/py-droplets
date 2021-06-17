@@ -13,7 +13,7 @@ from droplets import droplets
 
 
 def test_simple_droplet():
-    """ test a given simple droplet """
+    """test a given simple droplet"""
     d = droplets.SphericalDroplet((1, 2), 1)
     assert d.surface_area == pytest.approx(2 * np.pi)
     np.testing.assert_allclose(d.interface_position(0), [2, 2])
@@ -25,7 +25,7 @@ def test_simple_droplet():
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_random_droplet(dim):
-    """ tests simple droplet """
+    """tests simple droplet"""
     pos = np.random.uniform(0, 10, dim)
     radius = np.random.uniform(2, 3)
     d1 = droplets.SphericalDroplet(pos, radius)
@@ -54,7 +54,7 @@ def test_random_droplet(dim):
 
 
 def test_perturbed_droplet_2d():
-    """ test methods of perturbed droplets in 2d """
+    """test methods of perturbed droplets in 2d"""
     d = droplets.PerturbedDroplet2D([0, 1], 1, 0.1, [0.0, 0.1, 0.2])
     d.volume
     d.interface_distance(0.1)
@@ -63,7 +63,7 @@ def test_perturbed_droplet_2d():
 
 
 def test_perturbed_droplet_3d():
-    """ test methods of perturbed droplets in 2d """
+    """test methods of perturbed droplets in 2d"""
     d = droplets.PerturbedDroplet3D([0, 1, 2], 1, 0.1, [0.0, 0.1, 0.2, 0.3])
     d.volume_approx
     d.interface_distance(0.1, 0.2)
@@ -72,7 +72,7 @@ def test_perturbed_droplet_3d():
 
 
 def test_perturbed_volume():
-    """ test volume calculation of perturbed droplets """
+    """test volume calculation of perturbed droplets"""
     pos = np.random.randn(2)
     radius = 1 + np.random.random()
     amplitudes = np.random.uniform(-0.2, 0.2, 6)
@@ -96,7 +96,7 @@ def test_perturbed_volume():
 
 
 def test_surface_area():
-    """ test surface area calculation of droplets """
+    """test surface area calculation of droplets"""
     # perturbed 2d droplet
     R0 = 3
     amplitudes = np.random.uniform(-1e-2, 1e-2, 6)
@@ -115,7 +115,7 @@ def test_surface_area():
 
 
 def test_curvature():
-    """ test interface curvature calculation """
+    """test interface curvature calculation"""
     # spherical droplet
     for dim in range(1, 4):
         d = droplets.SphericalDroplet(np.zeros(dim), radius=np.random.uniform(1, 4))
@@ -127,7 +127,7 @@ def test_curvature():
     amplitudes = epsilon * np.array([0.1, 0.2, 0.3, 0.4])
 
     def curvature_analytical(φ):
-        """ analytical expression for curvature """
+        """analytical expression for curvature"""
         radius = (
             3.0
             * (
@@ -183,7 +183,7 @@ def test_curvature():
 
 
 def test_from_data():
-    """ test the from_data constructor """
+    """test the from_data constructor"""
     for d1 in [
         droplets.SphericalDroplet((1,), 2),
         droplets.SphericalDroplet((1, 2), 3),
@@ -197,7 +197,7 @@ def test_from_data():
 
 @skipUnlessModule("h5py")
 def test_triangulation_2d():
-    """ test the 2d triangulation of droplets """
+    """test the 2d triangulation of droplets"""
     d1 = droplets.SphericalDroplet([1, 3], 5)
     d2 = droplets.PerturbedDroplet2D([2, 4], 5, amplitudes=[0.1, 0.2, 0.1, 0.2])
     for drop in [d1, d2]:
@@ -211,7 +211,7 @@ def test_triangulation_2d():
 
 @skipUnlessModule("h5py")
 def test_triangulation_3d():
-    """ test the 3d triangulation of droplets """
+    """test the 3d triangulation of droplets"""
     d1 = droplets.SphericalDroplet([1, 2, 3], 5)
     d2 = droplets.PerturbedDroplet3D([2, 3, 4], 5, amplitudes=[0.1, 0.2, 0.1, 0.2])
     for drop in [d1, d2]:

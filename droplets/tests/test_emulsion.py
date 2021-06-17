@@ -12,7 +12,7 @@ from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emuls
 
 
 def test_empty_emulsion():
-    """ test an emulsions without any droplets """
+    """test an emulsions without any droplets"""
     e = Emulsion([], grid=UnitGrid([2]))
     assert not e
     assert len(e) == 0
@@ -35,7 +35,7 @@ def test_empty_emulsion():
 
 
 def test_emulsion_single():
-    """ test an emulsions with a single droplet """
+    """test an emulsions with a single droplet"""
     e = Emulsion([], grid=UnitGrid([2]))
     e.append(DiffuseDroplet([10], 3, 1))
     assert e
@@ -59,7 +59,7 @@ def test_emulsion_single():
 
 
 def test_emulsion_two():
-    """ test an emulsions with two droplets """
+    """test an emulsions with two droplets"""
     grid = UnitGrid([30])
     e = Emulsion([DiffuseDroplet([10], 3, 1)], grid=grid)
     e1 = Emulsion([DiffuseDroplet([20], 5, 1)], grid=grid)
@@ -87,7 +87,7 @@ def test_emulsion_two():
 
 
 def test_emulsion_incompatible():
-    """ test incompatible droplets in an emulsion """
+    """test incompatible droplets in an emulsion"""
     # different type
     d1 = SphericalDroplet([1], 2)
     d2 = DiffuseDroplet([1], 2, 1)
@@ -104,7 +104,7 @@ def test_emulsion_incompatible():
 
 
 def test_emulsion_linked_data():
-    """ test whether emulsions link the data to droplets correctly """
+    """test whether emulsions link the data to droplets correctly"""
     d1 = SphericalDroplet([0, 0], 1)
     d2 = SphericalDroplet([1, 2], 3)
     e = Emulsion([d1, d2])
@@ -121,7 +121,7 @@ def test_emulsion_linked_data():
 
 @skipUnlessModule("h5py")
 def test_emulsion_io(tmp_path):
-    """ test writing and reading emulsions """
+    """test writing and reading emulsions"""
     path = tmp_path / "test_emulsion_io.hdf5"
 
     es = [
@@ -136,7 +136,7 @@ def test_emulsion_io(tmp_path):
 
 
 def test_timecourse():
-    """ test some droplet track functions """
+    """test some droplet track functions"""
     t1 = emulsions.EmulsionTimeCourse()
     for i in range(4):
         d = droplets.SphericalDroplet([i], i)
@@ -160,7 +160,7 @@ def test_timecourse():
 
 @skipUnlessModule("h5py")
 def test_timecourse_io(tmp_path):
-    """ test writing and reading emulsions time courses """
+    """test writing and reading emulsions time courses"""
     path = tmp_path / "test_timecourse_io.hdf5"
 
     e1 = Emulsion()
@@ -176,7 +176,7 @@ def test_timecourse_io(tmp_path):
 
 @skipUnlessModule("matplotlib")
 def test_emulsion_plotting():
-    """ test plotting emulsions """
+    """test plotting emulsions"""
     # 1d emulsion
     e1 = Emulsion([DiffuseDroplet([1], 10, 0.5)] * 2)
     with pytest.raises(NotImplementedError):
@@ -207,7 +207,7 @@ def test_emulsion_plotting():
 
 
 def test_remove_overlapping():
-    """ test that removing overlapping droplets works """
+    """test that removing overlapping droplets works"""
     e = Emulsion([SphericalDroplet([0, 1], 2), SphericalDroplet([1, 1], 2)])
     assert len(e) == 2
     e.remove_overlapping()
