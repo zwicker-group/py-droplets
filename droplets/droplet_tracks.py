@@ -428,7 +428,7 @@ class DropletTrack:
 class DropletTrackList(list):
     """a list of instances of :class:`DropletTrack`"""
 
-    def __getitem__(self, key: Union[int, slice]):
+    def __getitem__(self, key: Union[int, slice]):  # type: ignore
         """return the droplets identified by the given index/slice"""
         result = super().__getitem__(key)
         if isinstance(key, slice):

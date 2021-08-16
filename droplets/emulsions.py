@@ -107,7 +107,7 @@ class Emulsion(list):
         # return sum of Emulsions as an emulsion
         return Emulsion(list.__add__(self, rhs))
 
-    def __getitem__(self, key: Union[int, slice]):
+    def __getitem__(self, key: Union[int, slice]):  # type: ignore
         # return result from extended slicing as Emulsion
         result = list.__getitem__(self, key)
         try:
@@ -447,11 +447,11 @@ class Emulsion(list):
             x, y = np.unravel_index(np.argmin(dists), dists.shape)
             if dists[x, y] < min_distance:
                 # droplets overlap -> remove the smaller one
-                if self[x].radius > self[y].radius:
-                    self.pop(y)
+                if self[x].radius > self[y].radius:  # type: ignore
+                    self.pop(y)  # type: ignore
                     dists = np.delete(np.delete(dists, y, 0), y, 1)
                 else:
-                    self.pop(x)
+                    self.pop(x)  # type: ignore
                     dists = np.delete(np.delete(dists, x, 0), x, 1)
             else:
                 break

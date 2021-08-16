@@ -136,7 +136,7 @@ def _locate_droplets_in_mask_spherical(
     for slices in object_slices:
         if slices[0].start == 0:  # contains point around origin
             radius = grid.cell_to_point(slices[0].stop).flat[-1]
-            droplet = SphericalDroplet(np.zeros(grid.dim), radius=radius)  # type: ignore
+            droplet = SphericalDroplet(np.zeros(grid.dim), radius=radius)
         else:
             logger = logging.getLogger(grid.__class__.__module__)
             logger.warning("Found object not located at origin")
