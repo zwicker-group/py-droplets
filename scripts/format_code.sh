@@ -10,5 +10,5 @@ isort ..
 # format rest of the code
 for dir in droplets examples ; do
     echo "Formating files in ${dir}..."
-    black -t py36 ../${dir}
+    black -t py37 ../${dir}
 done
