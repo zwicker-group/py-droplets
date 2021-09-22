@@ -19,6 +19,7 @@ from typing import List  # @UnusedImport
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     Dict,
     Generator,
     Iterator,
@@ -36,7 +37,7 @@ from pde.grids.cartesian import CartesianGridBase
 from pde.storage.base import StorageBase
 from pde.tools.cuboid import Cuboid
 from pde.tools.output import display_progress
-from pde.tools.plotting import plot_on_axes
+from pde.tools.plotting import PlotReference, plot_on_axes
 from pde.trackers.base import InfoDict
 from pde.trackers.intervals import IntervalType
 
@@ -493,16 +494,18 @@ class Emulsion(list):
         field: ScalarField = None,
         image_args: Dict[str, Any] = None,
         repeat_periodically: bool = True,
+        color_value: Callable = None,
+        cmap=None,
+        norm=None,
         **kwargs,
-    ):
+    ) -> PlotReference:
         """plot the current emulsion together with a corresponding field
 
         If the emulsion is defined in a 3d geometry, only a projection on the first two
         axes is shown.
 
         Args:
-            ax (:class:`matplotlib.axes.Axes`):
-                The axes in which the background is shown
+            {PLOT_ARGS}
             field (:class:`pde.fields.scalar.ScalarField`):
                 provides the phase field that is shown as a background
             image_args (dict):
@@ -512,10 +515,24 @@ class Emulsion(list):
             repeat_periodically (bool):
                 flag determining whether droplets are shown on both sides of
                 periodic boundary conditions. This option can slow down plotting
+            color_value (callable):
+                Function used to determine the color of a droplet. The function is
+                called with individual droplet objects and must return a single scalar
+                value, which is then mapped to a color using the colormap given by
+                `cmap` and a suitable normalization given by `norm`.
+            cmap (str or :class:`~matplotlib.colors.Colormap`):
+                The colormap used to map normalized data values to RGBA colors.
+            norm (:class:`~matplotlib.colors.Normalize`):
+                 The normalizing object which scales data, typically into the interval
+                 [0, 1]. If None, norm defaults to a `colors.Normalize` object which
+                 maps the range of values obtained from `color_value` to [0, 1].
             **kwargs:
                 Additional keyword arguments are passed to the function creating the
                 patch that represents the droplet. For instance, to only draw the
                 outlines of the droplets, you may need to supply `fill=False`.
+
+        Returns:
+            :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
         if self.dim is None or self.dim <= 1:
             raise NotImplementedError(
@@ -555,26 +572,48 @@ class Emulsion(list):
             ax.set_ylim(*bounds[1])
             ax.set_aspect("equal")
 
+        # determine the color of all droplets
+        if color_value is not None:
+            import matplotlib.pyplot as plt
+
+            # determine the scalar values associated with all droplets
+            values = np.array([color_value(droplet) for droplet in self])
+
+            # and map them to colors
+            mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+            colors = mapper.to_rgba(values)
+
+        else:
+            colors = [None] * len(self)
+
         # get patches representing all droplets
         if grid is None or not repeat_periodically:
             # plot only the droplets themselves
-            patches = [droplet._get_mpl_patch(dim=2, **kwargs) for droplet in self]
+            patches = [
+                droplet._get_mpl_patch(dim=2, color=color, **kwargs)
+                for droplet, color in zip(self, colors)
+            ]
         else:
             # plot droplets also in their mirror positions
             patches = []
-            for droplet in self:
+            for droplet, color in zip(self, colors):
                 for p in grid.iter_mirror_points(
                     droplet.position, with_self=True, only_periodic=True
                 ):
                     # create copy with changed position
                     d = droplet.copy(position=p)
-                    patches.append(d._get_mpl_patch(dim=2, **kwargs))
+                    patches.append(d._get_mpl_patch(dim=2, color=color, **kwargs))
 
         # add all patches as a collection
         import matplotlib as mpl
 
         coll = mpl.collections.PatchCollection(patches, match_original=True)
         ax.add_collection(coll)
+
+        parameters = {
+            "repeat_periodicially": repeat_periodically,
+        }
+        return PlotReference(ax, coll, parameters)
 
 
 class EmulsionTimeCourse:
