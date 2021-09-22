@@ -24,7 +24,7 @@ The details of the classes are explained below:
 import logging
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, TypeVar
 
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
@@ -35,7 +35,7 @@ from pde.grids.base import GridBase
 from pde.tools import spherical
 from pde.tools.cuboid import Cuboid
 from pde.tools.misc import preserve_scalars
-from pde.tools.plotting import plot_on_axes
+from pde.tools.plotting import PlotReference, plot_on_axes
 
 # work-around to satisfy type checking in python 3.6
 if TYPE_CHECKING:
@@ -477,8 +477,17 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         """return the patch representing the droplet for plotting
 
         Args:
-            dim (int, optional): The dimension in which the data is plotted. If omitted,
-                the actual physical dimension is assumed
+            dim (int, optional):
+                The dimension in which the data is plotted. If omitted, the actual
+                physical dimension is assumed.
+            **kwargs:
+                Additional keyword arguments are passed to
+                :class:`matplotlib.patches.Circle`, which creates the patch that
+                represents the droplet. For instance, to only draw the outlines of the
+                droplets, you may need to supply `fill=False`.
+
+        Returns:
+            :class:`~matplotlib.patches.Circle`: The patch representing the droplet
         """
         import matplotlib as mpl
 
@@ -496,18 +505,29 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         return mpl.patches.Circle(position, self.radius, **kwargs)
 
     @plot_on_axes()
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax, value: Callable = None, **kwargs) -> PlotReference:
         """Plot the droplet
 
         Args:
             {PLOT_ARGS}
+            value (callable):
+                Sets the color of the droplet. This could be either `a matplotlib color
+                <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ or a
+                function that takes the droplet instance and returns a color in which
+                this droplet is drawn. If given, it overwrites the `color` argument.
             **kwargs:
-                Additional keyword arguments are passed to the
-                :class:`matplotlib.patches.Circle`, which creates the patch that
-                represents the droplet
+                Additional keyword arguments are passed to the class that creates the
+                patch that represents the droplet. For instance, to only draw the
+                outlines of the droplets, you may need to supply `fill=False`.
+
+        Returns:
+            :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
-        kwargs.setdefault("fill", False)
-        ax.add_artist(self._get_mpl_patch(**kwargs))
+        # create the artist representing the droplet
+        artist = self._get_mpl_patch(**kwargs)
+        # add artist to axis and return all information in a plot reference
+        ax.add_artist(artist)
+        return PlotReference(ax, artist)
 
 
 class DiffuseDroplet(SphericalDroplet):
@@ -913,8 +933,17 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         """return the patch representing the droplet for plotting
 
         Args:
-            dim (int, optional): The dimension in which the data is plotted. If omitted,
-                the actual physical dimension is assumed
+            dim (int, optional):
+                The dimension in which the data is plotted. If omitted, the actual
+                physical dimension is assumed
+            **kwargs:
+                Additional keyword arguments are passed to
+                :class:`matplotlib.patches.Polygon`, which creates the patch that
+                represents the droplet. For instance, to only draw the outlines of the
+                droplets, you may need to supply `fill=False`.
+
+        Returns:
+            :class:`~matplotlib.patches.Polygon`: The patch representing the droplet
         """
         import matplotlib as mpl
 
@@ -1069,7 +1098,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius ** 2
         return volume
 
-    def _get_mpl_patch(self, dim=None, **kwargs):
+    def _get_mpl_patch(self, dim=None, *, color=None, **kwargs):
         """return the patch representing the droplet for plotting
 
         Args:

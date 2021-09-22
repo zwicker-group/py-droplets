@@ -338,8 +338,7 @@ class DropletTrack:
                 droplets.
 
         Returns:
-            :class:`~pde.tools.plotting.PlotReference`: Contains information about the
-            plot
+            :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
         if len(self.times) == 0:
             return PlotReference(ax, None)
@@ -362,7 +361,7 @@ class DropletTrack:
     @plot_on_axes()
     def plot_positions(
         self, grid: Optional[GridBase] = None, arrow: bool = True, ax=None, **kwargs
-    ):
+    ) -> PlotReference:
         """plot the droplet track
 
         Args:
@@ -376,9 +375,12 @@ class DropletTrack:
                 Additional keyword arguments are passed to the matplotlib plot
                 function to affect the appearance. For example, passing `color=None`,
                 will use different colors for different droplets.
+
+        Returns:
+            :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
         if len(self.times) == 0:
-            return
+            return PlotReference(ax, None, {"arrow": arrow})
 
         if self.dim != 2:
             raise NotImplementedError("Plotting is only implemented for 2d grids")
@@ -423,6 +425,8 @@ class DropletTrack:
                 head_width=0.02 * size,
                 color=line.get_color(),
             )
+
+        return PlotReference(ax, None, {"arrow": arrow})
 
 
 class DropletTrackList(list):
@@ -637,7 +641,7 @@ class DropletTrackList(list):
                 self.pop(i)
 
     @plot_on_axes()
-    def plot(self, attribute: str = "radius", ax=None, **kwargs):
+    def plot(self, attribute: str = "radius", ax=None, **kwargs) -> PlotReference:
         """plot the time evolution of all droplets
 
         Args:
@@ -650,6 +654,9 @@ class DropletTrackList(list):
                 function to affect the appearance. The special value `color="cycle"`
                 implies that the default color cycle is used for the tracks, using
                 different colors for different tracks.
+
+        Returns:
+            :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
         # choose a suitable color for the tracks
         if "color" in kwargs:
@@ -660,11 +667,14 @@ class DropletTrackList(list):
 
         # adjust alpha such that multiple tracks are visible well
         kwargs.setdefault("alpha", min(0.8, 20 / len(self)))
-        for track in self:
-            track.plot(attribute=attribute, ax=ax, **kwargs)
+        elements = [
+            track.plot(attribute=attribute, ax=ax, **kwargs).element for track in self
+        ]
+
+        return PlotReference(ax, elements, {"attribute": attribute})
 
     @plot_on_axes()
-    def plot_positions(self, ax=None, **kwargs):
+    def plot_positions(self, ax=None, **kwargs) -> PlotReference:
         """plot all droplet tracks
 
         Args:
@@ -672,9 +682,12 @@ class DropletTrackList(list):
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot
                 function to affect the appearance.
+
+        Returns:
+            :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
-        for track in self:
-            track.plot_positions(ax=ax, **kwargs)
+        elements = [track.plot_positions(ax=ax, **kwargs).element for track in self]
+        return PlotReference(ax, elements)
 
 
 __all__ = ["DropletTrack", "DropletTrackList"]

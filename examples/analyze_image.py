@@ -10,5 +10,5 @@ img_path = Path(__file__).parent / "resources" / "emulsion.png"
 field = ScalarField.from_image(img_path)
 emulsion = locate_droplets(field)
 
-for droplet in emulsion:
-    print(droplet)
+# visualize the result
+emulsion.plot(field=field, fill=False, color="w")

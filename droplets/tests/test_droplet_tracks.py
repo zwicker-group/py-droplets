@@ -58,7 +58,6 @@ def test_droplettrack_io(tmp_path):
         assert t_in.droplets == t_out.droplets
 
 
-@skipUnlessModule("matplotlib")
 def test_droplettrack_plotting():
     """test writing and reading droplet tracks"""
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
@@ -99,7 +98,6 @@ def test_droplettracklist_io(tmp_path):
     assert tl_in == tl_out
 
 
-@skipUnlessModule("matplotlib")
 def test_droplettracklist_plotting():
     """test plotting droplet tracks"""
     t1 = DropletTrack()
