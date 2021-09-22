@@ -587,12 +587,12 @@ class Emulsion(list):
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
             colors = mapper.to_rgba(values)
 
-            if kwargs.pop("color") is not None:
+            if kwargs.pop("color", None) is not None:
                 logger = logging.getLogger(self.__class__.__name__)
                 logger.warning("`color` is overwritten by `color_value`.")
 
         else:
-            colors = [kwargs.pop("color")] * len(self)
+            colors = [kwargs.pop("color", None)] * len(self)
 
         # get patches representing all droplets
         if grid is None or not repeat_periodically:

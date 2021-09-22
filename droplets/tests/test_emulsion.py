@@ -174,7 +174,6 @@ def test_timecourse_io(tmp_path):
     assert len(tc2) == 2
 
 
-@skipUnlessModule("matplotlib")
 def test_emulsion_plotting():
     """test plotting emulsions"""
     # 1d emulsion
@@ -190,7 +189,8 @@ def test_emulsion_plotting():
     ]
     for e2 in es:
         e2.plot()
-        e2.plot(field=field)
+        e2.plot(field=field, repeat_periodically=True)
+        e2.plot(color_value=lambda droplet: droplet.radius)
 
     # 3d emulsion
     field = ScalarField(UnitGrid([5, 5, 5], periodic=True))
