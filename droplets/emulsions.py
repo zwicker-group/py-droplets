@@ -497,6 +497,7 @@ class Emulsion(list):
         color_value: Callable = None,
         cmap=None,
         norm=None,
+        colorbar: Union[bool, str] = True,
         **kwargs,
     ) -> PlotReference:
         """plot the current emulsion together with a corresponding field
@@ -523,9 +524,12 @@ class Emulsion(list):
             cmap (str or :class:`~matplotlib.colors.Colormap`):
                 The colormap used to map normalized data values to RGBA colors.
             norm (:class:`~matplotlib.colors.Normalize`):
-                 The normalizing object which scales data, typically into the interval
-                 [0, 1]. If None, norm defaults to a `colors.Normalize` object which
-                 maps the range of values obtained from `color_value` to [0, 1].
+                The normalizing object which scales data, typically into the interval
+                [0, 1]. If None, norm defaults to a `colors.Normalize` object which
+                maps the range of values obtained from `color_value` to [0, 1].
+            colorbar (bool or str):
+                Determines whether a colorbar is shown when `color_value` is supplied.
+                If a string is given, it is used as a label for the colorbar.
             **kwargs:
                 Additional keyword arguments are passed to the function creating the
                 patch that represents the droplet. For instance, to only draw the
@@ -583,8 +587,12 @@ class Emulsion(list):
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
             colors = mapper.to_rgba(values)
 
+            if kwargs.pop("color") is not None:
+                logger = logging.getLogger(self.__class__.__name__)
+                logger.warning("`color` is overwritten by `color_value`.")
+
         else:
-            colors = [None] * len(self)
+            colors = [kwargs.pop("color")] * len(self)
 
         # get patches representing all droplets
         if grid is None or not repeat_periodically:
@@ -609,6 +617,13 @@ class Emulsion(list):
 
         coll = mpl.collections.PatchCollection(patches, match_original=True)
         ax.add_collection(coll)
+
+        # add colorbar if requested
+        if color_value is not None and colorbar:
+            from pde.tools.plotting import add_scaled_colorbar
+
+            label = colorbar if isinstance(colorbar, str) else ""
+            add_scaled_colorbar(mapper, ax=ax, label=label)
 
         parameters = {
             "repeat_periodicially": repeat_periodically,

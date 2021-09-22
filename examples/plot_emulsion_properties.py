@@ -17,4 +17,4 @@ droplets = [
 # remove overlapping droplets in emulsion and plot it
 emulsion = Emulsion(droplets)
 emulsion.remove_overlapping()
-emulsion.plot(color_value=lambda droplet: droplet.radius)
+emulsion.plot(color_value=lambda droplet: droplet.radius, colorbar="Droplet radius")
