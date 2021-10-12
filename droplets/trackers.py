@@ -35,6 +35,7 @@ class LengthScaleTracker(TrackerBase):
         self,
         interval: IntervalData = 1,
         filename: Optional[str] = None,
+        *,
         method: str = "structure_factor_mean",
         source: Union[None, int, Callable] = None,
         verbose: bool = False,
@@ -129,8 +130,10 @@ class DropletTracker(TrackerBase):
         self,
         interval: IntervalData = 1,
         filename: Optional[str] = None,
+        *,
         emulsion_timecourse=None,
         source: Union[None, int, Callable] = None,
+        threshold: Union[float, str] = 0.5,
         minimal_radius: float = 0,
         refine: bool = False,
         perturbation_modes: int = 0,
@@ -142,18 +145,19 @@ class DropletTracker(TrackerBase):
             filename (str, optional):
                 Determines the file to which the final data is written.
             emulsion_timecourse (:class:`EmulsionTimeCourse`, optional):
-                Can be an instance of
-                :class:`~droplets.emulsions.EmulsionTimeCourse` that is
-                used to store the data.
+                Can be an instance of :class:`~droplets.emulsions.EmulsionTimeCourse`
+                that is used to store the data.
             source (int or callable, optional):
-                Determines how a field is extracted from `fields`. If `None`,
-                `fields` is passed as is, assuming it is already a scalar field.
-                This works for the simple, standard case where only a single
-                ScalarField is treated. Alternatively, `source` can be an
-                integer, indicating which field is extracted from an instance of
-                :class:`~pde.fields.FieldCollection`. Lastly, `source` can be a
-                function that takes `fields` as an argument and returns the
-                desired field.
+                Determines how a field is extracted from `fields`. If `None`, `fields`
+                is passed as is, assuming it is already a scalar field. This works for
+                the simple, standard case where only a single ScalarField is treated.
+                Alternatively, `source` can be an integer, indicating which field is
+                extracted from an instance of :class:`~pde.fields.FieldCollection`.
+                Lastly, `source` can be a function that takes `fields` as an argument
+                and returns the desired field.
+            threshold (float or str):
+                The threshold for binarizing the image. The special value 'auto' takes
+                the mean between the minimum and the maximum of the data as a guess.
             minimal_radius (float):
                 Minimal radius of droplets that will be retained.
             refine (bool):
@@ -171,6 +175,7 @@ class DropletTracker(TrackerBase):
             self.data = emulsion_timecourse
         self.filename = filename
         self.source = source
+        self.threshold = threshold
         self.minimal_radius = minimal_radius
         self.refine = refine
         self.perturbation_modes = perturbation_modes
@@ -211,9 +216,10 @@ class DropletTracker(TrackerBase):
         scalar_field = extract_field(field, self.source, 0)
         emulsion = locate_droplets(
             scalar_field,  # type: ignore
-            minimal_radius=self.minimal_radius,
+            threshold=self.threshold,
             refine=self.refine,
             modes=self.perturbation_modes,
+            minimal_radius=self.minimal_radius,
         )
         self.data.append(emulsion, t)
 
