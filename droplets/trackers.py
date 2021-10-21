@@ -15,6 +15,7 @@ from typing import Callable, List, Optional, Union  # @UnusedImport
 import numpy as np
 
 from pde.fields.base import FieldBase
+from pde.tools.docstrings import fill_in_docstring
 from pde.trackers.base import InfoDict, TrackerBase
 from pde.trackers.intervals import IntervalData
 
@@ -31,6 +32,7 @@ class LengthScaleTracker(TrackerBase):
             The associated length scales
     """
 
+    @fill_in_docstring
     def __init__(
         self,
         interval: IntervalData = 1,
@@ -43,7 +45,7 @@ class LengthScaleTracker(TrackerBase):
         r"""
         Args:
             interval:
-                |Arg_tracker_interval|
+                {ARG_TRACKER_INTERVAL}
             filename (str, optional):
                 Determines the file to which the data is written in JSON format
             method (str):
@@ -126,6 +128,7 @@ class DropletTracker(TrackerBase):
             done.
     """
 
+    @fill_in_docstring
     def __init__(
         self,
         interval: IntervalData = 1,
@@ -141,9 +144,9 @@ class DropletTracker(TrackerBase):
         """
         Args:
             interval:
-                |Arg_tracker_interval|
+                {ARG_TRACKER_INTERVAL}
             filename (str, optional):
-                Determines the file to which the final data is written.
+                Determines the file to which the final data is written as an HDF5 file.
             emulsion_timecourse (:class:`EmulsionTimeCourse`, optional):
                 Can be an instance of :class:`~droplets.emulsions.EmulsionTimeCourse`
                 that is used to store the data.

@@ -11,6 +11,8 @@ Classes representing the time evolution of droplets
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from typing import List  # @UnusedImport
@@ -276,17 +278,19 @@ class DropletTrack:
         return obj
 
     @classmethod
-    def from_file(cls, filename: str) -> "DropletTrack":
+    def from_file(cls, path: str) -> DropletTrack:
         """create droplet track by reading from file
 
         Args:
-            filename (str): Name of the file to read emulsion from
+            path (str):
+                The path from which the data is read. This function assumes that the
+                data was written as an HDF5 file using :meth:`to_file`.
         """
         import h5py
 
-        with h5py.File(filename, "r") as fp:
+        with h5py.File(path, "r") as fp:
             if len(fp) != 1:
-                raise RuntimeError(f"Multiple droplet tracks found in file {filename}")
+                raise RuntimeError(f"Multiple droplet tracks found in file {path}")
             dataset = fp[list(fp.keys())[0]]  # retrieve the only dataset
             obj = cls._from_hdf_dataset(dataset)
 
@@ -307,15 +311,20 @@ class DropletTrack:
 
         return dataset
 
-    def to_file(self, filename: str, info: InfoDict = None) -> None:
+    def to_file(self, path: str, info: InfoDict = None) -> None:
         """store data in hdf5 file
 
+        The data can be read using the classmethod :meth:`DropletTrack.from_file`.
+
         Args:
-            filename (str): Name of the file to write emulsion to
+            path (str):
+                The path to which the data is written as an HDF5 file.
+            info (dict):
+                Additional data stored alongside the droplet track list
         """
         import h5py
 
-        with h5py.File(filename, "w") as fp:
+        with h5py.File(path, "w") as fp:
             self._write_hdf_dataset(fp)
 
             # write additional information
@@ -447,7 +456,7 @@ class DropletTrackList(list):
         method: str = "overlap",
         progress: bool = False,
         **kwargs,
-    ) -> "DropletTrackList":
+    ) -> DropletTrackList:
         r"""obtain droplet tracks from an emulsion time course
 
         Args:
@@ -560,7 +569,7 @@ class DropletTrackList(list):
         refine: bool = False,
         method: str = "overlap",
         progress: bool = None,
-    ) -> "DropletTrackList":
+    ) -> DropletTrackList:
         r"""obtain droplet tracks from stored scalar field data
 
         This method first determines an emulsion time course and than collects tracks by
@@ -590,11 +599,13 @@ class DropletTrackList(list):
         return cls.from_emulsion_time_course(etc, method=method, progress=progress)
 
     @classmethod
-    def from_file(cls, filename: str) -> "DropletTrackList":
+    def from_file(cls, path: str) -> DropletTrackList:
         """create droplet track list by reading file
 
         Args:
-            filename (str): The filename from which the data is read
+            path (str):
+                The path from which the data is read. This function assumes that the
+                data was written as an HDF5 file using :meth:`to_file`.
 
         Returns:
             :class:`DropletTrackList`: an instance describing the droplet track list
@@ -602,22 +613,26 @@ class DropletTrackList(list):
         import h5py
 
         obj = cls()
-        with h5py.File(filename, "r") as fp:
+        with h5py.File(path, "r") as fp:
             for key in sorted(fp.keys()):  # iterate in the stored order
                 dataset = fp[key]
                 obj.append(DropletTrack._from_hdf_dataset(dataset))
         return obj
 
-    def to_file(self, filename: str, info: InfoDict = None) -> None:
+    def to_file(self, path: str, info: InfoDict = None) -> None:
         """store data in hdf5 file
 
+        The data can be read using the classmethod :meth:`DropletTrackList.from_file`.
+
         Args:
-            filename (str): determines the location where the file is written
-            info (dict): can be additional data stored alongside
+            path (str):
+                The path to which the data is written as an HDF5 file.
+            info (dict):
+                Additional data stored alongside the droplet track list
         """
         import h5py
 
-        with h5py.File(filename, "w") as fp:
+        with h5py.File(path, "w") as fp:
             # write the actual emulsion data
             for i, droplet_track in enumerate(self):
                 droplet_track._write_hdf_dataset(fp, f"track_{i:06d}")

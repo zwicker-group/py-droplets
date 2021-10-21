@@ -44,11 +44,6 @@ from parse_examples import main
 main()
 
 
-rst_prolog = """
-.. include:: ../doc_replacements.txt
-"""
-
-
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.

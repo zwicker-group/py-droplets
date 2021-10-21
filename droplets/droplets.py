@@ -21,6 +21,8 @@ The details of the classes are explained below:
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+from __future__ import annotations
+
 import logging
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
@@ -97,14 +99,14 @@ class DropletBase:
     droplet class stores.
     """
 
-    _subclasses: Dict[str, "DropletBase"] = {}  # collect all inheriting classes
+    _subclasses: Dict[str, DropletBase] = {}  # collect all inheriting classes
 
     __slots__ = ["data"]
 
     data: np.recarray  # all information about the droplet in a record array
 
     @classmethod
-    def from_data(cls, data: np.recarray) -> "DropletBase":
+    def from_data(cls, data: np.recarray) -> DropletBase:
         """create droplet class from a given data
 
         Args:
@@ -119,7 +121,7 @@ class DropletBase:
         return obj  # type: ignore
 
     @classmethod
-    def from_droplet(cls, droplet: "DropletBase", **kwargs) -> "DropletBase":
+    def from_droplet(cls, droplet: DropletBase, **kwargs) -> DropletBase:
         r"""return a droplet with data taken from `droplet`
 
         Args:

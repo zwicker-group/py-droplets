@@ -13,6 +13,8 @@ temporal dynamics.
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from typing import List  # @UnusedImport
@@ -36,6 +38,7 @@ from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGridBase
 from pde.storage.base import StorageBase
 from pde.tools.cuboid import Cuboid
+from pde.tools.docstrings import fill_in_docstring
 from pde.tools.output import display_progress
 from pde.tools.plotting import PlotReference, plot_on_axes
 from pde.trackers.base import InfoDict
@@ -116,7 +119,7 @@ class Emulsion(list):
         except TypeError:
             return result
 
-    def copy(self, min_radius: float = -1) -> "Emulsion":
+    def copy(self, min_radius: float = -1) -> Emulsion:
         """return a copy of this emulsion
 
         Args:
@@ -203,7 +206,7 @@ class Emulsion(list):
         return data
 
     @classmethod
-    def _from_hdf_dataset(cls, dataset, grid: Optional[GridBase] = None) -> "Emulsion":
+    def _from_hdf_dataset(cls, dataset, grid: Optional[GridBase] = None) -> Emulsion:
         """construct an emulsion by reading data from an hdf5 dataset
 
         Args:
@@ -225,17 +228,19 @@ class Emulsion(list):
         return cls(droplets, grid=grid, copy=False)
 
     @classmethod
-    def from_file(cls, filename: str) -> "Emulsion":
+    def from_file(cls, path: str) -> Emulsion:
         """create emulsion by reading file
 
         Args:
-            filename (str): Name of the file to read emulsion from
+            path (str):
+                The path from which the data is read. This function assumes that the
+                data was written as an HDF5 file using :meth:`to_file`.
         """
         import h5py
 
-        with h5py.File(filename, "r") as fp:
+        with h5py.File(path, "r") as fp:
             if len(fp) != 1:
-                raise RuntimeError(f"Multiple emulsions found in file `{filename}`")
+                raise RuntimeError(f"Multiple emulsions found in file `{path}`")
 
             # read grid
             if "grid" in fp.attrs:
@@ -264,15 +269,18 @@ class Emulsion(list):
 
         return dataset
 
-    def to_file(self, filename: str) -> None:
+    def to_file(self, path: str) -> None:
         """store data in hdf5 file
 
+        The data can be read using the classmethod :meth:`Emulsion.from_file`.
+
         Args:
-            filename (str): Name of the file to write emulsion to
+            path (str):
+                The path to which the data is written as an HDF5 file.
         """
         import h5py
 
-        with h5py.File(filename, "w") as fp:
+        with h5py.File(path, "w") as fp:
             # write the grid data
             if self.grid is not None:
                 fp.attrs["grid"] = self.grid.state_serialized
@@ -771,12 +779,15 @@ class EmulsionTimeCourse:
         return cls(emulsions, times=storage.times)
 
     @classmethod
-    def from_file(cls, filename: str, progress: bool = True) -> "EmulsionTimeCourse":
+    def from_file(cls, path: str, progress: bool = True) -> "EmulsionTimeCourse":
         """create emulsion time course by reading file
 
         Args:
-            filename (str): The filename from which the emulsion is read
-            progress (bool): Whether to show the progress of the process
+            path (str):
+                The path from which the data is read. This function assumes that the
+                data was written as an HDF5 file using :meth:`to_file`.
+            progress (bool):
+                Whether to show the progress of the process in a progress bar
 
         Returns:
             EmulsionTimeCourse: an instance describing the emulsion time course
@@ -784,7 +795,7 @@ class EmulsionTimeCourse:
         import h5py
 
         obj = cls()
-        with h5py.File(filename, "r") as fp:
+        with h5py.File(path, "r") as fp:
             # read grid
             if "grid" in fp.attrs:
                 grid: Optional[GridBase] = GridBase.from_state(fp.attrs["grid"])
@@ -802,16 +813,20 @@ class EmulsionTimeCourse:
                 )
         return obj
 
-    def to_file(self, filename: str, info: InfoDict = None) -> None:
+    def to_file(self, path: str, info: InfoDict = None) -> None:
         """store data in hdf5 file
 
+        The data can be read using the classmethod :meth:`EmulsionTimeCourse.from_file`.
+
         Args:
-            filename (str): determines the location where the file is written
-            info (dict): can be additional data stored alongside
+            path (str):
+                The path to which the data is written as an HDF5 file.
+            info (dict):
+                Additional data stored alongside the droplet track list
         """
         import h5py
 
-        with h5py.File(filename, "w") as fp:
+        with h5py.File(path, "w") as fp:
             # write the actual emulsion data
             for i, (time, emulsion) in enumerate(self.items()):
                 dataset = emulsion._write_hdf_dataset(fp, f"time_{i:06d}")
@@ -828,6 +843,7 @@ class EmulsionTimeCourse:
             if self.grid is not None:
                 fp.attrs["grid"] = self.grid.state_serialized
 
+    @fill_in_docstring
     def tracker(
         self,
         interval: Union[int, float, IntervalType] = 1,
@@ -836,12 +852,8 @@ class EmulsionTimeCourse:
         """return a tracker that analyzes emulsions during simulations
 
         Args:
-            interval: Determines how often the tracker interrupts the
-                simulation. Simple numbers are interpreted as durations measured
-                in the simulation time variable. Alternatively, instances of
-                :class:`~droplets.simulation.trackers.LogarithmicIntervals` and
-                :class:`~droplets.simulation.trackers.RealtimeIntervals` might
-                be given for more control.
+            interval:
+                {ARG_TRACKER_INTERVAL}
             filename (str): determines where the EmulsionTimeCourse data is
                 stored
         """
