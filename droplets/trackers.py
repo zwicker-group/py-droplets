@@ -49,20 +49,19 @@ class LengthScaleTracker(TrackerBase):
             filename (str, optional):
                 Determines the file to which the data is written in JSON format
             method (str):
-                Method used for determining the length scale. Methods are
-                explain in the function :func:`~pde.analysis.get\_length\_scale`
+                Method used for determining the length scale. Details are explained in
+                the function :func:`~droplets.image_analysis.get_length_scale`.
             source (int or callable, optional):
-                Determines how a field is extracted from `fields`. If `None`,
-                `fields` is passed as is, assuming it is already a scalar field.
-                This works for the simple, standard case where only a single
-                ScalarField is treated. Alternatively, `source` can be an
-                integer, indicating which field is extracted from an instance of
-                :class:`~pde.fields.FieldCollection`. Lastly, `source` can be a
-                function that takes `fields` as an argument and returns the
-                desired field.
+                Determines how a field is extracted from `fields`. If `None`, `fields`
+                is passed as is, assuming it is already a scalar field. This works for
+                the simple, standard case where only a single 
+                :class:`~pde.fields.scalar.ScalarField` is treated. Alternatively,
+                `source` can be an integer, indicating which field is extracted from an
+                instance of :class:`~pde.fields.collection.FieldCollection`. Lastly,
+                `source` can be a function that takes `fields` as an argument and
+                returns the desired field.
             verbose (bool):
-                Determines whether errors in determining the length scales are
-                logged.
+                Determines whether errors in determining the length scales are logged.
         """
         super().__init__(interval=interval)
         self.length_scales: List[float] = []

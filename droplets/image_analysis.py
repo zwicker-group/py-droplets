@@ -554,13 +554,12 @@ def get_length_scale(
 
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):
-            The scalar_field being analyzed
+            The scala field being analyzed
         method (str):
-            A string determining which method is used to calculate the length
-            scale.Valid options are `structure_factor_maximum` (numerically
-            determine the maximum in the structure factor) and
-            `structure_factor_mean` (calculate the mean of the structure
-            factor).
+            A string determining which method is used to calculate the length scale.
+            Valid options are `structure_factor_maximum` (numerically determine the
+            maximum in the structure factor) and `structure_factor_mean` (calculate the
+            mean of the structure factor).
         full_output (bool):
             Flag determining whether additional data is returned. The format of
             the returned data depends on the method.
@@ -575,6 +574,9 @@ def get_length_scale(
 
         If `full_output = True`, a tuple with the length scale and an additional
         object with further information is returned.
+
+    See Also:
+        :class:`~droplets.trackers.LengthScaleTracker`: Tracker measuring length scales
     """
     logger = logging.getLogger(__name__)
 
