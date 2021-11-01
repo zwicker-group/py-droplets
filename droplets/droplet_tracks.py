@@ -290,7 +290,10 @@ class DropletTrack:
 
         with h5py.File(path, "r") as fp:
             if len(fp) != 1:
-                raise RuntimeError(f"Multiple droplet tracks found in file {path}")
+                raise RuntimeError(
+                    f"Multiple droplet tracks found in file {path}. Did you mean to "
+                    "load a DropletTrackList instead?"
+                )
             dataset = fp[list(fp.keys())[0]]  # retrieve the only dataset
             obj = cls._from_hdf_dataset(dataset)
 
