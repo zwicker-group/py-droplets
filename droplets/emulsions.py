@@ -456,11 +456,11 @@ class Emulsion(list):
             x, y = np.unravel_index(np.argmin(dists), dists.shape)
             if dists[x, y] < min_distance:
                 # droplets overlap -> remove the smaller one
-                if self[x].radius > self[y].radius:  # type: ignore
-                    self.pop(y)  # type: ignore
+                if self[x].radius > self[y].radius:
+                    self.pop(y)
                     dists = np.delete(np.delete(dists, y, 0), y, 1)
                 else:
-                    self.pop(x)  # type: ignore
+                    self.pop(x)
                     dists = np.delete(np.delete(dists, x, 0), x, 1)
             else:
                 break

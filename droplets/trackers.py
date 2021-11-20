@@ -54,7 +54,7 @@ class LengthScaleTracker(TrackerBase):
             source (int or callable, optional):
                 Determines how a field is extracted from `fields`. If `None`, `fields`
                 is passed as is, assuming it is already a scalar field. This works for
-                the simple, standard case where only a single 
+                the simple, standard case where only a single
                 :class:`~pde.fields.scalar.ScalarField` is treated. Alternatively,
                 `source` can be an integer, indicating which field is extracted from an
                 instance of :class:`~pde.fields.collection.FieldCollection`. Lastly,
