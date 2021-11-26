@@ -34,10 +34,11 @@ from scipy import integrate
 
 from pde.fields import ScalarField
 from pde.grids.base import GridBase
-from pde.tools import spherical
 from pde.tools.cuboid import Cuboid
 from pde.tools.misc import preserve_scalars
 from pde.tools.plotting import PlotReference, plot_on_axes
+
+from .tools import spherical
 
 # work-around to satisfy type checking in python 3.6
 if TYPE_CHECKING:
