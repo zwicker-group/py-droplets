@@ -80,7 +80,7 @@ def test_perturbed_volume():
 
     def integrand(φ):
         r = d.interface_distance(φ)
-        return 0.5 * r ** 2
+        return 0.5 * r**2
 
     vol = integrate.quad(integrand, 0, 2 * np.pi)[0]
     assert vol == pytest.approx(d.volume)
@@ -92,7 +92,7 @@ def test_perturbed_volume():
     pos = np.random.randn(3)
     radius = 1 + np.random.random()
     d = droplets.PerturbedDroplet3D(pos, radius, 0, np.zeros(7))
-    assert d.volume == pytest.approx(4 * np.pi / 3 * radius ** 3)
+    assert d.volume == pytest.approx(4 * np.pi / 3 * radius**3)
 
 
 def test_surface_area():
@@ -131,7 +131,7 @@ def test_curvature():
         radius = (
             3.0
             * (
-                5.0 * (40.0 + 27.0 * epsilon ** 2.0)
+                5.0 * (40.0 + 27.0 * epsilon**2.0)
                 + epsilon
                 * (
                     40.0 * (4.0 * np.cos(2.0 * φ) + np.sin(φ))
@@ -160,7 +160,7 @@ def test_curvature():
                         + np.sin(φ)
                         + 6.0 * np.sin(2.0 * φ)
                     )
-                    + epsilon ** 2.0
+                    + epsilon**2.0
                     * (
                         345.0
                         + 165.0 * np.cos(φ)

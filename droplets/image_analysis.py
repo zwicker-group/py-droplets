@@ -85,7 +85,7 @@ def _locate_droplets_in_mask_cartesian(
     # determine position from binary image and scale it to real space
     positions = ndimage.measurements.center_of_mass(mask_padded, labels, index=indices)
     # correct for the additional padding of the array
-    positions = grid.cell_to_point(positions - offset)
+    positions = grid.transform(positions - offset, "cell", "grid")
 
     # determine volume from binary image and scale it to real space
     volumes = ndimage.measurements.sum(mask_padded, labels, index=indices)
@@ -135,7 +135,7 @@ def _locate_droplets_in_mask_spherical(
     droplet = None
     for slices in object_slices:
         if slices[0].start == 0:  # contains point around origin
-            radius = float(grid.cell_to_point(slices[0].stop).flat[-1])  # type: ignore
+            radius = float(grid.transform(slices[0].stop, "cell", "grid").flat[-1])
             droplet = SphericalDroplet(np.zeros(grid.dim), radius=radius)
         else:
             logger = logging.getLogger(grid.__class__.__module__)
@@ -177,7 +177,7 @@ def _locate_droplets_in_mask_cylindrical_single(
 
     # determine position from binary image and scale it to real space
     pos = ndimage.measurements.center_of_mass(mask, labels, index=indices)
-    pos = grid.cell_to_point(pos)
+    pos = grid.transform(pos, "cell", "cartesian")
 
     # determine volume from binary image and scale it to real space
     vol_r, dz = grid.cell_volume_data
@@ -213,6 +213,7 @@ def _locate_droplets_in_mask_cylindrical(
 
         # pad the array to simulate periodic boundary conditions
         dim_r, dim_z = grid.shape
+        z_min, z_max = grid.axes_bounds[1]
         mask_padded = np.pad(mask, [[0, 0], [dim_z, dim_z]], mode="wrap")
         assert mask_padded.shape == (dim_r, 3 * dim_z)
 
@@ -226,7 +227,7 @@ def _locate_droplets_in_mask_cylindrical(
             # correct for the additional padding of the array
             droplet.position[2] -= grid.length
             # check whether the droplet lies in the original box
-            if grid.contains_point(droplet.position):
+            if z_min <= droplet.position[2] <= z_max:
                 droplets.append(droplet)
 
         grid._logger.info(f"Kept {len(droplets)} central droplets.")
@@ -433,8 +434,8 @@ def refine_droplet(
 
     # normalize the droplet position
     grid = phase_field.grid
-    coords = grid.point_from_cartesian(droplet.position)
-    droplet.position = grid.point_to_cartesian(grid.normalize_point(coords))
+    coords = grid.transform(droplet.position, "cartesian", "grid")
+    droplet.position = grid.transform(grid.normalize_point(coords), "grid", "cartesian")
 
     return droplet
 

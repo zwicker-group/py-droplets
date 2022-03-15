@@ -119,7 +119,7 @@ class DropletBase:
         # simply assume that the given data is sane
         obj = cls.__new__(cls)
         obj.data = data
-        return obj  # type: ignore
+        return obj
 
     @classmethod
     def from_droplet(cls, droplet: DropletBase, **kwargs) -> DropletBase:
@@ -135,7 +135,7 @@ class DropletBase:
         """
         args = droplet._args
         args.update(kwargs)
-        return cls(**args)  # type: ignore
+        return cls(**args)
 
     @classmethod
     @abstractmethod
@@ -464,7 +464,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             except (NotImplementedError, AttributeError):
                 # estimate surface area from 3d spherical droplet
                 surface_area = spherical.surface_from_radius(self.radius, dim=3)
-            num_est = (4 * surface_area) / (np.sqrt(3) * resolution ** 2)
+            num_est = (4 * surface_area) / (np.sqrt(3) * resolution**2)
             tri = triangulated_spheres.get_triangulation(num_est)
 
             φ, θ = tri["angles"][:, 0], tri["angles"][:, 1]
@@ -626,9 +626,9 @@ class DiffuseDroplet(SphericalDroplet):
         if interface_width == 0 or dtype == np.bool_:
             result = dist < self.radius
         else:
-            result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)
+            result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)  # type: ignore
 
-        return result.astype(dtype)  # type: ignore
+        return result.astype(dtype)
 
 
 class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
@@ -893,13 +893,13 @@ class PerturbedDroplet2D(PerturbedDropletBase):
     @property
     def volume(self) -> float:
         """float: volume of the droplet"""
-        term = 1 + np.sum(self.amplitudes ** 2) / 2
-        return np.pi * self.radius ** 2 * term  # type: ignore
+        term = 1 + np.sum(self.amplitudes**2) / 2
+        return np.pi * self.radius**2 * term  # type: ignore
 
     @volume.setter
     def volume(self, volume: float):
         """set volume keeping relative perturbations"""
-        term = 1 + np.sum(self.amplitudes ** 2) / 2
+        term = 1 + np.sum(self.amplitudes**2) / 2
         self.radius = np.sqrt(volume / (np.pi * term))
 
     @property
@@ -929,7 +929,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         """float: surface area of the droplet (quadratic in amplitudes)"""
         length = 4
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
-            length += n ** 2 * (a ** 2 + b ** 2)
+            length += n**2 * (a**2 + b**2)
         return np.pi * self.radius * length / 2
 
     def _get_mpl_patch(self, dim=2, **kwargs):
@@ -1070,9 +1070,9 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 l, _ = spherical.spherical_index_lm(k)
-                hk = (l ** 2 + l - 2) / 2
+                hk = (l**2 + l - 2) / 2
                 correction = a * hk * Yk(k, θ, φ)
-        return 1 / self.radius + correction / self.radius ** 2
+        return 1 / self.radius + correction / self.radius**2
 
     @property
     def volume(self) -> float:
@@ -1081,7 +1081,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         def integrand(θ, φ):
             """helper function calculating the integrand"""
             r = self.interface_distance(θ, φ)
-            return r ** 3 * np.sin(θ) / 3
+            return r**3 * np.sin(θ) / 3
 
         volume = integrate.dblquad(
             integrand, 0, 2 * np.pi, lambda _: 0, lambda _: np.pi
@@ -1098,7 +1098,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         """float: approximate volume to linear order in the perturbation"""
         volume = spherical.volume_from_radius(self.radius, 3)
         if len(self.amplitudes) > 0:
-            volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius ** 2
+            volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius**2
         return volume
 
     def _get_mpl_patch(self, dim=None, *, color=None, **kwargs):
