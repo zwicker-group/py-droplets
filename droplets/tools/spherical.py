@@ -96,7 +96,7 @@ def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
         float or :class:`~numpy.ndarray`: Radius of the sphere
     """
     if dim == 1:
-        return volume / 2  # type: ignore
+        return volume / 2
     elif dim == 2:
         return np.sqrt(volume / π)  # type: ignore
     elif dim == 3:
@@ -146,17 +146,17 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     if dim == 1:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return 2 * radius  # type: ignore
+            return 2 * radius
 
     elif dim == 2:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return π * radius ** 2  # type: ignore
+            return π * radius**2
 
     elif dim == 3:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return 4 * π / 3 * radius ** 3  # type: ignore
+            return 4 * π / 3 * radius**3
 
     else:
         raise NotImplementedError(f"Cannot calculate the volume in {dim} dimensions")
@@ -179,9 +179,9 @@ def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
         else:
             return 2
     elif dim == 2:
-        return 2 * π * radius  # type: ignore
+        return 2 * π * radius
     elif dim == 3:
-        return 4 * π * radius ** 2  # type: ignore
+        return 4 * π * radius**2
     else:
         raise NotImplementedError(
             f"Cannot calculate the surface area in {dim} dimensions"
@@ -201,7 +201,7 @@ def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
     if dim == 1:
         raise RuntimeError("Cannot calculate radius of 1-d sphere from surface")
     elif dim == 2:
-        return surface / (2 * π)  # type: ignore
+        return surface / (2 * π)
     elif dim == 3:
         return np.sqrt(surface / (4 * π))  # type: ignore
     else:
@@ -242,13 +242,13 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
 
         @jit
         def surface_from_radius(radius: TNumArr) -> TNumArr:
-            return 2 * π * radius  # type: ignore
+            return 2 * π * radius
 
     elif dim == 3:
 
         @jit
         def surface_from_radius(radius: TNumArr) -> TNumArr:
-            return 4 * π * radius ** 2  # type: ignore
+            return 4 * π * radius**2
 
     else:
         raise NotImplementedError(
