@@ -1,6 +1,6 @@
 # py-droplets
 
-[![Build Status](https://travis-ci.org/zwicker-group/py-droplets.svg?branch=master)](https://travis-ci.org/zwicker-group/py-droplets)
+[![Build Status](https://github.com/zwicker-group/py-droplets/actions/workflows/python_tests.yml/badge.svg)](https://github.com/zwicker-group/py-droplets/actions/workflows/python_tests.yml)
 [![Documentation Status](https://readthedocs.org/projects/py-droplets/badge/?version=latest)](https://py-droplets.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/py-droplets.svg)](https://badge.fury.io/py/py-droplets)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
