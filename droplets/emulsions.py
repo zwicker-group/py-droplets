@@ -35,7 +35,7 @@ import numpy as np
 
 from pde.fields import ScalarField
 from pde.grids.base import GridBase
-from pde.grids.cartesian import CartesianGridBase
+from pde.grids.cartesian import CartesianGrid
 from pde.storage.base import StorageBase
 from pde.tools.cuboid import Cuboid
 from pde.tools.docstrings import fill_in_docstring
@@ -574,7 +574,7 @@ class Emulsion(list):
                 grid = field.grid
 
         else:
-            if isinstance(grid, CartesianGridBase):
+            if isinstance(grid, CartesianGrid):
                 # determine the bounds from the (2d) grid
                 bounds = grid.axes_bounds
             else:

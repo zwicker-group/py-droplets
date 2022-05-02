@@ -226,7 +226,11 @@ def test_get_length_scale():
     """test determining the length scale"""
     grid = CartesianGrid([[0, 8 * np.pi]], 64, periodic=True)
     c = ScalarField(grid, np.sin(grid.axes_coords[0]))
-    for method in ["structure_factor_mean", "structure_factor_maximum"]:
+    for method in [
+        "structure_factor_mean",
+        "structure_factor_maximum",
+        "droplet_detection",
+    ]:
         s = image_analysis.get_length_scale(c, method=method)
         assert s == pytest.approx(2 * np.pi, rel=0.1)
 

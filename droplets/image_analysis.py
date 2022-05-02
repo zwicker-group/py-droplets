@@ -33,7 +33,7 @@ except ImportError:
 from pde.fields import ScalarField
 from pde.grids import CylindricalSymGrid
 from pde.grids.base import GridBase
-from pde.grids.cartesian import CartesianGridBase
+from pde.grids.cartesian import CartesianGrid
 from pde.grids.spherical import SphericalSymGridBase
 from pde.tools.math import SmoothData1D
 from pde.tools.typing import NumberOrArray
@@ -48,7 +48,7 @@ from .emulsions import Emulsion
 
 
 def _locate_droplets_in_mask_cartesian(
-    grid: CartesianGridBase, mask: np.ndarray
+    grid: CartesianGrid, mask: np.ndarray
 ) -> Emulsion:
     """locate droplets in a (potentially periodic) data set on a Cartesian grid
 
@@ -254,7 +254,7 @@ def locate_droplets_in_mask(grid: GridBase, mask: np.ndarray) -> Emulsion:
     Returns:
         :class:`droplets.emulsions.Emulsion`: The discovered spherical droplets
     """
-    if isinstance(grid, CartesianGridBase):
+    if isinstance(grid, CartesianGrid):
         return _locate_droplets_in_mask_cartesian(grid, mask)
     elif isinstance(grid, SphericalSymGridBase):
         return _locate_droplets_in_mask_spherical(grid, mask)
@@ -481,7 +481,7 @@ def get_structure_factor(
         )
 
     grid = scalar_field.grid
-    if not isinstance(grid, CartesianGridBase):
+    if not isinstance(grid, CartesianGrid):
         raise NotImplementedError(
             "Structure factor can currently only be calculated for Cartesian grids"
         )
@@ -546,10 +546,7 @@ def get_structure_factor(
 
 
 def get_length_scale(
-    scalar_field: ScalarField,
-    method: str = "structure_factor_maximum",
-    full_output: bool = False,
-    smoothing: Optional[float] = None,
+    scalar_field: ScalarField, method: str = "structure_factor_maximum", **kwargs
 ) -> Union[float, Tuple[float, Any]]:
     """Calculates a length scale associated with a phase field
 
@@ -561,14 +558,15 @@ def get_length_scale(
             Valid options are `structure_factor_maximum` (numerically determine the
             maximum in the structure factor) and `structure_factor_mean` (calculate the
             mean of the structure factor).
-        full_output (bool):
-            Flag determining whether additional data is returned. The format of
-            the returned data depends on the method.
-        smoothing (float, optional):
-            Length scale that determines the smoothing of the radially averaged
-            structure factor. If `None` it is automatically determined from the
-            typical discretization of the underlying grid. This parameter is
-            only used if `method = 'structure_factor_maximum'`
+
+    Additional supported keyword arguments depend on the chosen method. For instance,
+    the methods involving the structure factor allow for a boolean flag `full_output`,
+    which also returns the actual structure factor. The method
+    `structure_factor_maximum` also allows for some smoothing of the radially averaged
+    structure factor. If the parameter `smoothing` is set to `None` the amount of
+    smoothing is determined automatically from the typical discretization of the
+    underlying grid. For the method `droplet_detection`, additional arguments are
+    forwarded to :func:`locate_droplets`.
 
     Returns:
         float: The determine length scale
@@ -586,7 +584,7 @@ def get_length_scale(
         k_mag, sf = get_structure_factor(scalar_field)
         length_scale = np.sum(sf) / np.sum(k_mag * sf)
 
-        if full_output:
+        if kwargs.pop("full_output", False):
             return length_scale, sf
 
     elif method == "structure_factor_maximum" or method == "structure_factor_peak":
@@ -594,7 +592,7 @@ def get_length_scale(
         k_mag, sf = get_structure_factor(scalar_field, smoothing=None)
 
         # smooth the structure factor
-        if smoothing is None:
+        if kwargs.pop("smoothing", None) is None:
             smoothing = 0.01 * scalar_field.grid.typical_discretization
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
 
@@ -620,14 +618,33 @@ def get_length_scale(
                     )
                 length_scale = 1 / result.x
 
-        if full_output:
+        if kwargs.pop("full_output", False):
             return length_scale, sf_smooth
+
+    elif method == "droplet_detection":
+        # calculate the length scale from detected droplets
+        droplets = locate_droplets(scalar_field, **kwargs)
+        kwargs = None  # clear kwargs, so no warning is raised
+
+        # get the axes along which droplets can be placed
+        grid = scalar_field.grid
+        axes = set(range(grid.dim)) - set(grid.coordinate_constraints)
+        volume = 1
+        for ax in axes:
+            volume *= grid.axes_bounds[ax][1] - grid.axes_bounds[ax][0]
+
+        volume_per_droplet = volume / len(droplets)
+        length_scale = volume_per_droplet ** (1 / len(axes))
 
     else:
         raise ValueError(
             f"Method {method} is not defined. Valid values are `structure_factor_mean` "
             "and `structure_factor_maximum`"
         )
+
+    if kwargs:
+        # raise warning if keyword arguments remain
+        logger.warning("Unused keyword arguments: %s", ", ".join(kwargs))
 
     # return only the length scale with out any additional information
     return length_scale  # type: ignore
