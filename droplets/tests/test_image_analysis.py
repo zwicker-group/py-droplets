@@ -210,7 +210,7 @@ def test_localization_threshold():
     grid = UnitGrid((16, 16), periodic=False)
     field = d1.get_phase_field(grid)
 
-    for threshold in [0.25, 0.75, "auto"]:
+    for threshold in [0.25, 0.75, "auto", "mean", "extrema", "otsu"]:
         emulsion = image_analysis.locate_droplets(
             field, threshold=threshold, refine=True
         )

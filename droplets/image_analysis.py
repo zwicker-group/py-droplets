@@ -47,6 +47,43 @@ from .droplets import (
 from .emulsions import Emulsion
 
 
+def threshold_otsu(data: np.ndarray, nbins: int = 256) -> float:
+    """Find the threshold value for a bimodal histogram using the Otsu method.
+
+    If you have a distribution that is bimodal, i.e., with two peaks and a valley
+    between them, then you can use this to find the location of that valley, which
+    splits the distribution into two.
+
+    Args:
+        data (:class:`~numpy.ndarray`):
+            The data to be analyzed
+        nbins (int):
+            The number of bins in the histogram, which defines the accuracy of the
+            determined threshold.
+
+    Modified from https://stackoverflow.com/a/71345917/932593, which is based on the
+    the SciKit Image threshold_otsu implementation:
+    https://github.com/scikit-image/scikit-image/blob/70fa904eee9ef370c824427798302551df57afa1/skimage/filters/thresholding.py#L312
+    """
+    counts, bin_edges = np.histogram(data.flat, bins=nbins)
+    bin_centers = (bin_edges[1:] + bin_edges[:-1]) / 2
+
+    # class probabilities for all possible thresholds
+    weight1 = np.cumsum(counts)
+    weight2 = np.cumsum(counts[::-1])[::-1]
+    # class means for all possible thresholds
+    mean1 = np.cumsum(counts * bin_centers) / weight1
+    mean2 = (np.cumsum((counts * bin_centers)[::-1]) / weight2[::-1])[::-1]
+
+    # Clip ends to align class 1 and class 2 variables:
+    # The last value of ``weight1``/``mean1`` should pair with zero values in
+    # ``weight2``/``mean2``, which do not exist.
+    variance12 = weight1[:-1] * weight2[1:] * (mean1[:-1] - mean2[1:]) ** 2
+
+    idx = np.argmax(variance12)
+    return float(bin_centers[idx])
+
+
 def _locate_droplets_in_mask_cartesian(
     grid: CartesianGrid, mask: np.ndarray
 ) -> Emulsion:
@@ -284,9 +321,15 @@ def locate_droplets(
         phase_field (:class:`~pde.fields.ScalarField`):
             Scalar field that describes the concentration field of droplets
         threshold (float or str):
-            The threshold for binarizing the image. The special value 'auto'
-            takes the mean between the minimum and the maximum of the data as a
-            guess.
+            The threshold for binarizing the image. If a value is given it is used
+            directly. Otherwise, the following algorithms are supported:
+
+            * `extrema`: take mean between the minimum and the maximum of the data
+            * `mean`: take the mean over the entire data
+            * `otsu`: use Otsu's method implemented in :func:`threshold_otsu`
+
+            The special value `auto` currently defaults to the `extrema` method.
+
         modes (int):
             The number of perturbation modes that should be included.
             If `modes=0`, droplets are assumed to be spherical. Note that the
@@ -311,8 +354,12 @@ def locate_droplets(
         raise ValueError("Perturbed droplets only supported for 2d and 3d")
 
     # determine actual threshold
-    if threshold == "auto":
+    if threshold == "extrema" or threshold == "auto":
         threshold = float(phase_field.data.min() + phase_field.data.max()) / 2
+    elif threshold == "mean":
+        threshold = float(phase_field.data.mean())
+    elif threshold == "otsu":
+        threshold = threshold_otsu(phase_field.data)
     else:
         threshold = float(threshold)
 
@@ -624,12 +671,12 @@ def get_length_scale(
     elif method == "droplet_detection":
         # calculate the length scale from detected droplets
         droplets = locate_droplets(scalar_field, **kwargs)
-        kwargs = None  # clear kwargs, so no warning is raised
+        kwargs = {}  # clear kwargs, so no warning is raised
 
         # get the axes along which droplets can be placed
         grid = scalar_field.grid
         axes = set(range(grid.dim)) - set(grid.coordinate_constraints)
-        volume = 1
+        volume = 1.
         for ax in axes:
             volume *= grid.axes_bounds[ax][1] - grid.axes_bounds[ax][0]
 
@@ -651,6 +698,7 @@ def get_length_scale(
 
 
 __all__ = [
+    "threshold_otsu",
     "locate_droplets",
     "refine_droplet",
     "get_structure_factor",
