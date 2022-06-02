@@ -636,7 +636,7 @@ def get_length_scale(
 
     elif method == "structure_factor_maximum" or method == "structure_factor_peak":
         # calculate the structure factor
-        k_mag, sf = get_structure_factor(scalar_field, smoothing=None)
+        k_mag, sf = get_structure_factor(scalar_field, smoothing=None, add_zero=True)
 
         # smooth the structure factor
         if kwargs.pop("smoothing", None) is None:
@@ -647,7 +647,8 @@ def get_length_scale(
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
-            max_est = k_mag[np.argmax(sf)]
+            # determine maximum (excluding k=0)
+            max_est = k_mag[1 + np.argmax(sf[1:])]
             bracket = np.array([0.2, 1, 5]) * max_est
             logger.debug(f"Search maximum of structure factor in interval {bracket}")
             try:
@@ -676,7 +677,7 @@ def get_length_scale(
         # get the axes along which droplets can be placed
         grid = scalar_field.grid
         axes = set(range(grid.dim)) - set(grid.coordinate_constraints)
-        volume = 1.
+        volume = 1.0
         for ax in axes:
             volume *= grid.axes_bounds[ax][1] - grid.axes_bounds[ax][0]
 
