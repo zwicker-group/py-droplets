@@ -235,6 +235,15 @@ def test_get_length_scale():
         assert s == pytest.approx(2 * np.pi, rel=0.1)
 
 
+def test_get_length_scale_edge():
+    """test determining the length scale for edge cases"""
+    grid = CartesianGrid(bounds=[[0, 1]], shape=32, periodic=True)
+    for n in range(1, 4):
+        c = ScalarField.from_expression(grid, f"0.2 + 0.2*sin(2*{n}*pi*x)")
+        s = image_analysis.get_length_scale(c)
+        assert s == pytest.approx(1 / n, rel=1e-4)
+
+
 def test_emulsion_processing():
     """test identifying emulsions in phase fields"""
     grid = UnitGrid([32, 32], periodic=True)
