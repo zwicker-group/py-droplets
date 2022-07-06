@@ -2,6 +2,8 @@
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+import math
+
 import numpy as np
 import pytest
 
@@ -24,10 +26,10 @@ def test_empty_emulsion():
     np.testing.assert_array_equal(dists, np.zeros((0, 0)))
     expect = {
         "count": 0,
-        "radius_mean": np.nan,
-        "radius_std": np.nan,
-        "volume_mean": np.nan,
-        "volume_std": np.nan,
+        "radius_mean": math.nan,
+        "radius_std": math.nan,
+        "volume_mean": math.nan,
+        "volume_std": math.nan,
     }
     assert e.get_size_statistics() == expect
     for b in [True, False]:
