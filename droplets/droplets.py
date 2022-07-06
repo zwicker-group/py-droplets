@@ -24,6 +24,7 @@ The details of the classes are explained below:
 from __future__ import annotations
 
 import logging
+import math
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, TypeVar
@@ -587,7 +588,7 @@ class DiffuseDroplet(SphericalDroplet):
     @interface_width.setter
     def interface_width(self, value: Optional[float]):
         if value is None:
-            self.data["interface_width"] = np.nan
+            self.data["interface_width"] = math.nan
         elif value < 0:
             raise ValueError("Interface width must not be negative")
         else:

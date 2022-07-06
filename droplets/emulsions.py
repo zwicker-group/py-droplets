@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from typing import List  # @UnusedImport
 from typing import (
     TYPE_CHECKING,
@@ -479,10 +480,10 @@ class Emulsion(list):
         if len(self) == 0:
             return {
                 "count": 0,
-                "radius_mean": np.nan,
-                "radius_std": np.nan,
-                "volume_mean": np.nan,
-                "volume_std": np.nan,
+                "radius_mean": math.nan,
+                "radius_std": math.nan,
+                "volume_mean": math.nan,
+                "volume_std": math.nan,
             }
 
         radii = [droplet.radius for droplet in self]

@@ -10,9 +10,8 @@ Module defining classes for tracking droplets in simulations.
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+import math
 from typing import Callable, List, Optional, Union  # @UnusedImport
-
-import numpy as np
 
 from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
@@ -92,7 +91,7 @@ class LengthScaleTracker(TrackerBase):
         except Exception:
             if self.verbose:
                 self._logger.exception("Could not determine length scale")
-            length = np.nan
+            length = math.nan
 
         # store data
         self.times.append(t)

@@ -14,6 +14,7 @@ Functions for analyzing phase field images of emulsions.
 """
 
 import logging
+import math
 import warnings
 from functools import reduce
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
@@ -657,7 +658,7 @@ def get_length_scale(
                 )
             except Exception:
                 logger.exception("Could not determine maximal structure factor")
-                length_scale = np.nan
+                length_scale = math.nan
             else:
                 if not result.success:
                     logger.warning(
