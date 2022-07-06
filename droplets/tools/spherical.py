@@ -175,7 +175,7 @@ def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
     """
     if dim == 1:
         if isinstance(radius, np.ndarray):
-            return np.broadcast_to(2, radius.shape)  # type: ignore
+            return np.broadcast_to(2, radius.shape)
         else:
             return 2
     elif dim == 2:

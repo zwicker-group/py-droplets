@@ -343,10 +343,10 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             bool: whether the droplets overlap or not
         """
         if grid is None:
-            distance = np.linalg.norm(self.position - other.position)
+            distance = float(np.linalg.norm(self.position - other.position))
         else:
             distance = grid.distance_real(self.position, other.position)
-        return distance < self.radius + other.radius  # type: ignore
+        return distance < self.radius + other.radius
 
     @preserve_scalars
     def interface_position(self, *args) -> np.ndarray:
@@ -712,7 +712,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     @property
     def amplitudes(self) -> np.ndarray:
         """:class:`~numpy.ndarray`: the perturbation amplitudes"""
-        return np.atleast_1d(self.data["amplitudes"])
+        return np.atleast_1d(self.data["amplitudes"])  # type: ignore
 
     @amplitudes.setter
     def amplitudes(self, value: np.ndarray = None):
@@ -927,10 +927,10 @@ class PerturbedDroplet2D(PerturbedDropletBase):
     @property
     def surface_area_approx(self) -> float:
         """float: surface area of the droplet (quadratic in amplitudes)"""
-        length = 4
+        length: float = 4
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             length += n**2 * (a**2 + b**2)
-        return np.pi * self.radius * length / 2
+        return np.pi * self.radius * length / 2  # type: ignore
 
     def _get_mpl_patch(self, dim=2, **kwargs):
         """return the patch representing the droplet for plotting
