@@ -222,6 +222,31 @@ def test_localization_threshold():
         assert d1.interface_width == pytest.approx(d2.interface_width)
 
 
+@pytest.mark.parametrize(
+    "adjust_values, auto_values", [(False, False), (True, False), (True, True)]
+)
+def test_localization_vmin_vmax(adjust_values, auto_values):
+    """tests localization of droplets with non-normalized densities"""
+    # create perturbed droplet
+    grid = CartesianGrid(bounds=[[-2, 2], [-2, 2]], shape=32, periodic=True)
+    d1 = DiffuseDroplet([0, 0], 1, 0.2)
+    field = d1.get_phase_field(grid, vmin=-0.1, vmax=0.1)
+
+    if auto_values:
+        refine_args = {"vmin": None, "vmax": None, "adjust_values": adjust_values}
+    else:
+        refine_args = {"vmin": -0.1, "vmax": 0.1, "adjust_values": adjust_values}
+
+    # localize this droplet
+    d2 = image_analysis.locate_droplets(
+        field, threshold="auto", refine=True, refine_args=refine_args
+    )[0]
+
+    assert d1.position == pytest.approx(d2.position, rel=1e-4)
+    assert d1.radius == pytest.approx(d2.radius, rel=1e-4)
+    assert d1.interface_width == pytest.approx(d2.interface_width)
+
+
 def test_get_length_scale():
     """test determining the length scale"""
     grid = CartesianGrid([[0, 8 * np.pi]], 64, periodic=True)

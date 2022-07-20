@@ -307,10 +307,12 @@ def locate_droplets_in_mask(grid: GridBase, mask: np.ndarray) -> Emulsion:
 def locate_droplets(
     phase_field: ScalarField,
     threshold: Union[float, str] = 0.5,
-    modes: int = 0,
+    *,
     minimal_radius: float = 0,
-    refine: bool = False,
+    modes: int = 0,
     interface_width: Optional[float] = None,
+    refine: bool = False,
+    refine_args: Dict[str, Any] = None,
 ) -> Emulsion:
     """Locates droplets in the phase field
 
@@ -331,19 +333,22 @@ def locate_droplets(
 
             The special value `auto` currently defaults to the `extrema` method.
 
-        modes (int):
-            The number of perturbation modes that should be included.
-            If `modes=0`, droplets are assumed to be spherical. Note that the
-            mode amplitudes are only determined when `refine=True`.
         minimal_radius (float):
-            The smallest radius of droplets to include in the list. This can be
-            used to filter out fluctuations in noisy simulations.
-        refine (bool):
-            Flag determining whether the droplet properties should be refined
-            using fitting. This is a potentially slow procedure.
+            The smallest radius of droplets to include in the list. This can be used to
+            filter out fluctuations in noisy simulations.
+        modes (int):
+            The number of perturbation modes that should be included. If `modes=0`,
+            droplets are assumed to be spherical. Note that the mode amplitudes are only
+            determined when `refine=True`.
         interface_width (float, optional):
-            Interface width of the located droplets, which is also used as a
-            starting value for the fitting if droplets are refined.
+            Interface width of the located droplets, which is also used as a starting
+            value for the fitting if droplets are refined.
+        refine (bool):
+            Flag determining whether the droplet properties should be refined using
+            fitting. This is a potentially slow procedure.
+        refine_args (dict):
+            Additional keyword arguments passed on to :func:`refine_droplet`. Only has
+            an effect if `refine=True`.
 
     Returns:
         :class:`~droplets.emulsions.Emulsion`: All detected droplets
@@ -353,6 +358,8 @@ def locate_droplets(
 
     if modes > 0 and dim not in [2, 3]:
         raise ValueError("Perturbed droplets only supported for 2d and 3d")
+    if refine_args is None:
+        refine_args = {}
 
     # determine actual threshold
     if threshold == "extrema" or threshold == "auto":
@@ -399,7 +406,7 @@ def locate_droplets(
         # refine droplets if necessary
         if refine:
             try:
-                droplet = refine_droplet(phase_field, droplet)
+                droplet = refine_droplet(phase_field, droplet, **refine_args)
             except ValueError:
                 continue  # do not add the droplet to the list
         droplets.append(droplet)
@@ -414,6 +421,10 @@ def locate_droplets(
 def refine_droplet(
     phase_field: ScalarField,
     droplet: DiffuseDroplet,
+    *,
+    vmin: float = 0.0,
+    vmax: float = 1.0,
+    adjust_values: bool = False,
     least_squares_params: Optional[Dict[str, Any]] = None,
 ) -> DiffuseDroplet:
     """Refines droplet parameters by fitting to phase field
@@ -429,9 +440,19 @@ def refine_droplet(
         droplet (:class:`~droplets.droplets.SphericalDroplet`):
             Droplet that should be refined. This could also be a subclass of
             :class:`SphericalDroplet`
+        vmin (float):
+            The intensity value of the dilute phase surrounding the droplet. If `None`,
+            the value will be determined automatically.
+        vmax (float):
+            The intensity value inside the droplet. If `None`, the value will be
+            determined automatically.
+        adjust_value (bool):
+            Flag determining whether the intensity values will be included in the
+            fitting procedure. The default value `False` implies that the intensity
+            values are regarded fixed.
         least_squares_params (dict):
-            Dictionary of parameters that influence the fitting; see the
-            documentation of scipy.optimize.least_squares
+            Dictionary of parameters that influence the fitting; see the documentation
+            of :func:`scipy.optimize.least_squares`.
 
     Returns:
         :class:`droplets.droplets.DiffuseDroplet`: The refined droplet as an instance of
@@ -464,20 +485,53 @@ def refine_droplet(
     l, h = droplet.data_bounds
     bounds = l[free], h[free]
 
-    def _image_deviation(params):
-        """helper function evaluating the residuals"""
-        # generate the droplet
-        data_flat[free] = params
-        droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
-        droplet.check_data()
-        img = droplet._get_phase_field(phase_field.grid)[mask]
-        return img - data_mask
+    # determine the intensities outside and inside the droplet
+    if vmin is None:
+        vmin = np.min(data_mask)
+    if vmax is None:
+        vmax = np.max(data_mask)
+    vrng = vmax - vmin
 
-    # do the least square optimization
-    result = optimize.least_squares(
-        _image_deviation, data_flat[free], bounds=bounds, **least_squares_params
-    )
-    data_flat[free] = result.x
+    if adjust_values:
+        # fit intensities in addition to all droplet parameters
+
+        # add vmin and vrng as separate fitting parameters
+        parameters = np.r_[data_flat[free], vmin, vmax]
+        bounds = np.r_[bounds[0], vmin - vrng, 0], np.r_[bounds[1], vmax, 3 * vrng]
+
+        def _image_deviation(params):
+            """helper function evaluating the residuals"""
+            # generate the droplet
+            data_flat[free] = params[:-2]
+            vmin, vrng = params[-2:]
+            droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
+            droplet.check_data()
+            img = vmin + vrng * droplet._get_phase_field(phase_field.grid)[mask]
+            return img - data_mask
+
+        # do the least square optimization
+        result = optimize.least_squares(
+            _image_deviation, parameters, bounds=bounds, **least_squares_params
+        )
+        data_flat[free] = result.x[:-2]
+
+    else:
+        # fit only droplet parameters and assume all intensities fixed
+
+        def _image_deviation(params):
+            """helper function evaluating the residuals"""
+            # generate the droplet
+            data_flat[free] = params
+            droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
+            droplet.check_data()
+            img = vmin + vrng * droplet._get_phase_field(phase_field.grid)[mask]
+            return img - data_mask
+
+        # do the least square optimization
+        result = optimize.least_squares(
+            _image_deviation, data_flat[free], bounds=bounds, **least_squares_params
+        )
+        data_flat[free] = result.x
     droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
 
     # normalize the droplet position
