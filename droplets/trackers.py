@@ -16,7 +16,7 @@ from typing import Callable, List, Optional, Union  # @UnusedImport
 from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
 from pde.trackers.base import InfoDict, TrackerBase
-from pde.trackers.intervals import IntervalData
+from pde.trackers.interrupts import IntervalData
 
 from .emulsions import EmulsionTimeCourse
 

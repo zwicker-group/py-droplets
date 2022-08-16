@@ -43,7 +43,7 @@ from pde.tools.docstrings import fill_in_docstring
 from pde.tools.output import display_progress
 from pde.tools.plotting import PlotReference, plot_on_axes
 from pde.trackers.base import InfoDict
-from pde.trackers.intervals import IntervalType
+from pde.trackers.interrupts import IntervalData
 
 from .droplets import SphericalDroplet, droplet_from_data
 
@@ -846,9 +846,7 @@ class EmulsionTimeCourse:
 
     @fill_in_docstring
     def tracker(
-        self,
-        interval: Union[int, float, IntervalType] = 1,
-        filename: Optional[str] = None,
+        self, interval: IntervalData = 1, filename: Optional[str] = None
     ) -> "DropletTracker":
         """return a tracker that analyzes emulsions during simulations
 
