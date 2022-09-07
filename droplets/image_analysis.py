@@ -121,12 +121,12 @@ def _locate_droplets_in_mask_cartesian(
     grid._logger.info(f"Found {num_labels} droplet candidate(s)")
 
     # determine position from binary image and scale it to real space
-    positions = ndimage.measurements.center_of_mass(mask_padded, labels, index=indices)
+    positions = ndimage.center_of_mass(mask_padded, labels, index=indices)
     # correct for the additional padding of the array
     positions = grid.transform(positions - offset, "cell", "grid")
 
     # determine volume from binary image and scale it to real space
-    volumes = ndimage.measurements.sum(mask_padded, labels, index=indices)
+    volumes = ndimage.sum(mask_padded, labels, index=indices)
     volumes = np.asanyarray(volumes) * np.prod(grid.discretization)
 
     # only retain droplets that are inside the central area
@@ -169,7 +169,7 @@ def _locate_droplets_in_mask_spherical(
         return Emulsion([], grid=grid)
 
     # locate clusters around origin
-    object_slices = ndimage.measurements.find_objects(labels)
+    object_slices = ndimage.find_objects(labels)
     droplet = None
     for slices in object_slices:
         if slices[0].start == 0:  # contains point around origin
@@ -204,7 +204,7 @@ def _locate_droplets_in_mask_cylindrical_single(
         return Emulsion([], grid=grid)
 
     # locate clusters on the symmetry axis
-    object_slices = ndimage.measurements.find_objects(labels)
+    object_slices = ndimage.find_objects(labels)
     indices = []
     for index, slices in enumerate(object_slices, 1):
         if slices[0].start == 0:  # contains point on symmetry axis
@@ -214,13 +214,13 @@ def _locate_droplets_in_mask_cylindrical_single(
             logger.warning("Found object not located on symmetry axis")
 
     # determine position from binary image and scale it to real space
-    pos = ndimage.measurements.center_of_mass(mask, labels, index=indices)
+    pos = ndimage.center_of_mass(mask, labels, index=indices)
     pos = grid.transform(pos, "cell", "cartesian")
 
     # determine volume from binary image and scale it to real space
     vol_r, dz = grid.cell_volume_data
     cell_volumes = vol_r * dz
-    vol = ndimage.measurements.sum(cell_volumes, labels, index=indices)
+    vol = ndimage.sum(cell_volumes, labels, index=indices)
 
     # return an emulsion of droplets
     droplets = (
@@ -470,7 +470,7 @@ def refine_droplet(
     # enlarge the mask to also contain the shape change
     mask = droplet._get_phase_field(phase_field.grid, dtype=np.bool_)
     dilation_iterations = 1 + int(2 * droplet.interface_width)
-    mask = ndimage.morphology.binary_dilation(mask, iterations=dilation_iterations)
+    mask = ndimage.binary_dilation(mask, iterations=dilation_iterations)
 
     # apply the mask
     data_mask = phase_field.data[mask]
