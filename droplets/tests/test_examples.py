@@ -21,7 +21,6 @@ if not module_available("matplotlib"):
     SKIP_EXAMPLES.append("plot_emulsion.py")
 
 
-@pytest.mark.no_cover
 @pytest.mark.skipif(sys.platform == "win32", reason="Assumes unix setup")
 @pytest.mark.parametrize("path", EXAMPLES)
 def test_example(path):
