@@ -317,7 +317,7 @@ class Emulsion(list):
         """:class:`Cuboid`: bounding box of the emulsion"""
         if len(self) == 0:
             raise RuntimeError("Bounding box of empty emulsion is undefined")
-        return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
+        return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)  # type: ignore
 
     def get_phasefield(
         self, grid: GridBase = None, label: Optional[str] = None
@@ -468,7 +468,7 @@ class Emulsion(list):
     @property
     def total_droplet_volume(self) -> float:
         """float: the total volume of all droplets"""
-        return sum(droplet.volume for droplet in self)
+        return sum(droplet.volume for droplet in self)  # type: ignore
 
     def get_size_statistics(self) -> Dict[str, float]:
         """determine size statistics of the current emulsion
