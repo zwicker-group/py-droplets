@@ -284,7 +284,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
     @property
     def position(self) -> np.ndarray:
         """:class:`~numpy.ndarray`: the position of the droplet"""
-        return self.data["position"]  # type: ignore
+        return self.data["position"]
 
     @position.setter
     def position(self, value: np.ndarray):
@@ -931,7 +931,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         length: float = 4
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             length += n**2 * (a**2 + b**2)
-        return np.pi * self.radius * length / 2  # type: ignore
+        return np.pi * self.radius * length / 2
 
     def _get_mpl_patch(self, dim=2, **kwargs):
         """return the patch representing the droplet for plotting

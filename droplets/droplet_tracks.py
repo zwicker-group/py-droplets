@@ -415,7 +415,7 @@ class DropletTrack:
                 segments.append(close)
 
             # plot the individual segments
-            line, cx = None, []
+            line, cx = None, []  # type: ignore
             for s, e in contiguous_true_regions(np.array(segments)):
 
                 if line is None:
