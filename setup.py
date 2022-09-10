@@ -35,7 +35,7 @@ setup(
     url="https://github.com/zwicker-group/py-droplets",
     download_url=DOWNLOAD_URL,
     keywords=["emulsions", "image-analysis"],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=["matplotlib", "numpy", "numba", "scipy", "sympy", "py-pde"],
     extras_require={
         "hdf": ["h5py>=2"],
@@ -47,8 +47,7 @@ setup(
         "Topic :: Scientific/Engineering",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
