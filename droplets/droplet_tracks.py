@@ -20,7 +20,7 @@ from typing import Optional, Union
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
-from scipy.ndimage import filters
+from scipy import ndimage
 from scipy.spatial import distance
 
 from pde.grids.base import GridBase
@@ -228,7 +228,7 @@ class DropletTrack:
         """
         trajectory = np.array([droplet.position for droplet in self.droplets])
         if smoothing:
-            filters.gaussian_filter1d(
+            ndimage.gaussian_filter1d(
                 trajectory, output=trajectory, sigma=smoothing, axis=0, mode="nearest"
             )
         return trajectory

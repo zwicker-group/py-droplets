@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, TypeVar
 
 import numpy as np
+from numba.extending import register_jitable
 from numpy.lib.recfunctions import structured_to_unstructured
 from scipy import integrate
 
@@ -166,9 +167,14 @@ class DropletBase:
             self.data = np.recarray(1, dtype=dtype)[0]
 
     def __init_subclass__(cls, **kwargs):  # @NoSelf
-        """register all subclassess to reconstruct them later"""
+        """modify subclasses of this base class"""
         super().__init_subclass__(**kwargs)
+
+        # register all subclassess to reconstruct them later
         cls._subclasses[cls.__name__] = cls
+
+        # create a staticmethod for merging droplet data
+        cls._merge_data = staticmethod(cls._make_merge_data())
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -207,6 +213,21 @@ class DropletBase:
             return self.from_droplet(self, **kwargs)  # type: ignore
         else:
             return self.from_data(self.data.copy())  # type: ignore
+
+    @classmethod
+    def _make_merge_data(cls) -> Callable[[np.ndarray, np.ndarray, np.ndarray], None]:
+        """factory for a function that merges the data of two droplets"""
+        raise NotImplementedError
+
+    def merge(self: TDroplet, other: TDroplet, *, inplace: bool = False) -> TDroplet:
+        """merge two droplets into one"""
+        if inplace:
+            self._merge_data(self.data, other.data, out=self.data)  # type: ignore
+            return self
+        else:
+            result = self.data.copy()
+            self._merge_data(self.data, other.data, out=result)  # type: ignore
+            return self.__class__.from_data(result)  # type: ignore
 
     @property
     def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -325,7 +346,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             self.position - self.radius, self.position + self.radius
         )
 
-    def overlaps(self, other: "SphericalDroplet", grid: GridBase = None) -> bool:
+    def overlaps(self, other: SphericalDroplet, grid: GridBase = None) -> bool:
         """determine whether another droplet overlaps with this one
 
         Note that this function so far only compares the distances of the
@@ -348,6 +369,27 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         else:
             distance = grid.distance_real(self.position, other.position)
         return distance < self.radius + other.radius
+
+    @classmethod
+    def _make_merge_data(cls) -> Callable[[np.ndarray, np.ndarray, np.ndarray], None]:
+        """factory for a function that merges the data of two droplets"""
+        radius_from_volume = spherical.make_radius_from_volume_nd_compiled()
+        volume_from_radius = spherical.make_volume_from_radius_nd_compiled()
+
+        @register_jitable
+        def merge_data(drop1: np.ndarray, drop2: np.ndarray, out: np.ndarray) -> None:
+            """merge the data of two droplets"""
+            dim = len(drop1.position)  # type: ignore
+
+            V1 = volume_from_radius(drop1.radius, dim)  # type: ignore
+            V2 = volume_from_radius(drop2.radius, dim)  # type: ignore
+            volume = V1 + V2
+            out.radius = radius_from_volume(volume, dim)  # type: ignore
+
+            # adjust droplet position
+            out.position[...] = (V1 * drop1.position + V2 * drop2.position) / volume  # type: ignore
+
+        return merge_data  # type: ignore
 
     @preserve_scalars
     def interface_position(self, *args) -> np.ndarray:
@@ -576,6 +618,19 @@ class DiffuseDroplet(SphericalDroplet):
         """
         dtype = super().get_dtype(**kwargs)
         return dtype + [("interface_width", float)]
+
+    @classmethod
+    def _make_merge_data(cls) -> Callable[[np.ndarray, np.ndarray, np.ndarray], None]:
+        """factory for a function that merges the data of two droplets"""
+        parent_merge = super()._make_merge_data()
+
+        @register_jitable
+        def merge_data(drop1: np.ndarray, drop2: np.ndarray, out: np.ndarray) -> None:
+            """merge the data of two droplets"""
+            parent_merge(drop1, drop2, out)
+            out.interface_width = (drop1.interface_width + drop2.interface_width) / 2  # type: ignore
+
+        return merge_data  # type: ignore
 
     @property
     def interface_width(self) -> Optional[float]:
