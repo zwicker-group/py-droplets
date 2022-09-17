@@ -75,6 +75,7 @@ harmonics, where the order is always zero and the degree :math:`l` and the mode
 from typing import Callable, Tuple, TypeVar
 
 import numpy as np
+from numba.extending import register_jitable
 from scipy.special import sph_harm
 
 from pde.grids.spherical import volume_from_radius
@@ -109,29 +110,49 @@ def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     """Return a function calculating the radius of a sphere with a given volume
 
     Args:
-        dim (int): Dimension of the space
+        dim (int): Dimension of the space. If omitted, a general function is returned
 
     Returns:
         function: A function that takes a volume and returns the radius
     """
     if dim == 1:
 
-        def radius_from_volume(volume):
+        def radius_from_volume(volume: TNumArr) -> TNumArr:
             return volume / 2
 
     elif dim == 2:
 
-        def radius_from_volume(volume):
-            return np.sqrt(volume / π)
+        def radius_from_volume(volume: TNumArr) -> TNumArr:
+            return np.sqrt(volume / π)  # type: ignore
 
     elif dim == 3:
 
-        def radius_from_volume(volume):
-            return (3 * volume / (4 * π)) ** (1 / 3)
+        def radius_from_volume(volume: TNumArr) -> TNumArr:
+            return (3 * volume / (4 * π)) ** (1 / 3)  # type: ignore
 
     else:
         raise NotImplementedError(f"Cannot calculate the radius in {dim} dimensions")
     return jit(radius_from_volume)  # type: ignore
+
+
+def make_radius_from_volume_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
+    """Return a function calculating the radius of a sphere with a given volume
+
+    Returns:
+        function: A function that calculate the radius from a volume and dimension
+    """
+
+    @register_jitable
+    def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
+        if dim == 1:
+            return volume / 2
+        elif dim == 2:
+            return np.sqrt(volume / π)  # type: ignore
+        elif dim == 3:
+            return (3 * volume / (4 * π)) ** (1 / 3)  # type: ignore
+        raise NotImplementedError
+
+    return radius_from_volume  # type: ignore
 
 
 def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
@@ -161,6 +182,26 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     else:
         raise NotImplementedError(f"Cannot calculate the volume in {dim} dimensions")
     return jit(volume_from_radius)  # type: ignore
+
+
+def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
+    """Return a function calculating the volume of a sphere with a given radius
+
+    Returns:
+        function: A function that calculates the volume using a radius and dimension
+    """
+
+    @register_jitable
+    def volume_from_radius(radius: TNumArr, dim: int) -> TNumArr:
+        if dim == 1:
+            return 2 * radius
+        elif dim == 2:
+            return π * radius**2
+        elif dim == 3:
+            return 4 * π / 3 * radius**3
+        raise NotImplementedError
+
+    return volume_from_radius  # type: ignore
 
 
 def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
