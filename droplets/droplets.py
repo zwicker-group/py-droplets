@@ -225,7 +225,7 @@ class DropletBase:
             self._merge_data(self.data, other.data, out=self.data)  # type: ignore
             return self
         else:
-            result = self.data.copy()
+            result = np.record(np.zeros_like(self.data))
             self._merge_data(self.data, other.data, out=result)  # type: ignore
             return self.__class__.from_data(result)  # type: ignore
 
