@@ -227,30 +227,41 @@ def test_triangulation_3d():
         assert vol == pytest.approx(drop.volume, rel=0.1), drop
 
 
+@pytest.mark.parametrize("cls", [droplets.SphericalDroplet, droplets.DiffuseDroplet])
 @pytest.mark.parametrize("dim", [1, 2, 3])
-def test_droplet_merge(dim):
+def test_droplet_merge(cls, dim):
     """test merging of droplets"""
-    d1 = droplets.SphericalDroplet([0] * dim, 1)
-    d2 = droplets.SphericalDroplet([2] * dim, 1)
+    if cls == droplets.SphericalDroplet:
+        d1 = droplets.SphericalDroplet([0] * dim, 1)
+        d2 = droplets.SphericalDroplet([2] * dim, 1)
+    elif cls == droplets.DiffuseDroplet:
+        d1 = droplets.DiffuseDroplet([0] * dim, 1, 1)
+        d2 = droplets.DiffuseDroplet([2] * dim, 1, 2)
 
-    # test simple addition
+    # test simple merge
     d3 = d1.merge(d2, inplace=False)
     assert d3 is not d1 and d3 is not d2
     np.testing.assert_allclose(d3.position, [1] * dim)
     assert d3.volume == pytest.approx(d1.volume + d2.volume)
+    if cls == droplets.DiffuseDroplet:
+        assert d3.interface_width == pytest.approx(1.5)
 
-    # test numba addition
+    # test numba merge
     merge = jit(d1._make_merge_data())
     d3_data = d1.data.copy()
     merge(d1.data, d2.data, d3_data)
     np.testing.assert_allclose(d3.position, [1] * dim)
     assert d3_data.radius == pytest.approx(d3.radius)
+    if cls == droplets.DiffuseDroplet:
+        assert d3_data.interface_width == pytest.approx(1.5)
 
     # test inplace merge
     d4 = d1.merge(d2, inplace=True)
     assert d4 is d1 and d3 is not d2
     np.testing.assert_allclose(d4.position, [1] * dim)
     assert d4.volume == pytest.approx(d3.volume)
+    if cls == droplets.DiffuseDroplet:
+        assert d4.interface_width == pytest.approx(1.5)
 
 
 def test_droplet_interface_merge():
