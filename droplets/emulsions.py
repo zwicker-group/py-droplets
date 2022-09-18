@@ -470,8 +470,12 @@ class Emulsion(list):
         """float: the total volume of all droplets"""
         return sum(droplet.volume for droplet in self)  # type: ignore
 
-    def get_size_statistics(self) -> Dict[str, float]:
+    def get_size_statistics(self, incl_vanished: bool = True) -> Dict[str, float]:
         """determine size statistics of the current emulsion
+
+        Args:
+            incl_vanished (bool):
+                Whether to include droplets with vanished radii
 
         Returns:
             dict: a dictionary with various size statistics
@@ -485,10 +489,15 @@ class Emulsion(list):
                 "volume_std": math.nan,
             }
 
-        radii = [droplet.radius for droplet in self]
-        volumes = [droplet.volume for droplet in self]
+        if incl_vanished:
+            radii = [droplet.radius for droplet in self]
+            volumes = [droplet.volume for droplet in self]
+        else:
+            radii = [droplet.radius for droplet in self if droplet.radius > 0]
+            volumes = [droplet.volume for droplet in self if droplet.radius > 0]
+
         return {
-            "count": len(self),
+            "count": len(radii),
             "radius_mean": np.mean(radii),
             "radius_std": np.std(radii),
             "volume_mean": np.mean(volumes),

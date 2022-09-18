@@ -214,3 +214,21 @@ def test_remove_overlapping():
     assert len(e) == 2
     e.remove_overlapping()
     assert len(e) == 1
+
+
+@pytest.mark.parametrize("modify_data", [True, False])
+def test_emulsion_merge(modify_data):
+    """test merging of droplets"""
+    em = Emulsion([DiffuseDroplet([0], 1, 1)] * 5, copy=True)
+    drop_data = em.get_linked_data()
+    for i in range(1, len(em)):
+        if modify_data:
+            DiffuseDroplet._merge_data(drop_data[0], drop_data[i], out=drop_data[0])
+            drop_data[i].fill(0)
+        else:
+            em[0].merge(em[i], inplace=True)
+            em[i].data.fill(0)
+
+    stats = em.get_size_statistics(incl_vanished=False)
+    assert stats["count"] == 1
+    assert stats["radius_mean"] == pytest.approx(5)
