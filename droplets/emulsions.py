@@ -18,7 +18,6 @@ from __future__ import annotations
 import json
 import logging
 import math
-from typing import List  # @UnusedImport
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -26,6 +25,7 @@ from typing import (
     Dict,
     Generator,
     Iterator,
+    List,
     Optional,
     Sequence,
     Tuple,
@@ -555,6 +555,9 @@ class Emulsion(list):
         Returns:
             :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
+        if len(self) == 0:
+            # empty emulsions can be plotted in all dimensions :)
+            return PlotReference(ax, [], {})
         if self.dim is None or self.dim <= 1:
             raise NotImplementedError(
                 f"Plotting emulsions in {self.dim} dimensions is not implemented."
@@ -593,12 +596,15 @@ class Emulsion(list):
             ax.set_ylim(*bounds[1])
             ax.set_aspect("equal")
 
+        # determine non-vanishing droplets
+        drops_finite = [droplet for droplet in self if droplet.radius > 0]
+
         # determine the color of all droplets
         if color_value is not None:
             import matplotlib.pyplot as plt
 
             # determine the scalar values associated with all droplets
-            values = np.array([color_value(droplet) for droplet in self])
+            values = np.array([color_value(droplet) for droplet in drops_finite])
 
             # and map them to colors
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
@@ -609,19 +615,19 @@ class Emulsion(list):
                 logger.warning("`color` is overwritten by `color_value`.")
 
         else:
-            colors = [kwargs.pop("color", None)] * len(self)
+            colors = [kwargs.pop("color", None)] * len(drops_finite)
 
         # get patches representing all droplets
         if grid is None or not repeat_periodically:
             # plot only the droplets themselves
             patches = [
                 droplet._get_mpl_patch(dim=2, color=color, **kwargs)
-                for droplet, color in zip(self, colors)
+                for droplet, color in zip(drops_finite, colors)
             ]
         else:
             # plot droplets also in their mirror positions
             patches = []
-            for droplet, color in zip(self, colors):
+            for droplet, color in zip(drops_finite, colors):
                 for p in grid.iter_mirror_points(
                     droplet.position, with_self=True, only_periodic=True
                 ):

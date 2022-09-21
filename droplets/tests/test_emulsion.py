@@ -204,8 +204,9 @@ def test_emulsion_plotting():
     with pytest.raises(NotImplementedError):
         e3.plot()
 
-    with pytest.raises(NotImplementedError):
-        Emulsion().plot()
+    # can in principle plot an empty emulsion
+    Emulsion().plot()
+    Emulsion().plot(color_value=lambda d: d.radius, colorbar=True)
 
 
 def test_remove_overlapping():
