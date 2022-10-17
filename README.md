@@ -12,7 +12,7 @@
 
 `py-droplets` provides python code for representing physical droplets using
 key parameters like position, size, or shape.
-These droplets can also be represented as collections (emulsions) over time.
+These droplets can also be represented as collections (emulsions) and over time.
 Moreover, the package provides methods for locating droplets in microscope
 images or phase field data from simulations.
 
@@ -27,11 +27,11 @@ through `pip`:
 pip install py-droplets
 ```
 
-In order to have all features of the package available, you might also want to 
-install the following optional packages:
+As an alternative, you can install `py-droplets` through [conda](https://docs.conda.io/en/latest/)
+using the [conda-forge](https://conda-forge.org/) channel:
 
 ```bash
-pip install h5py tqdm
+conda install -c conda-forge py-droplets
 ```
 
 
