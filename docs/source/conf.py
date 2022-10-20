@@ -58,11 +58,9 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.coverage",
-    #     'sphinx.ext.mathjax',
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
-    #     'sphinx_autodoc_annotation',
-    "sphinx_simplify_typehints",
+    # "sphinx_simplify_typehints",
     "sphinx.ext.inheritance_diagram",
 ]
 
@@ -87,7 +85,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -96,6 +94,7 @@ exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
+toc_object_entries = False
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -250,6 +249,8 @@ intersphinx_mapping = {
 
 
 # run autodoc
+autodoc_typehints = "description"
+
 from run_autodoc import main
 
 main()
