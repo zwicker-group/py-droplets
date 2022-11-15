@@ -96,7 +96,7 @@ class LengthScaleTracker(TrackerBase):
         self.times.append(t)
         self.length_scales.append(length)  # type: ignore
 
-    def finalize(self, info: InfoDict = None) -> None:
+    def finalize(self, info: Optional[InfoDict] = None) -> None:
         """finalize the tracker, supplying additional information
 
         Args:
@@ -180,7 +180,7 @@ class DropletTracker(TrackerBase):
         self.refine = refine
         self.perturbation_modes = perturbation_modes
 
-    def initialize(self, field: FieldBase, info: InfoDict = None) -> float:
+    def initialize(self, field: FieldBase, info: Optional[InfoDict] = None) -> float:
         """
         Args:
             field (:class:`~pde.fields.base.FieldBase`):
@@ -223,7 +223,7 @@ class DropletTracker(TrackerBase):
         )
         self.data.append(emulsion, t)
 
-    def finalize(self, info: InfoDict = None) -> None:
+    def finalize(self, info: Optional[InfoDict] = None) -> None:
         """finalize the tracker, supplying additional information
 
         Args:

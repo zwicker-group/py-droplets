@@ -312,7 +312,7 @@ def locate_droplets(
     modes: int = 0,
     interface_width: Optional[float] = None,
     refine: bool = False,
-    refine_args: Dict[str, Any] = None,
+    refine_args: Optional[Dict[str, Any]] = None,
 ) -> Emulsion:
     """Locates droplets in the phase field
 
