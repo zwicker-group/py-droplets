@@ -1,0 +1,2 @@
+include droplets/py.typed
+recursive-include droplets/**/resources *
