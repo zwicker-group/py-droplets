@@ -1,6 +1,5 @@
 """
-Classes that describe collections of droplets, i.e. emulsions, and their
-temporal dynamics.
+Classes describing collections of droplets, i.e. emulsions, and their temporal dynamics.
 
 
 .. autosummary::
@@ -60,7 +59,7 @@ class Emulsion(list):
 
     def __init__(
         self,
-        droplets: DropletSequence = None,
+        droplets: Optional[DropletSequence] = None,
         grid: Optional[GridBase] = None,
         copy: bool = True,
     ):
@@ -124,9 +123,9 @@ class Emulsion(list):
 
         Args:
             min_radius (float):
-                The minimal radius of the droplets that are retained. Droplets
-                with exactly min_radius are removed, so `min_radius == 0` can be
-                used to filter vanished droplets.
+                The minimal radius of the droplets that are retained. Droplets with
+                exactly min_radius are removed, so `min_radius == 0` can be used to
+                filter vanished droplets.
         """
         droplets = [droplet.copy() for droplet in self if droplet.radius > min_radius]
         return self.__class__(
@@ -211,7 +210,7 @@ class Emulsion(list):
 
         Args:
             dataset:
-                an HDF5 dataset from which the data of the emulsion is read
+                An HDF5 dataset from which the data of the emulsion is read
             grid (:class:`pde.grids.base.GridBase`):
                 The grid on which the droplets are defined. This information is required
                 to measure distances between droplets.
@@ -291,8 +290,8 @@ class Emulsion(list):
     def interface_width(self) -> Optional[float]:
         """float: the average interface width across all droplets
 
-        This averages the interface widths of the individual droplets weighted
-        by their surface area, i.e., the amount of interface
+        This averages the interface widths of the individual droplets weighted by their
+        surface area, i.e., the amount of interface.
         """
 
         width, area = 0.0, 0.0
@@ -320,14 +319,14 @@ class Emulsion(list):
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)  # type: ignore
 
     def get_phasefield(
-        self, grid: GridBase = None, label: Optional[str] = None
+        self, grid: Optional[GridBase] = None, label: Optional[str] = None
     ) -> ScalarField:
         """create a phase field representing a list of droplets
 
         Args:
             grid (:class:`pde.grids.base.GridBase`):
-                The grid on which the phase field is created. If omitted, the
-                grid associated with the emulsion is used.
+                The grid on which the phase field is created. If omitted, the grid
+                associated with the emulsion is used.
             label (str):
                 Optional label for the returned scalar field
 
@@ -355,10 +354,10 @@ class Emulsion(list):
         The emulsions is modified in-place.
 
         Args:
-            min_radius (float): The minimal radius of the droplets that are
-                retained. Droplets with exactly min_radius are removed, so
-                `min_radius == 0` can be used to filter vanished droplets. The
-                default value does not remove any droplets
+            min_radius (float):
+                The minimal radius of the droplets that are retained. Droplets with
+                exactly min_radius are removed, so `min_radius == 0` can be used to
+                filter vanished droplets. The default value does not remove any droplets
         """
         for i in reversed(range(len(self))):
             if self[i].radius <= min_radius:
@@ -368,9 +367,9 @@ class Emulsion(list):
         """return the pairwise distance between droplets
 
         Args:
-            subtract_radius (bool): determines whether the distance is measured
-                from interface to interface (for round droplets) or center to
-                center.
+            subtract_radius (bool):
+                determines whether the distance is measured from interface to interface
+                (for round droplets) or center to center.
 
         Returns:
             :class:`~numpy.ndarray`: a matrix with the distances between all droplets
@@ -401,13 +400,15 @@ class Emulsion(list):
     def get_neighbor_distances(self, subtract_radius: bool = False) -> np.ndarray:
         """calculates the distance of each droplet to its nearest neighbor
 
-        Warning: Nearest neighbors are defined by comparing the distances
-        between the centers of the droplets, not their surfaces.
+        Warning:
+            Nearest neighbors are defined by comparing the distances between the centers
+            of the droplets, not their surfaces.
 
         Args:
-            subtract_radius (bool): Determines whether to subtract the radius
-                from the distance, i.e., whether to return the distance between
-                the surfaces instead of the positions
+            subtract_radius (bool):
+                Determines whether to subtract the radius from the distance, i.e.,
+                whether to return the distance between the surfaces instead of the
+                positions
 
         Returns:
             :class:`~numpy.ndarray`: a vector with a distance for each droplet
@@ -437,15 +438,16 @@ class Emulsion(list):
     def remove_overlapping(self, min_distance: float = 0) -> None:
         """remove all droplets that are overlapping.
 
-        If a pair of overlapping droplets was found, the smaller one of these
-        is removed from the current emulsion. This method modifies the emulsion
-        in place and thus does not return anything.
+        If a pair of overlapping droplets was found, the smaller one of these is removed
+        from the current emulsion. This method modifies the emulsion in place and thus
+        does not return anything.
 
         Args:
-            min_distance (float): The minimal distance droplets need to be
-                apart. The default value of 0 corresponds to just remove
-                overlapping droplets. Larger values ensure that droplets keep a
-                distance, while negative values allow for some overlap.
+            min_distance (float):
+                The minimal distance droplets need to be apart. The default value of `0`
+                corresponds to just remove overlapping droplets. Larger values ensure
+                that droplets keep a distance, while negative values allow for some
+                overlap.
         """
         # filter duplicates until there are none left
         dists = self.get_pairwise_distances(subtract_radius=True)
@@ -508,10 +510,10 @@ class Emulsion(list):
     def plot(
         self,
         ax,
-        field: ScalarField = None,
-        image_args: Dict[str, Any] = None,
+        field: Optional[ScalarField] = None,
+        image_args: Optional[Dict[str, Any]] = None,
         repeat_periodically: bool = True,
-        color_value: Callable = None,
+        color_value: Optional[Callable] = None,
         cmap=None,
         norm=None,
         colorbar: Union[bool, str] = True,
@@ -684,10 +686,7 @@ class EmulsionTimeCourse:
             self.times = list(times)
 
         if len(self.times) != len(self.emulsions):
-            raise ValueError(
-                "The list of emulsions and the list of times need "
-                "to have the same length"
-            )
+            raise ValueError("Lists of emulsions and times must have same length")
 
     def append(
         self, emulsion: Emulsion, time: Optional[float] = None, copy: bool = True
@@ -695,10 +694,12 @@ class EmulsionTimeCourse:
         """add an emulsion to the list
 
         Args:
-            emulsions (Emulsion): An :class:`Emulsion` instance that is added
-                to the time course
-            time (float): The time point associated with this emulsion
-            copy (bool): Whether to copy the emulsion
+            emulsions (Emulsion):
+                An :class:`Emulsion` instance that is added to the time course
+            time (float):
+                The time point associated with this emulsion
+            copy (bool):
+                Whether to copy the emulsion
         """
         emulsion = Emulsion(emulsion)  # make sure this is an emulsion
 
@@ -760,7 +761,11 @@ class EmulsionTimeCourse:
 
     @classmethod
     def from_storage(
-        cls, storage: StorageBase, refine: bool = False, progress: bool = None, **kwargs
+        cls,
+        storage: StorageBase,
+        refine: bool = False,
+        progress: Optional[bool] = None,
+        **kwargs,
     ) -> "EmulsionTimeCourse":
         r"""create an emulsion time course from a stored phase field
 
@@ -828,7 +833,7 @@ class EmulsionTimeCourse:
                 )
         return obj
 
-    def to_file(self, path: str, info: InfoDict = None) -> None:
+    def to_file(self, path: str, info: Optional[InfoDict] = None) -> None:
         """store data in hdf5 file
 
         The data can be read using the classmethod :meth:`EmulsionTimeCourse.from_file`.

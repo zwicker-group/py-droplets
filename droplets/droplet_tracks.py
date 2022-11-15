@@ -314,7 +314,7 @@ class DropletTrack:
 
         return dataset
 
-    def to_file(self, path: str, info: InfoDict = None) -> None:
+    def to_file(self, path: str, info: Optional[InfoDict] = None) -> None:
         """store data in hdf5 file
 
         The data can be read using the classmethod :meth:`DropletTrack.from_file`.
@@ -571,7 +571,7 @@ class DropletTrackList(list):
         storage: StorageBase,
         refine: bool = False,
         method: str = "overlap",
-        progress: bool = None,
+        progress: Optional[bool] = None,
     ) -> DropletTrackList:
         r"""obtain droplet tracks from stored scalar field data
 
@@ -622,7 +622,7 @@ class DropletTrackList(list):
                 obj.append(DropletTrack._from_hdf_dataset(dataset))
         return obj
 
-    def to_file(self, path: str, info: InfoDict = None) -> None:
+    def to_file(self, path: str, info: Optional[InfoDict] = None) -> None:
         """store data in hdf5 file
 
         The data can be read using the classmethod :meth:`DropletTrackList.from_file`.

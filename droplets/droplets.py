@@ -346,7 +346,9 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
             self.position - self.radius, self.position + self.radius
         )
 
-    def overlaps(self, other: SphericalDroplet, grid: GridBase = None) -> bool:
+    def overlaps(
+        self, other: SphericalDroplet, grid: Optional[GridBase] = None
+    ) -> bool:
         """determine whether another droplet overlaps with this one
 
         Note that this function so far only compares the distances of the
@@ -459,7 +461,12 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         return (dist < self.radius).astype(dtype)  # type: ignore
 
     def get_phase_field(
-        self, grid: GridBase, *, vmin: float = 0, vmax: float = 1, label: str = None
+        self,
+        grid: GridBase,
+        *,
+        vmin: float = 0,
+        vmax: float = 1,
+        label: Optional[str] = None,
     ) -> ScalarField:
         """Creates an image of the droplet on the `grid`
 
@@ -551,7 +558,7 @@ class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
         return mpl.patches.Circle(position, self.radius, **kwargs)
 
     @plot_on_axes()
-    def plot(self, ax, value: Callable = None, **kwargs) -> PlotReference:
+    def plot(self, ax, value: Optional[Callable] = None, **kwargs) -> PlotReference:
         """Plot the droplet
 
         Args:
@@ -582,7 +589,10 @@ class DiffuseDroplet(SphericalDroplet):
     __slots__ = ["data"]
 
     def __init__(
-        self, position: np.ndarray, radius: float, interface_width: float = None
+        self,
+        position: np.ndarray,
+        radius: float,
+        interface_width: Optional[float] = None,
     ):
         """
         Args:
@@ -700,8 +710,8 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         self,
         position: np.ndarray,
         radius: float,
-        interface_width: float = None,
-        amplitudes: np.ndarray = None,
+        interface_width: Optional[float] = None,
+        amplitudes: Optional[np.ndarray] = None,
     ):
         """
         Args:
@@ -771,7 +781,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         return np.atleast_1d(self.data["amplitudes"])  # type: ignore
 
     @amplitudes.setter
-    def amplitudes(self, value: np.ndarray = None):
+    def amplitudes(self, value: Optional[np.ndarray] = None):
         if value is None:
             assert self.modes == 0
             self.data["amplitudes"] = np.broadcast_to(0.0, (0,))
@@ -860,8 +870,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         self,
         position: np.ndarray,
         radius: float,
-        interface_width: float = None,
-        amplitudes: np.ndarray = None,
+        interface_width: Optional[float] = None,
+        amplitudes: Optional[np.ndarray] = None,
     ):
         r"""
         Args:
@@ -1041,8 +1051,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         self,
         position: np.ndarray,
         radius: float,
-        interface_width: float = None,
-        amplitudes: np.ndarray = None,
+        interface_width: Optional[float] = None,
+        amplitudes: Optional[np.ndarray] = None,
     ):
         r"""
         Args:
