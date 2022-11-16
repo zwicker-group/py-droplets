@@ -21,6 +21,7 @@ setup(
     name="py-droplets",
     package_data={"droplets": ["py.typed"]},
     packages=find_packages(),
+    include_package_data=True,  # include template files and the like
     zip_safe=False,  # this is required for mypy to find the py.typed file
     version=__version__,
     license="MIT",

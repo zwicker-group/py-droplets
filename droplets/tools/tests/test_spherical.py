@@ -7,50 +7,52 @@ import random
 
 import numpy as np
 import pytest
+from numba import njit
 from scipy import integrate
 
 from droplets.tools import spherical
 
 
-def test_volume_conversion():
+@pytest.mark.parametrize("dim", [1, 2, 3])
+def test_volume_conversion(dim):
     """tests conversion of volume and radius of droplet"""
-    for dim in [1, 2, 3]:
-        radius = 1 + random.random()
-        volume = spherical.volume_from_radius(radius, dim=dim)
-        radius2 = spherical.radius_from_volume(volume, dim=dim)
-        assert radius2 == pytest.approx(radius)
+    radius = 1 + random.random()
+    volume = spherical.volume_from_radius(radius, dim=dim)
+    radius2 = spherical.radius_from_volume(volume, dim=dim)
+    assert radius2 == pytest.approx(radius)
+
+    r2v = spherical.make_volume_from_radius_compiled(dim)
+    v2r = spherical.make_radius_from_volume_compiled(dim)
+    assert r2v(radius) == pytest.approx(volume)
+    assert v2r(volume) == pytest.approx(radius)
+
+    r2v_jit = njit(lambda r: r2v(r))
+    v2r_jit = njit(lambda r: v2r(r))
+    assert r2v_jit(radius) == pytest.approx(volume)
+    assert v2r_jit(volume) == pytest.approx(radius)
 
 
-def test_volume_conversion_numba():
-    """tests conversion of volume and radius of droplet using numba"""
-    for dim in [1, 2, 3]:
-        r2v = spherical.make_volume_from_radius_compiled(dim)
-        v2r = spherical.make_radius_from_volume_compiled(dim)
-        radius = 1 + random.random()
-        assert v2r(r2v(radius)) == pytest.approx(radius)
-
-
-def test_surface():
+@pytest.mark.parametrize("dim", [1, 2, 3])
+def test_surface(dim):
     """test whether the surface is calculated correctly"""
-    for dim in [1, 2, 3]:
-        radius = 1 + random.random()
-        eps = 1e-10
-        vol1 = spherical.volume_from_radius(radius + eps, dim=dim)
-        vol0 = spherical.volume_from_radius(radius, dim=dim)
-        surface_approx = (vol1 - vol0) / eps
-        surface = spherical.surface_from_radius(radius, dim=dim)
-        assert surface == pytest.approx(surface_approx, rel=1e-3)
+    radius = 1 + random.random()
+    eps = 1e-10
+    vol1 = spherical.volume_from_radius(radius + eps, dim=dim)
+    vol0 = spherical.volume_from_radius(radius, dim=dim)
+    surface_approx = (vol1 - vol0) / eps
+    surface = spherical.surface_from_radius(radius, dim=dim)
+    assert surface == pytest.approx(surface_approx, rel=1e-3)
 
-        r2s = spherical.make_surface_from_radius_compiled(dim)
-        assert surface == pytest.approx(r2s(radius))
+    r2s = spherical.make_surface_from_radius_compiled(dim)
+    assert r2s(radius) == pytest.approx(surface)
+    r2s_jit = njit(lambda r: r2s(r))
+    assert r2s_jit(radius) == pytest.approx(surface)
 
-        if dim == 1:
-            with pytest.raises(RuntimeError):
-                spherical.radius_from_surface(surface, dim=dim)
-        else:
-            assert spherical.radius_from_surface(surface, dim=dim) == pytest.approx(
-                radius
-            )
+    if dim == 1:
+        with pytest.raises(RuntimeError):
+            spherical.radius_from_surface(surface, dim=dim)
+    else:
+        assert spherical.radius_from_surface(surface, dim=dim) == pytest.approx(radius)
 
 
 def test_spherical_conversion():
