@@ -38,11 +38,10 @@ The required packages are listed in the table below:
 Package      Version   Usage 
 ===========  ========= =========
 matplotlib   >= 3.1.0  Visualizing results
-numpy        >=1.16    Array library used for storing data
-numba        >=0.43    Just-in-time compilation to accelerate numerics
-scipy        >=1.2     Miscellaneous scientific functions
-sympy        >=1.4     Dealing with user-defined mathematical expressions
-py-pde       >=0.14    Simulating partial differential equations
+numpy        >=1.18    Array library used for storing data
+numba        >=0.48    Just-in-time compilation to accelerate numerics
+scipy        >=1.24    Miscellaneous scientific functions
+py-pde       >=0.22    Simulating partial differential equations
 ===========  ========= =========
 
 These package can be installed via your operating system's package manager, e.g.
