@@ -12,7 +12,7 @@ the polar angle:
     \end{cases}
     \text{for} \; r \in [0, \infty] \;
     \text{and} \; \phi \in [0, 2\pi)
-    
+
 Similarly, for spherical coordinates :math:`(r, \theta, \phi)`, where :math:`r`
 is the radial coordinate, :math:`\theta` is the azimuthal angle, and
 :math:`\phi` is the polar angle, we use
@@ -26,8 +26,8 @@ is the radial coordinate, :math:`\theta` is the azimuthal angle, and
     \text{for} \; r \in [0, \infty], \;
     \theta \in [0, \pi], \; \text{and} \;
     \phi \in [0, 2\pi)
-    
-    
+
+
 The module also provides functions for handling spherical harmonics.
 These spherical harmonics are described by the degree :math:`l` and the order 
 :math:`m` or, alternatively, by the mode :math:`k`. The relation between these
@@ -35,19 +35,19 @@ values is
 
 .. math::
     k = l(l + 1) + m
-    
+
 and
 
 .. math::
     l &= \text{floor}(\sqrt{k}) \\
     m &= k - l(l + 1)
-    
+
 We will use these indices interchangeably, although the mode :math:`k` is
 preferred internally. Note that we also consider axisymmetric spherical
 harmonics, where the order is always zero and the degree :math:`l` and the mode
 :math:`k` are thus identical.    
-    
-    
+
+
 .. autosummary::
    :nosignatures:
 
@@ -67,15 +67,15 @@ harmonics, where the order is always zero and the degree :math:`l` and the mode
    spherical_harmonic_symmetric
    spherical_harmonic_real
    spherical_harmonic_real_k
-   
-   
+
+
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>    
 """
 
 from typing import Callable, Tuple, TypeVar
 
 import numpy as np
-from numba.extending import register_jitable
+from numba.extending import overload, register_jitable
 from scipy.special import sph_harm
 
 from pde.grids.spherical import volume_from_radius
@@ -262,22 +262,22 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
 
     if dim == 1:
 
-        if nb.config.DISABLE_JIT:
-            # jitting is disabled => return generic python function
-            def surface_from_radius(radius: TNumArr) -> TNumArr:
-                if isinstance(radius, np.ndarray):
-                    return np.full(radius.shape, 2)
-                else:
-                    return 2
+        def _surface_from_radius(radius):
+            if isinstance(radius, np.ndarray):
+                return np.full(radius.shape, 2)
+            else:
+                return 2
 
-        else:
-            # jitting is enabled => return specific compiled functions
-            @nb.generated_jit(nopython=True)
-            def surface_from_radius(radius: TNumArr) -> TNumArr:
-                if isinstance(radius, nb.types.Float):
-                    return lambda radius: 2  # type: ignore
-                else:
-                    return lambda radius: np.full(radius.shape, 2)  # type: ignore
+        @overload(_surface_from_radius)
+        def ol_surface_from_radius(radius):
+            if isinstance(radius, nb.types.Array):
+                return lambda radius: np.full(radius.shape, 2)
+            else:
+                return lambda radius: 2
+
+        @jit
+        def surface_from_radius(radius: TNumArr) -> TNumArr:
+            return _surface_from_radius(radius)  # type: ignore
 
     elif dim == 2:
 
@@ -295,7 +295,7 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
         raise NotImplementedError(
             f"Cannot calculate the surface area in {dim} dimensions"
         )
-    return surface_from_radius
+    return surface_from_radius  # type: ignore
 
 
 def points_cartesian_to_spherical(points: np.ndarray) -> np.ndarray:
