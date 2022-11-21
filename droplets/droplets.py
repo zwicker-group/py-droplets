@@ -1192,7 +1192,7 @@ def droplet_from_data(droplet_class: str, data) -> DropletBase:
 class _TriangulatedSpheres:
     """helper class for handling stored data about triangulated spheres"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.path = Path(__file__).resolve().parent / "resources" / "spheres_3d.hdf5"
         self.num_list = np.zeros((0,))
         self.data: Optional[Dict[int, Dict[str, Any]]] = None
