@@ -13,7 +13,7 @@ except ImportError:
     from importlib.metadata import PackageNotFoundError, version
 
     try:
-        __version__ = version("pde")
+        __version__ = version("droplets")
     except PackageNotFoundError:
         # package is not installed, so we cannot determine any version
         __version__ = "unknown"
