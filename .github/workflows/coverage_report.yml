@@ -32,6 +32,6 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./tests/report_coverage.xml
+        file: ./report_coverage.xml
         flags: unittests
         fail_ci_if_error: true
