@@ -23,7 +23,14 @@ classifiers = [
 ]
 
 # Requirements for setuptools
-dependencies = ["matplotlib>=3.1.0", "numba>=0.56.0", "numpy>=1.22.0", "scipy>=1.4.0", "sympy>=1.5.0", "py-pde>=0.22"]
+dependencies = [
+    "matplotlib>=3.1.0",
+    "numba>=0.56.0",
+    "numpy>=1.22.0",
+    "scipy>=1.4.0",
+    "sympy>=1.5.0",
+    "py-pde>=0.22",
+]
 
 [project.optional-dependencies]
 hdf = ["h5py>=2.10"]
