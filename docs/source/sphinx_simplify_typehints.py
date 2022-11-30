@@ -87,7 +87,7 @@ REPLACEMENTS_REGEX = {
 def process_signature(
     app, what: str, name: str, obj, options, signature, return_annotation
 ):
-    """ Process signature by applying replacement rules """
+    """Process signature by applying replacement rules"""
     if signature is not None:
         for key, value in REPLACEMENTS.items():
             signature = signature.replace(key, value)
@@ -97,5 +97,5 @@ def process_signature(
 
 
 def setup(app):
-    """ set up hooks for this sphinx plugin """
+    """set up hooks for this sphinx plugin"""
     app.connect("autodoc-process-signature", process_signature)

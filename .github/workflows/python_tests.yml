@@ -5,16 +5,16 @@ on: [push]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    
+
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         python-version: ['3.8', '3.10']
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -23,13 +23,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install h5py
-        
+
     - name: Test types with mypy
       continue-on-error: true
       run: |
         pip install mypy
-        python -m mypy --config-file tests/mypy.ini --pretty --package droplets
-        
+        python -m mypy --config-file pyproject.toml --pretty --package droplets
+
     - name: Test with pytest
       env:
         NUMBA_WARNINGS: 1
