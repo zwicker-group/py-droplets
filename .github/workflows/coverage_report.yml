@@ -24,9 +24,9 @@ jobs:
     - name: Generate coverage report
       run: |
         pip install h5py pytest pytest-cov
-        cd tests
         export MPLBACKEND="agg"
-        pytest --cov-config=pyproject.toml --cov-report xml:report_coverage.xml --cov=droplets
+        export PYTHONPATH="${PYTHONPATH}:`pwd`"
+        pytest --cov-config=pyproject.toml --cov-report xml:report_coverage.xml --cov=droplets droplets
 
     - name: Upload coverage to Codecov  
       uses: codecov/codecov-action@v1
