@@ -30,7 +30,7 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 from pde.trackers.base import InfoDict
 
 from .droplets import SphericalDroplet, droplet_from_data
-from .emulsions import EmulsionTimeCourse
+from .emulsions import EmulsionTimeCourse, Emulsion
 
 
 def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
@@ -488,7 +488,9 @@ class DropletTrackList(list):
         if method == "overlap":
             # track droplets by their physical overlap
 
-            def match_tracks(emulsion, tracks_alive, time):
+            def match_tracks(
+                emulsion: Emulsion, tracks_alive: List[DropletTrack], time: float
+            ) -> None:
                 """helper function adding emulsions to the tracks"""
                 found_multiple_overlap = False
                 for droplet in emulsion:
@@ -513,7 +515,9 @@ class DropletTrackList(list):
 
             max_dist = kwargs.pop("max_dist", np.inf)
 
-            def match_tracks(emulsion, tracks_alive, time):
+            def match_tracks(
+                emulsion: Emulsion, tracks_alive: List[DropletTrack], time: float
+            ) -> None:
                 """helper function adding emulsions to the tracks"""
                 added = set()
 
@@ -536,12 +540,12 @@ class DropletTrackList(list):
                         if np.isinf(dists[i, j]):
                             break  # no more matches
                         added.add(j)
-                        tracks_alive[i].append(emulsion[j], time=time)
+                        tracks_alive[i].append(emulsion[j], time=time)  # type: ignore
                         dists[i, :] = np.inf
                         dists[:, j] = np.inf
 
                 # add droplets that have not been matched
-                for i, droplet in enumerate(emulsion):
+                for i, droplet in enumerate(emulsion):  # type: ignore
                     if i not in added:
                         tracks.append(DropletTrack(droplets=[droplet], times=[time]))
 
