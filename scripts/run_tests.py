@@ -154,7 +154,7 @@ def run_unit_tests(
         )
 
     # specify the package to run
-    args.append(PACKAGE)
+    args.append("tests")
 
     # actually run the test
     return sp.run(args, env=env, cwd=PACKAGE_PATH).returncode

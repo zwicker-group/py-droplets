@@ -110,10 +110,10 @@ module = [
     "numpy.*",
     "pandas.*",
     "pyfftw.*",
+    "pygmsh.*",
     "pytest.*",
     "qtpy.*",
     "scipy.*",
     "sympy.*",
-    "tqdm.*",
 ]
 ignore_missing_imports = true
