@@ -26,7 +26,7 @@ jobs:
         pip install h5py pytest pytest-cov
         export MPLBACKEND="agg"
         export PYTHONPATH="${PYTHONPATH}:`pwd`"
-        pytest --cov-config=pyproject.toml --cov-report xml:report_coverage.xml --cov=droplets droplets
+        pytest --cov-config=pyproject.toml --cov-report xml:report_coverage.xml --cov=droplets tests
 
     - name: Upload coverage to Codecov  
       uses: codecov/codecov-action@v1
