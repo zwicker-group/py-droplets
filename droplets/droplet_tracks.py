@@ -455,7 +455,7 @@ class DropletTrackList(list):
     @classmethod
     def from_emulsion_time_course(
         cls,
-        time_course: "EmulsionTimeCourse",
+        time_course: EmulsionTimeCourse,
         method: str = "overlap",
         progress: bool = False,
         **kwargs,
