@@ -4,10 +4,8 @@
 [![Documentation Status](https://readthedocs.org/projects/py-droplets/badge/?version=latest)](https://py-droplets.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/py-droplets.svg)](https://badge.fury.io/py/py-droplets)
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/py-droplets.svg)](https://anaconda.org/conda-forge/py-droplets)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/zwicker-group/py-droplets/branch/master/graph/badge.svg)](https://codecov.io/gh/zwicker-group/py-droplets)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/zwicker-group/py-droplets.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwicker-group/py-droplets/context:python)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 `py-droplets` provides python code for representing physical droplets using
