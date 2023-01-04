@@ -640,7 +640,11 @@ class Emulsion(list):
         # add all patches as a collection
         import matplotlib as mpl
 
-        coll = mpl.collections.PatchCollection(patches, match_original=True)
+        # the zorder needs to be set on the collection level to have any effect
+        col_args = {}
+        if "zorder" in kwargs:
+            col_args["zorder"] = kwargs["zorder"]
+        coll = mpl.collections.PatchCollection(patches, match_original=True, **col_args)
         ax.add_collection(coll)
 
         # add colorbar if requested

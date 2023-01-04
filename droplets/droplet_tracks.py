@@ -689,9 +689,10 @@ class DropletTrackList(list):
 
         # adjust alpha such that multiple tracks are visible well
         kwargs.setdefault("alpha", min(0.8, 20 / len(self)))
-        elements = [
-            track.plot(attribute=attribute, ax=ax, **kwargs).element for track in self
-        ]
+        elements = []
+        for track in self:
+            elements.append(track.plot(attribute=attribute, ax=ax, **kwargs).element)
+            kwargs["label"] = ""  # set potential plot label only for first track
 
         return PlotReference(ax, elements, {"attribute": attribute})
 
