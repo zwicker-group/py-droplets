@@ -30,7 +30,7 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 from pde.trackers.base import InfoDict
 
 from .droplets import SphericalDroplet, droplet_from_data
-from .emulsions import EmulsionTimeCourse, Emulsion
+from .emulsions import Emulsion, EmulsionTimeCourse
 
 
 def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Configuration file for the Sphinx documentation builder.
 #
 # This file does only contain a selection of the most common options. For a
@@ -27,6 +25,7 @@ import sphinx_simplify_typehints  # @UnresolvedImport @UnusedImport
 # -- Project information -----------------------------------------------------
 
 project = "py-droplets"
+module_name = "droplets"
 author = "David Zwicker"
 copyright = f"{date.today().year}, {author}"  # @ReservedAssignment
 
@@ -226,8 +225,8 @@ napoleon_numpy_docstring = False
 napoleon_include_init_with_doc = False
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = False
-napoleon_use_admonition_for_examples = False
-napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_examples = True
+napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = False
 napoleon_use_ivar = False
 napoleon_use_param = True
@@ -239,12 +238,13 @@ napoleon_custom_sections = None
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    "https://docs.python.org/3/": None,
-    "https://docs.scipy.org/doc/numpy/": None,
-    "https://docs.scipy.org/doc/scipy/reference": None,
-    "https://matplotlib.org": None,
-    "http://docs.h5py.org/en/latest/": None,
-    "https://py-pde.readthedocs.io/en/latest": None,
+    "h5py": ("https://docs.h5py.org/en/latest", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
+    "napari": ("https://napari.org/", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "python": ("https://docs.python.org/3/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "sympy": ("https://docs.sympy.org/latest/", None),
 }
 
 

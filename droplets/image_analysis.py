@@ -320,6 +320,23 @@ def locate_droplets(
     phase field, which are interpreted as droplets. Basic quantities, like
     position and size, are determined for these clusters.
 
+    Example:
+        To determine the position, radius and interfacial width of an arbitrary droplet,
+        the following call can be used
+
+        .. code-block:: python
+
+            emulsion = droplets.locate_droplets(
+                field,
+                threshold="auto",
+                refine=True,
+                refine_args={'vmin': None, 'vmax': None},
+            )
+
+        :code:`field` is the scalar field, in which the droplets are located. The
+        `refine_args` set flexibel boundaries for the intensities inside and outside
+        the droplet.
+
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
             Scalar field that describes the concentration field of droplets
