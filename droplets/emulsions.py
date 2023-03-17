@@ -172,7 +172,10 @@ class Emulsion(list):
     def data(self) -> Optional[np.ndarray]:
         """:class:`~numpy.ndarray`: an array containing the data of the full emulsion
 
-        This requires all droplets to be of the same class
+        Warning:
+            This requires all droplets to be of the same class. The returned array is
+            a copy of all the data and writing to it will thus not change the underlying
+            data.
         """
         if len(self) == 0:
             return None
@@ -677,8 +680,8 @@ class EmulsionTimeCourse:
         else:
             self.grid = None
 
-        self.emulsions = []
-        self.times = []
+        self.emulsions: List[Emulsion] = []
+        self.times: List[float] = []
 
         # add all emulsions
         if emulsions:
@@ -686,7 +689,9 @@ class EmulsionTimeCourse:
                 self.append(Emulsion(e))
 
         # add all times
-        if times is not None:
+        if times is None:
+            self.times = list(range(len(self.emulsions)))
+        else:
             self.times = list(times)
 
         if len(self.times) != len(self.emulsions):
@@ -746,11 +751,11 @@ class EmulsionTimeCourse:
         else:
             return result
 
-    def __iter__(self) -> Iterator[Tuple[float, Emulsion]]:
+    def __iter__(self) -> Iterator[Emulsion]:
         """iterate over the emulsions"""
         return iter(self.emulsions)
 
-    def items(self):
+    def items(self) -> Iterator[Tuple[float, Emulsion]]:
         """iterate over all times and emulsions, returning them in pairs"""
         return zip(self.times, self.emulsions)
 
@@ -866,6 +871,18 @@ class EmulsionTimeCourse:
             # should be identical, so we don't handle this case explicitly
             if self.grid is not None:
                 fp.attrs["grid"] = self.grid.state_serialized
+
+    def get_emulsion(self, time: float) -> Emulsion:
+        """returns the emulsion clostest to a specific time point
+
+        Args:
+            time (float): The time point
+
+        Returns:
+            :class:`Emuslion`
+        """
+        idx = np.argmin(np.abs(np.asarray(self.times) - time))
+        return self.emulsions[idx]
 
     @fill_in_docstring
     def tracker(

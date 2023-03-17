@@ -2,7 +2,6 @@
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
-import glob
 import os
 import subprocess as sp
 import sys
@@ -13,8 +12,8 @@ import pytest
 
 from pde.tools.misc import module_available
 
-PACKAGE_PATH = Path(__file__).resolve().parents[2]
-EXAMPLES = glob.glob(str(PACKAGE_PATH / "examples" / "*.py"))
+PACKAGE_PATH = Path(__file__).resolve().parents[1]
+EXAMPLES = (PACKAGE_PATH / "examples").glob("*.py")
 
 SKIP_EXAMPLES: List[str] = []
 if not module_available("matplotlib"):
@@ -25,9 +24,9 @@ if not module_available("matplotlib"):
 @pytest.mark.parametrize("path", EXAMPLES)
 def test_example(path):
     """runs an example script given by path"""
-    if os.path.basename(path).startswith("_"):
+    if path.name.startswith("_"):
         pytest.skip("skip examples starting with an underscore")
-    if any(name in path for name in SKIP_EXAMPLES):
+    if any(name in str(path) for name in SKIP_EXAMPLES):
         pytest.skip(f"Skip test {path}")
 
     env = os.environ.copy()
