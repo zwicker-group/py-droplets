@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 import math
+import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, TypeVar
@@ -171,7 +172,10 @@ class DropletBase:
         super().__init_subclass__(**kwargs)
 
         # register all subclassess to reconstruct them later
-        cls._subclasses[cls.__name__] = cls
+        if cls.__name__ != "DropletBase":
+            if cls.__name__ in cls._subclasses:
+                warnings.warn(f"Redefining class {cls.__name__}")
+            cls._subclasses[cls.__name__] = cls
 
         # create a staticmethod for merging droplet data
         cls._merge_data = staticmethod(cls._make_merge_data())

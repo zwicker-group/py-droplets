@@ -56,6 +56,8 @@ class Emulsion(list):
     """class representing a collection of droplets in a common system"""
 
     _show_projection_warning: bool = True
+    """bool: Flag determining whether a warning is shown when high-dimensional
+    emulsions are plotted"""
 
     def __init__(
         self,
