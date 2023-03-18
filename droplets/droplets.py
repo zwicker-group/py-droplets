@@ -172,7 +172,7 @@ class DropletBase:
         super().__init_subclass__(**kwargs)
 
         # register all subclassess to reconstruct them later
-        if cls.__name__ != "DropletBase":
+        if cls is not DropletBase:
             if cls.__name__ in cls._subclasses:
                 warnings.warn(f"Redefining class {cls.__name__}")
             cls._subclasses[cls.__name__] = cls
