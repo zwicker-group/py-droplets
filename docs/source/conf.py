@@ -61,6 +61,7 @@ extensions = [
     "sphinx.ext.napoleon",
     # "sphinx_simplify_typehints",
     "sphinx.ext.inheritance_diagram",
+    "sphinxcontrib.jquery",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
