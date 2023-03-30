@@ -565,7 +565,7 @@ def get_structure_factor(
     wave_numbers: Union[Sequence[float], str] = "auto",
     add_zero: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Calculates the structure factor associated with a field
+    r"""Calculates the structure factor associated with a field
 
     Here, the structure factor is basically the power spectral density of the
     field `scalar_field` normalized so that re-gridding or rescaling the field
@@ -588,8 +588,9 @@ def get_structure_factor(
             returned.
 
     Returns:
-        (numpy.ndarray, numpy.ndarray): Two arrays giving the wave numbers and
-        the associated structure factor
+        (numpy.ndarray, numpy.ndarray): Two arrays giving the wave numbers and the
+        associated structure factor. Wave numbers :math:`k` are related to distances by
+        :math:`2\pi/k`.
     """
     logger = logging.getLogger(__name__)
 
@@ -621,9 +622,11 @@ def get_structure_factor(
     #    sf /= (scalar_field.data**2).sum()
     # but since this involves two FFT, it is probably slower
 
-    # determine the (squared) components of the wave vectors
+    # determine the (squared) components of the wave vectors.
+    # Note that `fftfreq` defines the wave number in cycles per unit of the sample
+    # spacing, so we need to scale lengths by one over 2π.
     k2s = [
-        np.fft.fftfreq(grid.shape[i], d=grid.discretization[i]) ** 2
+        np.fft.fftfreq(grid.shape[i], d=grid.discretization[i] / (2 * np.pi)) ** 2
         for i in range(grid.dim)
     ]
     # calculate the magnitude
@@ -701,7 +704,7 @@ def get_length_scale(
     if method == "structure_factor_mean" or method == "structure_factor_average":
         # calculate the structure factor
         k_mag, sf = get_structure_factor(scalar_field)
-        length_scale = np.sum(sf) / np.sum(k_mag * sf)
+        length_scale = 2 * np.pi * np.sum(sf) / np.sum(k_mag * sf)
 
         if kwargs.pop("full_output", False):
             return length_scale, sf
@@ -736,7 +739,7 @@ def get_length_scale(
                         "Maximization of structure factor resulted in the following "
                         f"message: {result.message}"
                     )
-                length_scale = 1 / result.x
+                length_scale = 2 * np.pi / result.x
 
         if kwargs.pop("full_output", False):
             return length_scale, sf_smooth
