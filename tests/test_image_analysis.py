@@ -247,17 +247,30 @@ def test_localization_vmin_vmax(adjust_values, auto_values):
     assert d1.interface_width == pytest.approx(d2.interface_width)
 
 
-def test_get_length_scale():
-    """test determining the length scale"""
-    grid = CartesianGrid([[0, 8 * np.pi]], 64, periodic=True)
-    c = ScalarField(grid, np.sin(grid.axes_coords[0]))
-    for method in [
+def test_get_structure_factor():
+    """test the structure factor method"""
+    grid = UnitGrid([512], periodic=True)
+    k0 = np.random.uniform(1, 3)
+    field = ScalarField.from_expression(grid, f"sin({k0} * x)")
+    k, S = image_analysis.get_structure_factor(field)
+    k_max = k[S.argmax()]
+    assert k_max == pytest.approx(k0, rel=1e-2)
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
         "structure_factor_mean",
         "structure_factor_maximum",
         "droplet_detection",
-    ]:
-        s = image_analysis.get_length_scale(c, method=method)
-        assert s == pytest.approx(2 * np.pi, rel=0.1)
+    ],
+)
+def test_get_length_scale(method):
+    """test determining the length scale"""
+    grid = CartesianGrid([[0, 8 * np.pi]], 64, periodic=True)
+    c = ScalarField.from_expression(grid, "sin(x)")
+    s = image_analysis.get_length_scale(c, method=method)
+    assert s == pytest.approx(2 * np.pi, rel=0.1)
 
 
 def test_get_length_scale_edge():
@@ -265,7 +278,7 @@ def test_get_length_scale_edge():
     grid = CartesianGrid(bounds=[[0, 1]], shape=32, periodic=True)
     for n in range(1, 4):
         c = ScalarField.from_expression(grid, f"0.2 + 0.2*sin(2*{n}*pi*x)")
-        s = image_analysis.get_length_scale(c)
+        s = image_analysis.get_length_scale(c, method="structure_factor_maximum")
         assert s == pytest.approx(1 / n, rel=1e-4)
 
 
