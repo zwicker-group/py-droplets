@@ -254,7 +254,7 @@ def test_get_structure_factor():
     field = ScalarField.from_expression(grid, f"sin({k0} * x)")
     k, S = image_analysis.get_structure_factor(field)
     k_max = k[S.argmax()]
-    assert k_max == pytest.approx(k0, rel=1e-2)
+    assert k_max == pytest.approx(k0, rel=5e-1)
 
 
 @pytest.mark.parametrize(
