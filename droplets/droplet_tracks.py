@@ -15,8 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import List  # @UnusedImport
-from typing import Optional, Union
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -524,7 +523,7 @@ class DropletTrackList(list):
                 # calculate the distance between droplets
                 if tracks_alive:
                     if time_course.grid is None:
-                        metric = "euclidean"
+                        metric: Union[str, Callable] = "euclidean"
                     else:
                         metric = time_course.grid.distance_real
                     points_prev = [track.last.position for track in tracks_alive]
