@@ -22,13 +22,14 @@ from typing import (
     Any,
     Callable,
     Dict,
-    Generator,
+    Iterable,
     Iterator,
     List,
     Optional,
     Sequence,
     Tuple,
     Union,
+    overload,
 )
 
 import numpy as np
@@ -49,9 +50,6 @@ if TYPE_CHECKING:
     from .trackers import DropletTracker  # @UnusedImport
 
 
-DropletSequence = Union[Generator, Sequence[SphericalDroplet]]
-
-
 class Emulsion(list):
     """class representing a collection of droplets in a common system"""
 
@@ -59,9 +57,11 @@ class Emulsion(list):
     """bool: Flag determining whether a warning is shown when high-dimensional
     emulsions are plotted"""
 
+    grid: Optional[GridBase]
+
     def __init__(
         self,
-        droplets: Optional[DropletSequence] = None,
+        droplets: Optional[Iterable[SphericalDroplet]] = None,
         grid: Optional[GridBase] = None,
         copy: bool = True,
     ):
@@ -112,13 +112,21 @@ class Emulsion(list):
         # return sum of Emulsions as an emulsion
         return Emulsion(list.__add__(self, rhs))
 
-    def __getitem__(self, key: Union[int, slice]):  # type: ignore
+    @overload  # type: ignore
+    def __getitem__(self, key: int) -> SphericalDroplet:
+        ...
+
+    @overload
+    def __getitem__(self, key: slice) -> Emulsion:
+        ...
+
+    def __getitem__(self, key):
         # return result from extended slicing as Emulsion
         result = list.__getitem__(self, key)
-        try:
-            return Emulsion(result, grid=self.grid)
-        except TypeError:
+        if isinstance(result, SphericalDroplet):
             return result
+        else:
+            return Emulsion(result, grid=self.grid)
 
     def copy(self, min_radius: float = -1) -> Emulsion:
         """return a copy of this emulsion
@@ -129,16 +137,18 @@ class Emulsion(list):
                 exactly min_radius are removed, so `min_radius == 0` can be used to
                 filter vanished droplets.
         """
-        droplets = [droplet.copy() for droplet in self if droplet.radius > min_radius]
+        droplets: List[SphericalDroplet] = [
+            droplet.copy() for droplet in self if droplet.radius > min_radius
+        ]
         return self.__class__(
             droplets,
             grid=self.grid,
             copy=False,
         )
 
-    def extend(  # type: ignore
+    def extend(
         self,
-        droplets: DropletSequence,
+        droplets: Iterable[SphericalDroplet],
         copy: bool = True,
     ) -> None:
         """add many droplets to the emulsion
@@ -321,7 +331,7 @@ class Emulsion(list):
         """:class:`Cuboid`: bounding box of the emulsion"""
         if len(self) == 0:
             raise RuntimeError("Bounding box of empty emulsion is undefined")
-        return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)  # type: ignore
+        return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
 
     def get_phasefield(
         self, grid: Optional[GridBase] = None, label: Optional[str] = None
@@ -668,7 +678,11 @@ class Emulsion(list):
 class EmulsionTimeCourse:
     """represents emulsions as a function of time"""
 
-    def __init__(self, emulsions=None, times=None):
+    def __init__(
+        self,
+        emulsions: Optional[Iterable[Emulsion]] = None,
+        times: Union[np.ndarray, Sequence[float], None] = None,
+    ) -> None:
         """
         Args:
             emulsions (list): List of emulsions that describe this time course
@@ -677,7 +691,7 @@ class EmulsionTimeCourse:
         if isinstance(emulsions, EmulsionTimeCourse):
             # extract data from given object; ignore `times`
             times = emulsions.times
-            self.grid = emulsions.grid
+            self.grid: Optional[GridBase] = emulsions.grid
             emulsions = emulsions.emulsions
         else:
             self.grid = None
@@ -686,7 +700,7 @@ class EmulsionTimeCourse:
         self.times: List[float] = []
 
         # add all emulsions
-        if emulsions:
+        if emulsions is not None:
             for e in emulsions:
                 self.append(Emulsion(e))
 
