@@ -11,7 +11,6 @@ with h5py.File("spheres_3d.hdf5", "w") as f:
 
     # iterate over different characteristic lengths
     for length in [0.1, 0.2, 0.3, 0.5, 1.0, 2.0]:
-
         # initialize the geometry
         with pygmsh.occ.Geometry() as geom:
             # set the resolution of the geometry

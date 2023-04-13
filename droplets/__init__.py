@@ -7,7 +7,7 @@ Functions and classes for analyzing emulsions and droplets
 # determine the package version
 try:
     # try reading version of the automatically generated module
-    from ._version import __version__  # type: ignore
+    from ._version import __version__
 except ImportError:
     # determine version automatically from CVS information
     from importlib.metadata import PackageNotFoundError, version
@@ -17,7 +17,7 @@ except ImportError:
     except PackageNotFoundError:
         # package is not installed, so we cannot determine any version
         __version__ = "unknown"
-    del version, PackageNotFoundError  # clean name space
+    del PackageNotFoundError, version  # clean name space
 
 from .droplet_tracks import DropletTrack, DropletTrackList
 from .droplets import DiffuseDroplet, SphericalDroplet
