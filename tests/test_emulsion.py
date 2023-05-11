@@ -233,3 +233,14 @@ def test_emulsion_merge(modify_data):
     stats = em.get_size_statistics(incl_vanished=False)
     assert stats["count"] == 1
     assert stats["radius_mean"] == pytest.approx(5)
+
+
+@pytest.mark.parametrize("dim", [1, 2, 3])
+def test_emulsion_random(dim):
+    """create random emulsions"""
+    rng = np.random.default_rng(dim)
+    em = Emulsion.from_random(num=10, bounds=[(10, 30)] * dim, radius=(1, 2), rng=rng)
+    assert 1 < len(em) < 10
+    assert em.dim == dim
+    assert np.all(em.data["position"] > 10) and np.all(em.data["position"] < 30)
+    assert np.all(em.data["radius"] > 1) and np.all(em.data["radius"] < 2)
