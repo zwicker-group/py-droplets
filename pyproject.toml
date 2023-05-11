@@ -115,5 +115,6 @@ module = [
     "qtpy.*",
     "scipy.*",
     "sympy.*",
+    "tqdm.*",
 ]
 ignore_missing_imports = true

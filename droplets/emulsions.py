@@ -28,6 +28,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     Union,
     overload,
 )
@@ -94,6 +95,65 @@ class Emulsion(list):
         super().__init__()
         if droplets is not None:
             self.extend(droplets, copy=copy)
+
+    @classmethod
+    def from_random(
+        cls,
+        num: int,
+        bounds: Sequence[Tuple[float, float]],
+        radius: Union[float, Tuple[float, float]],
+        *,
+        remove_overlapping: bool = True,
+        droplet_class: Type[SphericalDroplet] = SphericalDroplet,
+        rng: Optional[np.random.Generator] = None,
+    ) -> Emulsion:
+        """
+        Create an emulsion with random droplets
+
+        Args:
+            num (int):
+                The (maximal) number of droplets to generate
+            bounds:
+                Boundaries of the space in which droplets are placed. This needs to be
+                a sequence of tuples with lower and upper bounds for each axes. The
+                length of the sequence determines the dimension of the space in which
+                droplets are placed.
+            radius (float or tuple of float):
+                Radius of the droplets that are created. If two numbers are given, they
+                specify the bounds of a uniform distribution from which the radius of
+                each individual droplet is chosen.
+            remove_overlapping (bool):
+                Flag determining whether overlapping droplets are removed. If enabled,
+                the resulting element might contain less thatn `num` droplets.
+            droplet_class:
+                The class that is used to describe droplets.
+            rng (:class:`~numpy.random.Generator`):
+                Random number generator (default: :func:`~numpy.random.default_rng()`)
+        """
+        if rng is None:
+            rng = np.random.default_rng()
+
+        # extract information about possible positions
+        bnds = np.atleast_2d(bounds)
+        assert bnds.ndim == 2 and bnds.shape[0] > 0 and bnds.shape[1] == 2
+
+        # extract information about radius
+        try:
+            r0, r1 = radius  # type: ignore
+        except TypeError:
+            r0 = r1 = float(radius)  # type: ignore
+
+        # create the emulsion from a list of droplets
+        drops = [
+            droplet_class(rng.uniform(bnds[:, 0], bnds[:, 1]), rng.uniform(r0, r1))
+            for _ in range(num)
+        ]
+        emulsion = cls(drops)
+
+        if remove_overlapping:
+            emulsion.remove_overlapping()
+
+        return emulsion
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -451,7 +511,7 @@ class Emulsion(list):
             return dist[:, 1]  # type: ignore
 
     def remove_overlapping(self, min_distance: float = 0) -> None:
-        """remove all droplets that are overlapping.
+        """remove all droplets that are overlapping
 
         If a pair of overlapping droplets was found, the smaller one of these is removed
         from the current emulsion. This method modifies the emulsion in place and thus
