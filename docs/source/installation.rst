@@ -11,14 +11,14 @@ the installation is in principle as simple as running
 .. code-block:: bash
 
     pip install py-droplets
-    
+
 
 In order to have all features of the package available, you might also want to 
 install the following optional packages:
 
 .. code-block:: bash
 
-	pip install h5py pyfftw tqdm
+	pip install h5py pyfftw
 
 
 Installing from source
@@ -37,10 +37,10 @@ The required packages are listed in the table below:
 ===========  ========= =========
 Package      Version   Usage 
 ===========  ========= =========
-matplotlib   >= 3.1.0  Visualizing results
-numpy        >=1.18    Array library used for storing data
+matplotlib   >=3.1.0   Visualizing results
+numpy        >=1.22    Array library used for storing data
 numba        >=0.48    Just-in-time compilation to accelerate numerics
-scipy        >=1.24    Miscellaneous scientific functions
+scipy        >=1.4     Miscellaneous scientific functions
 py-pde       >=0.22    Simulating partial differential equations
 ===========  ========= =========
 
