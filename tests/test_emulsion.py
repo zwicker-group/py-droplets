@@ -7,7 +7,7 @@ import math
 import numpy as np
 import pytest
 
-from pde import ScalarField, UnitGrid
+from pde import CartesianGrid, ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
 
 from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emulsions
@@ -236,10 +236,15 @@ def test_emulsion_merge(modify_data):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
-def test_emulsion_random(dim):
+@pytest.mark.parametrize("grid", [True, False])
+def test_emulsion_random(dim, grid):
     """create random emulsions"""
     rng = np.random.default_rng(dim)
-    em = Emulsion.from_random(num=10, bounds=[(10, 30)] * dim, radius=(1, 2), rng=rng)
+    if grid:
+        bounds = CartesianGrid([(10, 30)] * dim, 1)
+    else:
+        bounds = [(10, 30)] * dim
+    em = Emulsion.from_random(num=10, bounds=bounds, radius=(1, 2), rng=rng)
     assert 1 < len(em) < 10
     assert em.dim == dim
     assert np.all(em.data["position"] > 10) and np.all(em.data["position"] < 30)

@@ -100,7 +100,7 @@ class Emulsion(list):
     def from_random(
         cls,
         num: int,
-        bounds: Sequence[Tuple[float, float]],
+        bounds: Union[Sequence[Tuple[float, float]], GridBase],
         radius: Union[float, Tuple[float, float]],
         *,
         remove_overlapping: bool = True,
@@ -114,10 +114,11 @@ class Emulsion(list):
             num (int):
                 The (maximal) number of droplets to generate
             bounds:
-                Boundaries of the space in which droplets are placed. This needs to be
-                a sequence of tuples with lower and upper bounds for each axes. The
-                length of the sequence determines the dimension of the space in which
-                droplets are placed.
+                Boundaries of the space in which droplets are placed. This is either a
+                :class:`~pde.grids.base.GridBase` from which the bounds are taken or a
+                sequence of tuples with lower and upper bounds for each axes. The length
+                of the sequence determines the dimension of the space in which droplets
+                are placed.
             radius (float or tuple of float):
                 Radius of the droplets that are created. If two numbers are given, they
                 specify the bounds of a uniform distribution from which the radius of
@@ -134,6 +135,8 @@ class Emulsion(list):
             rng = np.random.default_rng()
 
         # extract information about possible positions
+        if isinstance(bounds, GridBase):
+            bounds = bounds.axes_bounds
         bnds = np.atleast_2d(bounds)
         assert bnds.ndim == 2 and bnds.shape[0] > 0 and bnds.shape[1] == 2
 

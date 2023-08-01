@@ -9,7 +9,6 @@ Functions for analyzing phase field images of emulsions.
    get_structure_factor
    get_length_scale
 
-
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
@@ -219,8 +218,12 @@ def _locate_droplets_in_mask_cylindrical_single(
 
     # determine volume from binary image and scale it to real space
     vol_r, dz = grid.cell_volume_data
-    cell_volumes = vol_r * dz
-    vol = ndimage.sum(cell_volumes, labels, index=indices)
+    cell_volumes = np.outer(vol_r, dz)
+    try:
+        vol = ndimage.sum_labels(cell_volumes, labels, index=indices)
+    except AttributeError:
+        # fall-back for older versions of scipy
+        vol = ndimage.sum(cell_volumes, labels, index=indices)
 
     # return an emulsion of droplets
     droplets = (
