@@ -244,7 +244,7 @@ def test_emulsion_random(dim, grid):
         bounds = CartesianGrid([(10, 30)] * dim, 1)
     else:
         bounds = [(10, 30)] * dim
-    em = Emulsion.from_random(num=10, bounds=bounds, radius=(1, 2), rng=rng)
+    em = Emulsion.from_random(10, bounds, radius=(1, 2), rng=rng)
     assert 1 < len(em) < 10
     assert em.dim == dim
     assert np.all(em.data["position"] > 10) and np.all(em.data["position"] < 30)
