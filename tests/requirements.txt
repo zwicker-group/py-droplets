@@ -1,5 +1,6 @@
 -r ../requirements.txt
 black>=19.*
+h5py
 isort>=5.1
 pytest>=5.4
 pytest-cov>=2.8
