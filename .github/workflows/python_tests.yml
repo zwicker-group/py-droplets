@@ -37,4 +37,4 @@ jobs:
       run: |
         pip install pytest
         cd scripts
-        python run_tests.py --unit
+        python run_tests.py --unit --num_cores auto

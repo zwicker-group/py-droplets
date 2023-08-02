@@ -134,9 +134,7 @@ def run_unit_tests(
 
     # run tests using multiple cores?
     if parallel:
-        from multiprocessing import cpu_count
-
-        args.extend(["-n", str(cpu_count() // 2), "--durations=10"])
+        args.extend(["-n", str(os.cpu_count()), "--durations=10"])
 
     # run only a subset of the tests?
     if pattern is not None:
