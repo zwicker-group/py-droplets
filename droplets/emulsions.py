@@ -100,7 +100,7 @@ class Emulsion(list):
     def from_random(
         cls,
         num: int,
-        bounds: Union[Sequence[Tuple[float, float]], GridBase],
+        grid_or_bounds: Union[GridBase, Sequence[Tuple[float, float]]],
         radius: Union[float, Tuple[float, float]],
         *,
         remove_overlapping: bool = True,
@@ -113,12 +113,11 @@ class Emulsion(list):
         Args:
             num (int):
                 The (maximal) number of droplets to generate
-            bounds:
-                Boundaries of the space in which droplets are placed. This is either a
-                :class:`~pde.grids.base.GridBase` from which the bounds are taken or a
-                sequence of tuples with lower and upper bounds for each axes. The length
-                of the sequence determines the dimension of the space in which droplets
-                are placed.
+            grid_or_bounds (:class:`~pde.grids.base.GridBase` or list of float tuples):
+                Determines the space in which droplets are placed. This is either a
+                :class:`~pde.grids.base.GridBase` describing the geometry or a sequence
+                of tuples with lower and upper bounds for each axes, so the length of
+                the sequence determines the space dimension.
             radius (float or tuple of float):
                 Radius of the droplets that are created. If two numbers are given, they
                 specify the bounds of a uniform distribution from which the radius of
@@ -134,11 +133,18 @@ class Emulsion(list):
         if rng is None:
             rng = np.random.default_rng()
 
-        # extract information about possible positions
-        if isinstance(bounds, GridBase):
-            bounds = bounds.axes_bounds
-        bnds = np.atleast_2d(bounds)
-        assert bnds.ndim == 2 and bnds.shape[0] > 0 and bnds.shape[1] == 2
+        # determine how to get random droplet positions
+        if isinstance(grid_or_bounds, GridBase):
+
+            def get_position():
+                return grid_or_bounds.get_random_point(rng=rng)
+
+        else:
+            bnds = np.atleast_2d(grid_or_bounds)
+            assert bnds.ndim == 2 and bnds.shape[0] > 0 and bnds.shape[1] == 2
+
+            def get_position():
+                return rng.uniform(bnds[:, 0], bnds[:, 1])
 
         # extract information about radius
         try:
@@ -147,10 +153,7 @@ class Emulsion(list):
             r0 = r1 = float(radius)  # type: ignore
 
         # create the emulsion from a list of droplets
-        drops = [
-            droplet_class(rng.uniform(bnds[:, 0], bnds[:, 1]), rng.uniform(r0, r1))
-            for _ in range(num)
-        ]
+        drops = [droplet_class(get_position(), rng.uniform(r0, r1)) for _ in range(num)]
         emulsion = cls(drops)
 
         if remove_overlapping:
