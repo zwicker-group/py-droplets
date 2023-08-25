@@ -259,7 +259,7 @@ class DropletTrack:
 
         Args:
             dataset:
-                an HDF5 dataset from which the data of the droplet track is read
+                A HDF5 dataset from which the data of the droplet track is read
         """
         # there are values, so the emulsion is not empty
         droplet_class = dataset.attrs["droplet_class"]
@@ -376,11 +376,12 @@ class DropletTrack:
         """plot the droplet track
 
         Args:
-            grid (GridBase, optional): The grid on which the droplets are
-                defined. If given, periodic boundary conditions can be respected
-                in the plotting.
-            arrow (bool, optional): Flag determining whether an arrow head is
-                shown to indicate the direction of the droplet drift.
+            grid (GridBase, optional):
+                The grid on which the droplets are defined. If given, periodic boundary
+                conditions can be respected in the plotting.
+            arrow (bool, optional):
+                Flag determining whether an arrow head is shown to indicate the
+                direction of the droplet drift.
             {PLOT_ARGS}
             **kwargs:
                 Additional keyword arguments are passed to the matplotlib plot

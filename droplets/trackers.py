@@ -6,7 +6,7 @@ Module defining classes for tracking droplets in simulations.
 
    LengthScaleTracker
    DropletTracker
-   
+
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
@@ -166,7 +166,6 @@ class DropletTracker(TrackerBase):
             perturbation_modes (int):
                 An option describing how many perturbation modes should be
                 considered when refining droplets.
-
         """
         super().__init__(interval=interval)
         if emulsion_timecourse is None:
