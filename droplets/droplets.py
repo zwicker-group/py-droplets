@@ -1,6 +1,9 @@
 """
 Classes representing (perturbed) droplets in various dimensions
 
+The classes differ in what features of a droplet they track. In the simplest case, only
+the position and radius of a spherical droplet are stored. Other classes additionally
+keep track of the interfacial width or shape perturbations (of various degrees).
 
 .. autosummary::
    :nosignatures:
@@ -240,7 +243,7 @@ class DropletBase:
         return np.full(num, -np.inf), np.full(num, np.inf)
 
 
-class SphericalDroplet(DropletBase):  # lgtm [py/missing-equals]
+class SphericalDroplet(DropletBase):
     """Represents a single, spherical droplet"""
 
     __slots__ = ["data"]
@@ -1181,13 +1184,14 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         raise NotImplementedError("Plotting PerturbedDroplet3D is not implemented")
 
 
-def droplet_from_data(droplet_class: str, data) -> DropletBase:
+def droplet_from_data(droplet_class: str, data: np.ndarray) -> DropletBase:
     """create a droplet instance of the given class using some data
 
     Args:
-        droplet_class (str): The name of the class that is used to create the
-            droplet instance
-        data (numpy.ndarray): A numpy array that defines the droplet properties
+        droplet_class (str):
+            The name of the class that is used to create the droplet instance
+        data (:class:`~numpy.ndarray`):
+            A numpy array that defines the droplet properties
     """
     cls = DropletBase._subclasses[droplet_class]
     return cls(**{key: data[key] for key in data.dtype.names})  # type: ignore
