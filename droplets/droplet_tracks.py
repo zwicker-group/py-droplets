@@ -254,7 +254,7 @@ class DropletTrack:
         return s0 <= o1 and o0 <= s1
 
     @classmethod
-    def _from_hdf_dataset(cls, dataset) -> "DropletTrack":
+    def _from_hdf_dataset(cls, dataset) -> DropletTrack:
         """construct a droplet track by reading data from an hdf5 dataset
 
         Args:
@@ -455,7 +455,9 @@ class DropletTrackList(list):
     def from_emulsion_time_course(
         cls,
         time_course: EmulsionTimeCourse,
+        *,
         method: str = "overlap",
+        grid: Optional[GridBase] = None,
         progress: bool = False,
         **kwargs,
     ) -> DropletTrackList:
@@ -469,6 +471,9 @@ class DropletTrackList(list):
                 "overlap" (adding droplets that overlap with those in previous frames)
                 and "distance" (matching droplets to minimize center-to-center
                 distances).
+            grid (:class:`~pde.grids.base.GridBase`):
+                The grid on which the droplets are defined, which is necessary if
+                periodic boundary conditions should be respected for measuring distances
             progress (bool):
                 Whether to show the progress of the process.
             **kwargs:
@@ -496,7 +501,7 @@ class DropletTrackList(list):
                     # determine which old tracks could be extended
                     overlaps: List[DropletTrack] = []
                     for track in tracks_alive:
-                        if track.last.overlaps(droplet, time_course.grid):
+                        if track.last.overlaps(droplet, grid=grid):
                             overlaps.append(track)
 
                     if len(overlaps) == 1:
@@ -522,10 +527,10 @@ class DropletTrackList(list):
 
                 # calculate the distance between droplets
                 if tracks_alive:
-                    if time_course.grid is None:
+                    if grid is None:
                         metric: Union[str, Callable] = "euclidean"
                     else:
-                        metric = time_course.grid.distance_real
+                        metric = grid.distance_real
                     points_prev = [track.last.position for track in tracks_alive]
                     points_now = [droplet.position for droplet in emulsion]
                     dists = distance.cdist(points_prev, points_now, metric=metric)

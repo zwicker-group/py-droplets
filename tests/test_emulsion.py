@@ -2,6 +2,7 @@
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+import logging
 import math
 
 import numpy as np
@@ -88,6 +89,39 @@ def test_emulsion_two():
     np.testing.assert_array_equal(e.get_neighbor_distances(True), np.array([2, 2]))
 
 
+def test_emulsion_emtpy(caplog):
+    """test incompatible droplets in an emulsion"""
+    caplog.set_level(logging.WARNING)
+
+    # define droplets
+    d1 = SphericalDroplet([1], 2)
+    d2 = DiffuseDroplet([1], 2, 1)
+
+    e = Emulsion([])
+    assert len(e) == 0
+    with pytest.raises(RuntimeError):
+        e.data
+    e.append(d1, force_consistency=True)
+    assert e.dtype == d1.data.dtype
+
+    e = Emulsion([], dtype=d1.data.dtype)
+    assert len(e) == 0
+    assert e.data.size == 0
+    assert e.dtype == e.data.dtype == d1.data.dtype
+    e.append(d1, force_consistency=True)
+
+    e = Emulsion([], dtype=d1.data.dtype)
+    with pytest.raises(ValueError):
+        e.append(d2, force_consistency=True)
+
+    e = Emulsion([], dtype=d1.data.dtype)
+    e.append(d2)
+    assert len(e) == 1
+
+    e.data  # raises warning
+    assert "inconsistent" in caplog.text
+
+
 def test_emulsion_incompatible():
     """test incompatible droplets in an emulsion"""
     # different type
@@ -101,8 +135,10 @@ def test_emulsion_incompatible():
     # same type
     d1 = SphericalDroplet([1], 2)
     d2 = SphericalDroplet([1, 2], 2)
+
+    e = Emulsion([d1, d2])
     with pytest.raises(ValueError):
-        e = Emulsion([d1, d2])
+        e = Emulsion([d1, d2], force_consistency=True)
 
 
 def test_emulsion_linked_data():

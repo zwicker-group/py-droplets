@@ -179,26 +179,6 @@ class DropletTracker(TrackerBase):
         self.refine = refine
         self.perturbation_modes = perturbation_modes
 
-    def initialize(self, field: FieldBase, info: Optional[InfoDict] = None) -> float:
-        """
-        Args:
-            field (:class:`~pde.fields.base.FieldBase`):
-                An example of the data that will be analyzed by the tracker
-            info (dict):
-                Extra information from the simulation
-
-        Returns:
-            float: The first time the tracker needs to handle data
-        """
-        if self.data.grid is None:
-            self.data.grid = field.grid
-        elif not self.data.grid.compatible_with(field.grid):
-            raise RuntimeError(
-                "Grid of the Emulsion is incompatible with the grid of current state"
-            )
-
-        return super().initialize(field, info)
-
     def handle(self, field: FieldBase, t: float) -> None:
         """handle data supplied to this tracker
 

@@ -284,16 +284,15 @@ def test_get_length_scale_edge():
 
 def test_emulsion_processing():
     """test identifying emulsions in phase fields"""
-    grid = UnitGrid([32, 32], periodic=True)
-
     e1 = Emulsion(
         [
             DiffuseDroplet(position=[5, 6], radius=9, interface_width=1),
             DiffuseDroplet(position=[20, 19], radius=8, interface_width=1),
-        ],
-        grid=grid,
+        ]
     )
-    field = e1.get_phasefield()
+
+    grid = UnitGrid([32, 32], periodic=True)
+    field = e1.get_phasefield(grid)
 
     e2 = image_analysis.locate_droplets(field, refine=True)
 
