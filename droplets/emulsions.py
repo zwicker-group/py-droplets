@@ -494,23 +494,17 @@ class Emulsion(list):
 
         return dists
 
-    def get_neighbor_distances(
-        self, subtract_radius: bool = False, grid: Optional[GridBase] = None
-    ) -> np.ndarray:
+    def get_neighbor_distances(self, subtract_radius: bool = False) -> np.ndarray:
         """calculates the distance of each droplet to its nearest neighbor
 
         Warning:
-            Nearest neighbors are defined by comparing the distances between the centers
-            of the droplets, not their surfaces.
+            This function does not take periodic boundary conditions into account.
 
         Args:
             subtract_radius (bool):
                 Determines whether to subtract the radius from the distance, i.e.,
                 whether to return the distance between the surfaces instead of the
                 positions
-            grid (:class:`~pde.grids.base.GridBase`):
-                The grid on which the droplets are defined, which is necessary if
-                periodic boundary conditions should be respected for measuring distances
 
         Returns:
             :class:`~numpy.ndarray`: a vector with a distance for each droplet
@@ -530,8 +524,7 @@ class Emulsion(list):
         assert self.data is not None
         positions = self.data["position"]
 
-        # TODO: respect periodic boundary conditions using `boxsize` argument
-
+        # we could support periodic boundary conditions using `freud.locality.AABBQuery`
         tree = KDTree(positions)
         dist, index = tree.query(positions, 2)
 
