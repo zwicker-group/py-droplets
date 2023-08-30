@@ -293,7 +293,8 @@ class Emulsion(list):
                 return np.empty(0, dtype=self.dtype)
             else:
                 raise RuntimeError(
-                    "Cannot create data array since dtype is not specified and no "
+                    "Cannot create data array since the emulsion is empty and an "
+                    "explicit dtype has not been specified."
                 )
 
         else:
