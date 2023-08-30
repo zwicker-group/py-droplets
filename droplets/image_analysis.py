@@ -31,9 +31,8 @@ except ImportError:
     from numpy.fft import fftn as np_fftn
 
 from pde.fields import ScalarField
-from pde.grids import CylindricalSymGrid
+from pde.grids import CartesianGrid, CylindricalSymGrid
 from pde.grids.base import GridBase
-from pde.grids.cartesian import CartesianGrid
 from pde.grids.spherical import SphericalSymGridBase
 from pde.tools.math import SmoothData1D
 from pde.tools.typing import NumberOrArray
@@ -113,7 +112,8 @@ def _locate_droplets_in_mask_cartesian(
     # locate individual clusters in the padded image
     labels, num_labels = ndimage.label(mask_padded)
     if num_labels == 0:
-        return Emulsion([], grid=grid)
+        example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
+        return Emulsion.empty(example_drop)
     indices = range(1, num_labels + 1)
 
     # create and emulsion from this of droplets
@@ -136,12 +136,12 @@ def _locate_droplets_in_mask_cartesian(
     )
 
     # filter overlapping droplets (e.g. due to duplicates)
-    emulsion = Emulsion(droplets, grid=grid)
+    emulsion = Emulsion(droplets)
     num_candidates = len(emulsion)
     if num_candidates < num_labels:
         grid._logger.info(f"Only {num_candidates} candidate(s) inside bounds")
 
-    emulsion.remove_overlapping()
+    emulsion.remove_overlapping(grid=grid)
     if len(emulsion) < num_candidates:
         grid._logger.info(f"Only {num_candidates} candidate(s) not overlapping")
 
@@ -165,7 +165,8 @@ def _locate_droplets_in_mask_spherical(
     # locate clusters in the binary image
     labels, num_labels = ndimage.label(mask)
     if num_labels == 0:
-        return Emulsion([], grid=grid)
+        example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
+        return Emulsion.empty(example_drop)
 
     # locate clusters around origin
     object_slices = ndimage.find_objects(labels)
@@ -180,9 +181,10 @@ def _locate_droplets_in_mask_spherical(
 
     # return an emulsion of droplets
     if droplet:
-        return Emulsion([droplet], grid=grid)
+        return Emulsion([droplet])
     else:
-        return Emulsion([], grid=grid)
+        example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
+        return Emulsion.empty(example_drop)
 
 
 def _locate_droplets_in_mask_cylindrical_single(
@@ -200,7 +202,8 @@ def _locate_droplets_in_mask_cylindrical_single(
     # locate the individual clusters
     labels, num_features = ndimage.label(mask)
     if num_features == 0:
-        return Emulsion([], grid=grid)
+        example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
+        return Emulsion.empty(example_drop)
 
     # locate clusters on the symmetry axis
     object_slices = ndimage.find_objects(labels)
@@ -230,7 +233,7 @@ def _locate_droplets_in_mask_cylindrical_single(
         SphericalDroplet.from_volume(np.array([0, 0, p[2]]), v)
         for p, v in zip(pos, vol)
     )
-    return Emulsion(droplets, grid=grid)
+    return Emulsion(droplets)
 
 
 def _locate_droplets_in_mask_cylindrical(
@@ -263,7 +266,7 @@ def _locate_droplets_in_mask_cylindrical(
         grid._logger.info(f"Found {len(candidates)} droplet candidates.")
 
         # keep droplets that are inside the central area
-        droplets = Emulsion(grid=grid)
+        droplets = Emulsion()
         for droplet in candidates:
             # correct for the additional padding of the array
             droplet.position[2] -= grid.length
@@ -432,7 +435,7 @@ def locate_droplets(
         droplets.append(droplet)
 
     # return droplets as an emulsion
-    emulsion = Emulsion(droplets, grid=phase_field.grid)
+    emulsion = Emulsion(droplets)
     if minimal_radius > -np.inf:
         emulsion.remove_small(minimal_radius)
     return emulsion

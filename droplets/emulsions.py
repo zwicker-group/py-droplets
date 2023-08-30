@@ -63,7 +63,7 @@ class Emulsion(list):
         droplets: Optional[Iterable[SphericalDroplet]] = None,
         *,
         copy: bool = True,
-        dtype: np.typing.DTypeLike = None,
+        dtype: Union[np.typing.DTypeLike, np.ndarray, SphericalDroplet] = None,
         force_consistency: bool = False,
         grid: Optional[GridBase] = None,
     ):
@@ -76,7 +76,8 @@ class Emulsion(list):
                 Whether to make a copy of the droplet or not
             dtype (:class:`~numpy.tpying.DTypeLike`):
                 The dtype describing what droplets are stored in the emulsion. Providing
-                this is usually only necessary for creating empty emulsions.
+                this is usually only necessary for creating empty emulsions. Instead of
+                a dtype, an array or an example droplet can also be supplied.
             force_consistency (bool, optional):
                 Whether to ensure that all droplets are of the same type, i.e., their
                 data is described by the same dtype and matches `dtype` if given.
@@ -87,12 +88,35 @@ class Emulsion(list):
             # deprecated on 2023-08-29
             warnings.warn("`grid` argument is deprecated", DeprecationWarning)
 
-        # store general information about droplets
-        self.dtype = dtype
+        # store general information about droplets using a single dtype
+        if isinstance(dtype, SphericalDroplet):
+            dtype = dtype.data.dtype  # extract dtype from actual droplet
+        elif isinstance(dtype, np.ndarray):
+            dtype = dtype.dtype  # extract dtype from numpy array
+        elif dtype is not None:
+            dtype = np.dtype(dtype)  # assume a proper dtype is given
+        assert dtype is None or isinstance(dtype, np.dtype)
+        if isinstance(dtype, np.record):
+            self.dtype: np.typing.DTypeLike = dtype.dtype  # strip record part
+        else:
+            self.dtype = dtype
 
         # add the actual droplets that are specified
         if droplets is not None:
             self.extend(droplets, copy=copy, force_consistency=force_consistency)
+
+    @classmethod
+    def empty(cls, droplet: SphericalDroplet) -> Emulsion:
+        """create empty emulsion with particular droplet type
+
+        Args:
+            droplet (:class:`~droplets.droplets.SphericalDroplet`):
+                An example for a droplet, which defines the type of
+
+        Returns:
+            :class:`Emulsion`: The empty emulsion
+        """
+        return cls([], dtype=droplet, copy=False)
 
     @classmethod
     def from_random(
@@ -127,6 +151,9 @@ class Emulsion(list):
                 The class that is used to create droplets.
             rng (:class:`~numpy.random.Generator`):
                 Random number generator (default: :func:`~numpy.random.default_rng()`)
+
+        Returns:
+            :class:`Emulsion`: The emulsion containing the random droplets
         """
         if rng is None:
             rng = np.random.default_rng()
