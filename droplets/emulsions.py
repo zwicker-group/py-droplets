@@ -86,7 +86,6 @@ class Emulsion(list):
 
         if grid is not None:
             # deprecated on 2023-08-29
-            raise RuntimeError
             warnings.warn("`grid` argument is deprecated", DeprecationWarning)
 
         # store general information about droplets using a single dtype
