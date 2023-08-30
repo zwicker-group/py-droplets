@@ -14,9 +14,11 @@ from pde.tools.misc import skipUnlessModule
 from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emulsions
 
 
-def test_empty_emulsion():
+def test_empty_emulsion(caplog):
     """test an emulsions without any droplets"""
-    e = Emulsion([], grid=UnitGrid([2]))
+    caplog.set_level(logging.WARNING)
+
+    e = Emulsion([])
     assert not e
     assert len(e) == 0
     assert e == e.copy()
@@ -36,10 +38,47 @@ def test_empty_emulsion():
     for b in [True, False]:
         np.testing.assert_array_equal(e.get_neighbor_distances(b), np.array([]))
 
+    # define droplets
+    d1 = SphericalDroplet([1], 2)
+    d2 = DiffuseDroplet([1], 2, 1)
+
+    e = Emulsion([])
+    assert len(e) == 0
+    with pytest.raises(RuntimeError):
+        e.data
+    e.append(d1, force_consistency=True)
+    assert e.dtype == d1.data.dtype
+
+    e = Emulsion.empty(d1)
+    assert len(e) == 0
+    assert e.data.size == 0
+    e.append(d1, force_consistency=True)
+    assert e.dtype == d1.data.dtype
+
+    for dt in [d1.data.dtype, d1.data, d1]:
+        e = Emulsion([], dtype=dt)
+        assert len(e) == 0
+        assert e.data.size == 0
+        assert e.data.ndim == 1
+        assert e.dtype == e.data.dtype
+        assert e.dtype == d1.data.dtype
+        e.append(d1, force_consistency=True)
+
+    e = Emulsion([], dtype=d1.data.dtype)
+    with pytest.raises(ValueError):
+        e.append(d2, force_consistency=True)
+
+    e = Emulsion([], dtype=d1.data.dtype)
+    e.append(d2)
+    assert len(e) == 1
+
+    e.data  # raises warning
+    assert "inconsistent" in caplog.text
+
 
 def test_emulsion_single():
     """test an emulsions with a single droplet"""
-    e = Emulsion([], grid=UnitGrid([2]))
+    e = Emulsion([])
     e.append(DiffuseDroplet([10], 3, 1))
     assert e
     assert len(e) == 1
@@ -63,9 +102,8 @@ def test_emulsion_single():
 
 def test_emulsion_two():
     """test an emulsions with two droplets"""
-    grid = UnitGrid([30])
-    e = Emulsion([DiffuseDroplet([10], 3, 1)], grid=grid)
-    e1 = Emulsion([DiffuseDroplet([20], 5, 1)], grid=grid)
+    e = Emulsion([DiffuseDroplet([10], 3, 1)])
+    e1 = Emulsion([DiffuseDroplet([20], 5, 1)])
     e.extend(e1)
     assert e
     assert len(e) == 2
@@ -87,39 +125,6 @@ def test_emulsion_two():
 
     np.testing.assert_array_equal(e.get_neighbor_distances(False), np.array([10, 10]))
     np.testing.assert_array_equal(e.get_neighbor_distances(True), np.array([2, 2]))
-
-
-def test_emulsion_emtpy(caplog):
-    """test incompatible droplets in an emulsion"""
-    caplog.set_level(logging.WARNING)
-
-    # define droplets
-    d1 = SphericalDroplet([1], 2)
-    d2 = DiffuseDroplet([1], 2, 1)
-
-    e = Emulsion([])
-    assert len(e) == 0
-    with pytest.raises(RuntimeError):
-        e.data
-    e.append(d1, force_consistency=True)
-    assert e.dtype == d1.data.dtype
-
-    e = Emulsion([], dtype=d1.data.dtype)
-    assert len(e) == 0
-    assert e.data.size == 0
-    assert e.dtype == e.data.dtype == d1.data.dtype
-    e.append(d1, force_consistency=True)
-
-    e = Emulsion([], dtype=d1.data.dtype)
-    with pytest.raises(ValueError):
-        e.append(d2, force_consistency=True)
-
-    e = Emulsion([], dtype=d1.data.dtype)
-    e.append(d2)
-    assert len(e) == 1
-
-    e.data  # raises warning
-    assert "inconsistent" in caplog.text
 
 
 def test_emulsion_incompatible():
@@ -162,10 +167,14 @@ def test_emulsion_io(tmp_path):
     """test writing and reading emulsions"""
     path = tmp_path / "test_emulsion_io.hdf5"
 
+    drop_diff = DiffuseDroplet([0, 1], 10, 0.5)
+    drop_pert = droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3])
+
     es = [
         Emulsion(),
-        Emulsion([DiffuseDroplet([0, 1], 10, 0.5)] * 2),
-        Emulsion([droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3])]),
+        Emulsion([], dtype=drop_diff.data.dtype),
+        Emulsion([drop_diff] * 2),
+        Emulsion([drop_pert]),
     ]
     for e1 in es:
         e1.to_file(path)
