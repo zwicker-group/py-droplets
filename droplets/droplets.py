@@ -76,9 +76,11 @@ def iterate_in_pairs(it, fill=0):
     `[('A', 'B'), ('C', 'D'), ('E', 'Z')]`
 
     Args:
-        it (iterator): The iterator
-        fill: The value returned for the second part of the last returned tuple
-            if the length of the iterator is odd
+        it (iterator):
+            The iterator
+        fill:
+            The value returned for the second part of the last returned tuple if the
+            length of the iterator is odd
 
     Returns:
         This is a generator function that yields pairs of items of the iterator
@@ -101,9 +103,8 @@ def iterate_in_pairs(it, fill=0):
 class DropletBase:
     """represents a generic droplet
 
-    The data associated with a droplet is stored in structured array.
-    Consequently, the `dtype` of the array determines what information the
-    droplet class stores.
+    The data associated with a droplet is stored in structured array. Consequently, the
+    `dtype` of the array determines what information the droplet class stores.
     """
 
     _subclasses: Dict[str, DropletBase] = {}  # collect all inheriting classes
@@ -133,11 +134,11 @@ class DropletBase:
 
         Args:
             droplet (:class:`DropletBase`):
-                Another droplet from which data is copied. This does not be the
-                same type of droplet
+                Another droplet from which data is copied. This does not be the same
+                type of droplet
             \**kwargs:
-                Additional arguments that can overwrite data in `droplet` or
-                set additional arguments for the current class
+                Additional arguments that can overwrite data in `droplet` or set
+                additional arguments for the current class
         """
         args = droplet._args
         args.update(kwargs)
@@ -149,7 +150,8 @@ class DropletBase:
         """determine the dtype representing this droplet class
 
         Returns:
-            :class:`numpy.dtype`: the (structured) dtype associated with this class
+            :class:`numpy.dtype`:
+                The (structured) dtype associated with this class
         """
         pass
 
@@ -213,8 +215,8 @@ class DropletBase:
         r"""return a copy of the current droplet
 
         Args:
-            \**kwargs: Additional arguments an be used to set data of the
-                returned droplet.
+            \**kwargs:
+                Additional arguments an be used to set data of the returned droplet.
         """
         if kwargs:
             return self.from_droplet(self, **kwargs)  # type: ignore
@@ -273,8 +275,7 @@ class SphericalDroplet(DropletBase):
 
         Args:
             position (:class:`~numpy.ndarray`):
-                The position vector of the droplet. This is used to determine the space
-                dimension.
+                The position vector of the droplet, determining space dimension.
 
         Returns:
             :class:`numpy.dtype`: the (structured) dtype associated with this class
@@ -301,9 +302,12 @@ class SphericalDroplet(DropletBase):
         """Construct a droplet from given volume instead of radius
 
         Args:
-            position (:class:`~numpy.ndarray`): center of the droplet
-            volume (float): volume of the droplet
-            interface_width (float, optional): width of the interface
+            position (:class:`~numpy.ndarray`):
+                Center of the droplet
+            volume (float):
+                Volume of the droplet
+            interface_width (float, optional):
+                Width of the interface
         """
         dim = len(np.array(position, np.double, ndmin=1))
         radius = spherical.radius_from_volume(volume, dim)
@@ -358,9 +362,8 @@ class SphericalDroplet(DropletBase):
     ) -> bool:
         """determine whether another droplet overlaps with this one
 
-        Note that this function so far only compares the distances of the
-        droplets to their radii, which does not respect perturbed droplets
-        correctly.
+        Note that this function so far only compares the distances of the droplets to
+        their radii, which does not respect perturbed droplets correctly.
 
         Args:
             other (:class:`~droplets.droplets.SphericalDroplet`):
@@ -627,8 +630,7 @@ class DiffuseDroplet(SphericalDroplet):
 
         Args:
             position (:class:`~numpy.ndarray`):
-                The position vector of the droplet. This is used to determine the space
-                dimension.
+                The position vector of the droplet, determining the space dimension.
 
         Returns:
             :class:`numpy.dtype`: the (structured) dtype associated with this class
@@ -797,11 +799,11 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         self.check_data()
 
     @abstractmethod
-    def interface_distance(self, *angles):
+    def interface_distance(self, *angles: np.ndarray) -> np.ndarray:
         pass
 
     @abstractmethod
-    def interface_curvature(self, *angles):
+    def interface_curvature(self, *angles: np.ndarray) -> np.ndarray:  # type: ignore
         pass
 
     @property
@@ -850,23 +852,23 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         else:
             result = 0.5 + 0.5 * np.tanh((interface - dist) / interface_width)
 
-        return result.astype(dtype)  # type: ignore
+        return result.astype(dtype)
 
 
 class PerturbedDroplet2D(PerturbedDropletBase):
     r"""Represents a single droplet in two dimensions with a perturbed shape
 
-    The shape is described using the distance :math:`R(\phi)` of the interface
-    from the `position`, which is a function of the polar angle :math:`\phi`.
-    This function is expressed as a truncated series of harmonics:
+    The shape is described using the distance :math:`R(\phi)` of the interface from the
+    `position`, which is a function of the polar angle :math:`\phi`. This function is
+    expressed as a truncated series of harmonics:
 
     .. math::
         R(\phi) = R_0 + R_0\sum_{n=1}^N \left[ \epsilon^{(1)}_n \sin(n \phi)
-                                    + \epsilon^{(2)}_n \cos(n \phi) \right]
+                                             + \epsilon^{(2)}_n \cos(n \phi) \right]
 
-    where :math:`N` is the number of perturbation modes considered, which is
-    given by half the length of the `amplitudes` array. Consequently, amplitudes
-    should always be an even number, to consider both `sin` and `cos` terms.
+    where :math:`N` is the number of perturbation modes considered, which is given by
+    half the length of the `amplitudes` array. Consequently, amplitudes should always
+    be an even number, to consider both `sin` and `cos` terms.
     """
 
     dim = 2
@@ -892,8 +894,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
                 (dimensionless) perturbation amplitudes
                 :math:`\{\epsilon^{(1)}_1, \epsilon^{(2)}_1, \epsilon^{(1)}_2,
                 \epsilon^{(2)}_2, \epsilon^{(1)}_3, \epsilon^{(2)}_3, \dots \}`.
-                The length of the array needs to be even to capture
-                perturbations of the highest mode consistently.
+                The length of the array needs to be even to capture perturbations of the
+                highest mode consistently.
         """
         super().__init__(position, radius, interface_width, amplitudes)
         if len(self.amplitudes) % 2 != 0:
@@ -904,16 +906,15 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             )
 
     @preserve_scalars
-    def interface_distance(self, φ):
+    def interface_distance(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
         """calculates the distance of the droplet interface to the origin
 
         Args:
-            φ (float or array): The angle in the polar coordinate system that
-                is used to describe the interface
+            φ (float or :class:`~np.ndarray`):
+                The angle in the polar coordinate system that describing the interface
 
         Returns:
-            An array with the distances of the interfacial points associated
-            with each angle given by `φ`.
+            Array with distances of the interfacial points associated with each angle φ
         """
         dist = np.ones(φ.shape, dtype=np.double)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
@@ -924,35 +925,33 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         return self.radius * dist
 
     @preserve_scalars
-    def interface_position(self, φ):
+    def interface_position(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
         """calculates the position of the interface of the droplet
 
         Args:
-            φ (float or array): The angle in the polar coordinate system that
-                is used to describe the interface
+            φ (float or :class:`~np.ndarray`):
+                The angle in the polar coordinate system that describing the interface
 
         Returns:
-            An array with the coordinates of the interfacial points associated
-            with each angle given by `φ`.
+            Array with coordinates of interfacial points associated with each angle φ
         """
         dist = self.interface_distance(φ)
         pos = dist[:, None] * np.transpose([np.sin(φ), np.cos(φ)])
-        return self.position[None, :] + pos
+        return self.position[None, :] + pos  # type: ignore
 
     @preserve_scalars
-    def interface_curvature(self, φ):
+    def interface_curvature(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
         r"""calculates the mean curvature of the interface of the droplet
 
         For simplicity, the effect of the perturbations are only included to
         linear order in the perturbation amplitudes :math:`\epsilon^{(1/2)}_n`.
 
         Args:
-            φ (float or array): The angle in the polar coordinate system that
-                is used to describe the interface
+            φ (float or :class:`~np.ndarray`):
+                The angle in the polar coordinate system that describing the interface
 
         Returns:
-            An array with the curvature at the interfacial points associated
-            with each angle given by `φ`.
+            Array with curvature at the interfacial points associated with each angle φ
         """
         curv_radius = np.ones(φ.shape, dtype=np.double)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
@@ -1035,19 +1034,19 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
 
 class PerturbedDroplet3D(PerturbedDropletBase):
-    r"""Represents a single droplet in two dimensions with a perturbed shape
+    r"""Represents a single droplet in three dimensions with a perturbed shape
 
-    The shape is described using the distance :math:`R(\theta, \phi)` of the
-    interface from the origin as a function of the azimuthal angle
-    :math:`\theta` and the polar angle :math:`\phi`. This function is developed
-    as a truncated series of spherical harmonics :math:`Y_{l,m}(\theta, \phi)`:
+    The shape is described using the distance :math:`R(\theta, \phi)` of the interface
+    from the origin as a function of the azimuthal angle :math:`\theta` and the polar
+    angle :math:`\phi`. This function is developed as a truncated series of spherical
+    harmonics :math:`Y_{l,m}(\theta, \phi)`:
 
     .. math::
         R(\theta, \phi) = R_0 \left[1 + \sum_{l=1}^{N_l}\sum_{m=-l}^l
-                                \epsilon_{l,m} Y_{l,m}(\theta, \phi) \right]
+                                            \epsilon_{l,m} Y_{l,m}(\theta, \phi) \right]
 
-    where :math:`N_l` is the number of perturbation modes considered, which is
-    deduced from the length of the `amplitudes` array.
+    where :math:`N_l` is the number of perturbation modes considered, which is deduced
+    from the length of the `amplitudes` array.
     """
 
     dim = 3
@@ -1088,64 +1087,84 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             )
 
     @preserve_scalars
-    def interface_distance(self, θ, φ):
+    def interface_distance(  # type: ignore
+        self, θ: np.ndarray, φ: Optional[np.ndarray] = None
+    ) -> np.ndarray:
         r"""calculates the distance of the droplet interface to the origin
 
         Args:
-            θ (float or array): Azimuthal angle (in :math:`[0, \pi]`)
-            φ (float or array): Polar angle (in :math:`[0, 2\pi]`)
+            θ (float or :class:`~np.ndarray`):
+                Azimuthal angle (in :math:`[0, \pi]`)
+            φ (float or :class:`~np.ndarray`):
+                Polar angle (in :math:`[0, 2\pi]`); 0 if omitted
 
         Returns:
-            An array with the distances of the interfacial points associated
-            with the angles.
+            Array with distances of the interfacial points associated with the angles
         """
-        assert θ.shape == φ.shape
-        dist = np.ones(φ.shape, dtype=np.double)
+        if φ is None:
+            φ = np.zeros_like(θ)
+        elif θ.shape != φ.shape:
+            raise ValueError("Shape of θ and φ must agree")
+        dist = np.ones(θ.shape, dtype=np.double)
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
-                dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)
+                dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)  # type: ignore
         return self.radius * dist
 
     @preserve_scalars
-    def interface_position(self, θ, φ):
+    def interface_position(  # type: ignore
+        self, θ: np.ndarray, φ: Optional[np.ndarray] = None
+    ) -> np.ndarray:
         r"""calculates the position of the interface of the droplet
 
         Args:
-            θ (float or array): Azimuthal angle (in :math:`[0, \pi]`)
-            φ (float or array): Polar angle (in :math:`[0, 2\pi]`)
+            θ (float or :class:`~np.ndarray`):
+                Azimuthal angle (in :math:`[0, \pi]`)
+            φ (float or :class:`~np.ndarray`):
+                Polar angle (in :math:`[0, 2\pi]`); 0 if omitted
 
         Returns:
-            An array with the coordinates of the interfacial points associated
-            with the angles.
+            Array with coordinates of the interfacial points associated with the angles
         """
+        if φ is None:
+            φ = np.zeros_like(θ)
+        elif θ.shape != φ.shape:
+            raise ValueError("Shape of θ and φ must agree")
         dist = self.interface_distance(θ, φ)
         unit_vector = [np.sin(θ) * np.cos(φ), np.sin(θ) * np.sin(φ), np.cos(θ)]
         pos = dist[:, None] * np.transpose(unit_vector)
-        return self.position[None, :] + pos
+        return self.position[None, :] + pos  # type: ignore
 
     @preserve_scalars
-    def interface_curvature(self, θ, φ):
+    def interface_curvature(  # type: ignore
+        self, θ: np.ndarray, φ: Optional[np.ndarray] = None
+    ) -> np.ndarray:
         r"""calculates the mean curvature of the interface of the droplet
 
         For simplicity, the effect of the perturbations are only included to
         linear order in the perturbation amplitudes :math:`\epsilon_{l,m}`.
 
         Args:
-            θ (float or array): Azimuthal angle (in :math:`[0, \pi]`)
-            φ (float or array): Polar angle (in :math:`[0, 2\pi]`)
+            θ (float or :class:`~np.ndarray`):
+                Azimuthal angle (in :math:`[0, \pi]`)
+            φ (float or :class:`~np.ndarray`):
+                Polar angle (in :math:`[0, 2\pi]`); 0 if omitted
 
         Returns:
-            An array with the curvature at the interfacial points associated
-            with the angles
+            Array with curvature at the interfacial points associated with the angles
         """
+        if φ is None:
+            φ = np.zeros_like(θ)
+        elif θ.shape != φ.shape:
+            raise ValueError("Shape of θ and φ must agree")
         Yk = spherical.spherical_harmonic_real_k
         correction = 0
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 l, _ = spherical.spherical_index_lm(k)
                 hk = (l**2 + l - 2) / 2
-                correction = a * hk * Yk(k, θ, φ)
-        return 1 / self.radius + correction / self.radius**2
+                correction = a * hk * Yk(k, θ, φ)  # type: ignore
+        return 1 / self.radius + correction / self.radius**2  # type: ignore
 
     @property
     def volume(self) -> float:
@@ -1178,8 +1197,9 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         """return the patch representing the droplet for plotting
 
         Args:
-            dim (int, optional): The dimension in which the data is plotted. If omitted,
-                the actual physical dimension is assumed
+            dim (int, optional):
+                The dimension in which the data is plotted. If omitted, the actual
+                physical dimension is assumed
         """
         raise NotImplementedError("Plotting PerturbedDroplet3D is not implemented")
 
