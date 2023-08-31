@@ -115,14 +115,12 @@ class LengthScaleTracker(TrackerBase):
 class DropletTracker(TrackerBase):
     """Detect droplets in a scalar field during simulations
 
-    This tracker is useful when only the parameters of actual droplets are
-    needed, since it stores considerably less information compared to the full
-    scalar field.
+    This tracker is useful when only the parameters of actual droplets are needed, since
+    it stores considerably less information compared to the full scalar field.
 
     Attributes:
         data (:class:`~droplets.emulsions.EmulsionTimeCourse`):
-            Contains the data of the tracked droplets after the simulation is
-            done.
+            Contains the data of the tracked droplets after the simulation is done.
     """
 
     @fill_in_docstring
