@@ -322,9 +322,9 @@ def locate_droplets(
 ) -> Emulsion:
     """Locates droplets in the phase field
 
-    This uses a binarized image to locate clusters of large concentration in the
-    phase field, which are interpreted as droplets. Basic quantities, like
-    position and size, are determined for these clusters.
+    This uses a binarized image to locate clusters of large concentration in the phase
+    field, which are interpreted as droplets. Basic quantities, like position and size,
+    are determined for these clusters.
 
     Example:
         To determine the position, radius, and interfacial width of an arbitrary
@@ -453,10 +453,9 @@ def refine_droplet(
 ) -> DiffuseDroplet:
     """Refines droplet parameters by fitting to phase field
 
-    This function varies droplet parameters, like position, size,
-    interface width, and potential perturbation amplitudes until the overlap
-    with the respective phase field region is maximized. Here, we use a
-    constraint fitting routine.
+    This function varies droplet parameters, like position, size, interface width, and
+    potential perturbation amplitudes until the overlap with the respective phase field
+    region is maximized. Here, we use a constraint fitting routine.
 
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
@@ -581,9 +580,9 @@ def get_structure_factor(
 ) -> Tuple[np.ndarray, np.ndarray]:
     r"""Calculates the structure factor associated with a field
 
-    Here, the structure factor is basically the power spectral density of the
-    field `scalar_field` normalized so that re-gridding or rescaling the field
-    does not change the result.
+    Here, the structure factor is basically the power spectral density of the field
+    `scalar_field` normalized so that re-gridding or rescaling the field does not change
+    the result.
 
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):
