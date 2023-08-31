@@ -327,8 +327,8 @@ def locate_droplets(
     position and size, are determined for these clusters.
 
     Example:
-        To determine the position, radius and interfacial width of an arbitrary droplet,
-        the following call can be used
+        To determine the position, radius, and interfacial width of an arbitrary
+        droplet, the following call can be used
 
         .. code-block:: python
 

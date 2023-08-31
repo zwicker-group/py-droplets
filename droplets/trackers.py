@@ -11,7 +11,7 @@ Module defining classes for tracking droplets in simulations.
 """
 
 import math
-from typing import Callable, List, Optional, Union  # @UnusedImport
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
@@ -134,9 +134,25 @@ class DropletTracker(TrackerBase):
         threshold: Union[float, str] = 0.5,
         minimal_radius: float = 0,
         refine: bool = False,
+        refine_args: Optional[Dict[str, Any]] = None,
         perturbation_modes: int = 0,
     ):
         """
+
+        Example:
+            To track droplets and determine their position, radii, and interfacial
+            widths, the following tracker can be used
+
+            .. code-block:: python
+
+                droplet_tracker = DropletTracker(
+                    1, refine=True, refine_args={'vmin': None, 'vmax': None}
+                )
+
+            :code:`field` is the scalar field, in which the droplets are located. The
+            `refine_args` set flexibel boundaries for the intensities inside and outside
+            the droplet.
+
         Args:
             interval:
                 {ARG_TRACKER_INTERVAL}
@@ -154,16 +170,26 @@ class DropletTracker(TrackerBase):
                 Lastly, `source` can be a function that takes `fields` as an argument
                 and returns the desired field.
             threshold (float or str):
-                The threshold for binarizing the image. The special value 'auto' takes
-                the mean between the minimum and the maximum of the data as a guess.
+                The threshold for binarizing the image. If a value is given it is used
+                directly. Otherwise, the following algorithms are supported:
+
+                * `extrema`: take mean between the minimum and the maximum of the data
+                * `mean`: take the mean over the entire data
+                * `otsu`: use Otsu's method implemented in :func:`threshold_otsu`
+
+                The special value `auto` currently defaults to the `extrema` method.
+
             minimal_radius (float):
                 Minimal radius of droplets that will be retained.
             refine (bool):
                 Flag determining whether the droplet coordinates should be
                 refined using fitting. This is a potentially slow procedure.
+            refine_args (dict):
+                Additional keyword arguments passed on to :func:`refine_droplet`. Only
+                has an effect if `refine=True`.
             perturbation_modes (int):
-                An option describing how many perturbation modes should be
-                considered when refining droplets.
+                An option describing how many perturbation modes should be considered
+                when refining droplets. Only has an effect if `refine=True`.
         """
         super().__init__(interval=interval)
         if emulsion_timecourse is None:
@@ -175,6 +201,7 @@ class DropletTracker(TrackerBase):
         self.threshold = threshold
         self.minimal_radius = minimal_radius
         self.refine = refine
+        self.refine_args = refine_args
         self.perturbation_modes = perturbation_modes
 
     def handle(self, field: FieldBase, t: float) -> None:
@@ -195,6 +222,7 @@ class DropletTracker(TrackerBase):
             scalar_field,  # type: ignore
             threshold=self.threshold,
             refine=self.refine,
+            refine_args=self.refine_args,
             modes=self.perturbation_modes,
             minimal_radius=self.minimal_radius,
         )
