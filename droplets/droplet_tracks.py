@@ -77,8 +77,10 @@ class DropletTrack:
     def __init__(self, droplets=None, times=None):
         """
         Args:
-            emulsions (list): List of emulsions that describe this time course
-            times (list): Times associated with the emulsions
+            emulsions (list):
+                List of emulsions that describe this time course
+            times (list):
+                Times associated with the emulsions
         """
         if isinstance(droplets, DropletTrack):
             # get data from given object
@@ -189,8 +191,10 @@ class DropletTrack:
         """append a new droplet with a time code
 
         Args:
-            droplet (:class:`droplets.droplets.SphericalDroplet`): the droplet
-            time (float, optional): The time point
+            droplet (:class:`droplets.droplets.SphericalDroplet`):
+                The droplet to append
+            time (float, optional):
+                The associated time point
         """
         if self.dim is not None and droplet.dim != self.dim:
             raise ValueError(
@@ -213,38 +217,55 @@ class DropletTrack:
             idx = np.nonzero(self.times == time)[0][0]
         return self.droplets[idx].position  # type: ignore
 
-    def get_trajectory(self, smoothing: float = 0) -> np.ndarray:
-        """return a list of positions over time
+    def get_trajectory(
+        self, smoothing: float = 0, *, attribute: str = "position"
+    ) -> np.ndarray:
+        """return a the time-evolution of a droplet attribute (e.g., the position)
 
         Args:
             smoothing (float):
-                Determines the length scale for some gaussian smoothing of the
-                trajectory. Setting this to zero disables smoothing.
+                Determines the scale for some gaussian smoothing of the trajectory.
+                The default value of zero disables smoothing.
+            attribute (str):
+                The attribute to consider (default: "position").
 
         Returns:
             :class:`~numpy.ndarray`: An array giving the position of the droplet at each
                 time instance
         """
-        trajectory = np.array([droplet.position for droplet in self.droplets])
+        trajectory = np.array([getattr(d, attribute) for d in self.droplets])
         if smoothing:
             ndimage.gaussian_filter1d(
                 trajectory, output=trajectory, sigma=smoothing, axis=0, mode="nearest"
             )
         return trajectory
 
-    def get_radii(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: returns the droplet radius for each time point"""
-        return np.array([droplet.radius for droplet in self.droplets])
+    def get_radii(self, smoothing: float = 0) -> np.ndarray:
+        """:class:`~numpy.ndarray`: returns the droplet radius for each time point
 
-    def get_volumes(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: returns the droplet volume for each time point"""
-        return np.array([droplet.volume for droplet in self.droplets])
+        Args:
+            smoothing (float):
+                Determines the length scale for some gaussian smoothing of the
+                trajectory. The default value of zero disables smoothing.
+        """
+        return self.get_trajectory(smoothing, attribute="radius")
+
+    def get_volumes(self, smoothing: float = 0) -> np.ndarray:
+        """:class:`~numpy.ndarray`: returns the droplet volume for each time point
+
+        Args:
+            smoothing (float):
+                Determines the volume scale for some gaussian smoothing of the
+                trajectory. The default value of zero disables smoothing.
+        """
+        return self.get_trajectory(smoothing, attribute="volume")
 
     def time_overlaps(self, other: "DropletTrack") -> bool:
         """determine whether two DropletTrack instances overlaps in time
 
         Args:
-            other (DropletTrack): The other droplet track
+            other (:class:`DropletTrack`):
+                The other droplet track
 
         Returns:
             bool: True when both tracks contain droplets at the same time step
@@ -335,13 +356,18 @@ class DropletTrack:
                     fp.attrs[k] = json.dumps(v)
 
     @plot_on_axes()
-    def plot(self, attribute: str = "radius", ax=None, **kwargs) -> PlotReference:
+    def plot(
+        self, attribute: str = "radius", smoothing: float = 0, ax=None, **kwargs
+    ) -> PlotReference:
         """plot the time evolution of the droplet
 
         Args:
             attribute (str):
-                The attribute to plot. Typical values include `radius` and
-                `volume`, but others might be defined on the droplet class.
+                The attribute to plot. Typical values include `radius` and `volume`, but
+                others might be defined on the droplet class.
+            smoothing (float):
+                Determines the scale for some gaussian smoothing of the trajectory.
+                The default value of zero disables smoothing.
             {PLOT_ARGS}
             **kwargs:
                 All remaining parameters are forwarded to the `ax.plot` method. For
@@ -361,7 +387,7 @@ class DropletTrack:
             data = self.get_volumes()
             ylabel = "Volume"
         else:
-            data = np.array([getattr(droplet, attribute) for droplet in self.droplets])
+            data = self.get_trajectory(smoothing=smoothing, attribute=attribute)
             ylabel = attribute.capitalize()
 
         (line,) = ax.plot(self.times, data, **kwargs)
