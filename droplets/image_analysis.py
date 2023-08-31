@@ -448,6 +448,7 @@ def refine_droplet(
     vmin: float = 0.0,
     vmax: float = 1.0,
     adjust_values: bool = False,
+    tolerance: Optional[float] = None,
     least_squares_params: Optional[Dict[str, Any]] = None,
 ) -> DiffuseDroplet:
     """Refines droplet parameters by fitting to phase field
@@ -473,6 +474,10 @@ def refine_droplet(
             Flag determining whether the intensity values will be included in the
             fitting procedure. The default value `False` implies that the intensity
             values are regarded fixed.
+        tolerance (float, optional):
+            Sets the three tolerance values `ftol`, `xtol`, and `gtol` of the
+            :func:`scipy.optimize.least_squares`, unless they are specified in detail by
+            the `least_squares_params` argument.
         least_squares_params (dict):
             Dictionary of parameters that influence the fitting; see the documentation
             of :func:`scipy.optimize.least_squares`.
@@ -484,6 +489,9 @@ def refine_droplet(
     assert isinstance(phase_field, ScalarField)
     if least_squares_params is None:
         least_squares_params = {}
+    if tolerance is not None:
+        for key in ["ftol", "xtol", "gtol"]:
+            least_squares_params.setdefault(key, tolerance)
 
     if not isinstance(droplet, DiffuseDroplet):
         droplet = DiffuseDroplet.from_droplet(droplet)
