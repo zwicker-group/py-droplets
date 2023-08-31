@@ -118,7 +118,9 @@ def test_localization_perturbed_3d(periodic):
     assert grid.dim == 3
     field = d1.get_phase_field(grid)
 
-    emulsion = image_analysis.locate_droplets(field, refine=True, modes=d1.modes)
+    emulsion = image_analysis.locate_droplets(
+        field, refine=True, modes=d1.modes, refine_args={"tolerance": 1e-6}
+    )
     assert len(emulsion) == 1
     d2 = emulsion[0]
 

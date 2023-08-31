@@ -322,13 +322,13 @@ def locate_droplets(
 ) -> Emulsion:
     """Locates droplets in the phase field
 
-    This uses a binarized image to locate clusters of large concentration in the
-    phase field, which are interpreted as droplets. Basic quantities, like
-    position and size, are determined for these clusters.
+    This uses a binarized image to locate clusters of large concentration in the phase
+    field, which are interpreted as droplets. Basic quantities, like position and size,
+    are determined for these clusters.
 
     Example:
-        To determine the position, radius and interfacial width of an arbitrary droplet,
-        the following call can be used
+        To determine the position, radius, and interfacial width of an arbitrary
+        droplet, the following call can be used
 
         .. code-block:: python
 
@@ -448,14 +448,14 @@ def refine_droplet(
     vmin: float = 0.0,
     vmax: float = 1.0,
     adjust_values: bool = False,
+    tolerance: Optional[float] = None,
     least_squares_params: Optional[Dict[str, Any]] = None,
 ) -> DiffuseDroplet:
     """Refines droplet parameters by fitting to phase field
 
-    This function varies droplet parameters, like position, size,
-    interface width, and potential perturbation amplitudes until the overlap
-    with the respective phase field region is maximized. Here, we use a
-    constraint fitting routine.
+    This function varies droplet parameters, like position, size, interface width, and
+    potential perturbation amplitudes until the overlap with the respective phase field
+    region is maximized. Here, we use a constraint fitting routine.
 
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
@@ -473,6 +473,10 @@ def refine_droplet(
             Flag determining whether the intensity values will be included in the
             fitting procedure. The default value `False` implies that the intensity
             values are regarded fixed.
+        tolerance (float, optional):
+            Sets the three tolerance values `ftol`, `xtol`, and `gtol` of the
+            :func:`scipy.optimize.least_squares`, unless they are specified in detail by
+            the `least_squares_params` argument.
         least_squares_params (dict):
             Dictionary of parameters that influence the fitting; see the documentation
             of :func:`scipy.optimize.least_squares`.
@@ -484,6 +488,9 @@ def refine_droplet(
     assert isinstance(phase_field, ScalarField)
     if least_squares_params is None:
         least_squares_params = {}
+    if tolerance is not None:
+        for key in ["ftol", "xtol", "gtol"]:
+            least_squares_params.setdefault(key, tolerance)
 
     if not isinstance(droplet, DiffuseDroplet):
         droplet = DiffuseDroplet.from_droplet(droplet)
@@ -573,9 +580,9 @@ def get_structure_factor(
 ) -> Tuple[np.ndarray, np.ndarray]:
     r"""Calculates the structure factor associated with a field
 
-    Here, the structure factor is basically the power spectral density of the
-    field `scalar_field` normalized so that re-gridding or rescaling the field
-    does not change the result.
+    Here, the structure factor is basically the power spectral density of the field
+    `scalar_field` normalized so that re-gridding or rescaling the field does not change
+    the result.
 
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):
