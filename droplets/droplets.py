@@ -12,6 +12,7 @@ keep track of the interfacial width or shape perturbations (of various degrees).
    DiffuseDroplet
    PerturbedDroplet2D
    PerturbedDroplet3D
+   PerturbedDroplet3DAxisSym
 
 
 Inheritance structure of the classes:
@@ -854,6 +855,16 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
         return result.astype(dtype)
 
+    def _get_mpl_patch(self, dim=None, *, color=None, **kwargs):
+        """return the patch representing the droplet for plotting
+
+        Args:
+            dim (int, optional):
+                The dimension in which the data is plotted. If omitted, the actual
+                physical dimension is assumed
+        """
+        raise NotImplementedError(f"Plotting {self.__class__.__name__} not implemented")
+
 
 class PerturbedDroplet2D(PerturbedDropletBase):
     r"""Represents a single droplet in two dimensions with a perturbed shape
@@ -1193,15 +1204,79 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius**2
         return volume
 
-    def _get_mpl_patch(self, dim=None, *, color=None, **kwargs):
-        """return the patch representing the droplet for plotting
+
+class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
+    r"""Represents a droplet axisymmetrically perturbed shape in three dimensions
+
+    The shape is described using the distance :math:`R(\theta)` of the interface from
+    the origin as a function of the azimuthal angle :math:`\theta`, while polar symmetry
+    is assumed. This function is developed as a truncated series of spherical harmonics
+    :math:`Y_{l,m}(\theta, 0)`:
+
+    .. math::
+        R(\theta) = R_0 \left[1 + \sum_{l=1}^{N_l}
+                                                \epsilon_{l} Y_{l,0}(\theta, 0) \right]
+
+    where :math:`N_l` is the number of perturbation modes considered, which is deduced
+    from the length of the `amplitudes` array.
+    """
+
+    dim = 3
+
+    __slots__ = ["data"]
+
+    def check_data(self):
+        """method that checks the validity and consistency of self.data"""
+        super().check_data()
+        if not np.allclose(self.position[:2], 0):
+            raise ValueError("Droplet must lie on z-axis")
+
+    @preserve_scalars
+    def interface_distance(self, θ: np.ndarray) -> np.ndarray:  # type: ignore
+        r"""calculates the distance of the droplet interface to the origin
 
         Args:
-            dim (int, optional):
-                The dimension in which the data is plotted. If omitted, the actual
-                physical dimension is assumed
+            θ (float or :class:`~np.ndarray`):
+                Azimuthal angle (in :math:`[0, \pi]`)
+
+        Returns:
+            Array with distances of the interfacial points associated with the angles
         """
-        raise NotImplementedError("Plotting PerturbedDroplet3D is not implemented")
+        dist = np.ones(θ.shape, dtype=np.double)
+        for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
+            if a != 0:
+                dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
+        return self.radius * dist
+
+    @preserve_scalars
+    def interface_curvature(self, θ: np.ndarray) -> np.ndarray:  # type: ignore
+        r"""calculates the mean curvature of the interface of the droplet
+
+        For simplicity, the effect of the perturbations are only included to
+        linear order in the perturbation amplitudes :math:`\epsilon_{l,m}`.
+
+        Args:
+            θ (float or :class:`~np.ndarray`):
+                Azimuthal angle (in :math:`[0, \pi]`)
+
+        Returns:
+            Array with curvature at the interfacial points associated with the angles
+        """
+        Yl = spherical.spherical_harmonic_symmetric
+        correction = 0
+        for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
+            if a != 0:
+                hl = (order**2 + order - 2) / 2
+                correction = a * hl * Yl(order, θ)  # type: ignore
+        return 1 / self.radius + correction / self.radius**2  # type: ignore
+
+    @property
+    def volume_approx(self) -> float:
+        """float: approximate volume to linear order in the perturbation"""
+        volume = spherical.volume_from_radius(self.radius, 3)
+        if len(self.amplitudes) > 0:
+            volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius**2
+        return volume
 
 
 def droplet_from_data(droplet_class: str, data: np.ndarray) -> DropletBase:
@@ -1267,4 +1342,5 @@ __all__ = [
     "DiffuseDroplet",
     "PerturbedDroplet2D",
     "PerturbedDroplet3D",
+    "PerturbedDroplet3DAxisSym",
 ]
