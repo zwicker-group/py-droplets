@@ -1243,9 +1243,9 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
             Array with distances of the interfacial points associated with the angles
         """
         dist = np.ones(θ.shape, dtype=np.double)
-        for l, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
+        for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
-                dist += a * spherical.spherical_harmonic_symmetric(l, θ)  # type: ignore
+                dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
         return self.radius * dist
 
     @preserve_scalars
@@ -1264,10 +1264,10 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         """
         Yl = spherical.spherical_harmonic_symmetric
         correction = 0
-        for l, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
+        for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
-                hl = (l**2 + l - 2) / 2
-                correction = a * hl * Yl(l, θ)  # type: ignore
+                hl = (order**2 + order - 2) / 2
+                correction = a * hl * Yl(order, θ)  # type: ignore
         return 1 / self.radius + correction / self.radius**2  # type: ignore
 
     @property
