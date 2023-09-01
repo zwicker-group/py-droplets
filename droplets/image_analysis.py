@@ -41,6 +41,7 @@ from .droplets import (
     DiffuseDroplet,
     PerturbedDroplet2D,
     PerturbedDroplet3D,
+    PerturbedDroplet3DAxisSym,
     SphericalDroplet,
 )
 from .emulsions import Emulsion
@@ -417,7 +418,10 @@ def locate_droplets(
             if dim == 2:
                 droplet_class = PerturbedDroplet2D
             elif dim == 3:
-                droplet_class = PerturbedDroplet3D
+                if isinstance(phase_field.grid, CylindricalSymGrid):
+                    droplet_class = PerturbedDroplet3DAxisSym
+                else:
+                    droplet_class = PerturbedDroplet3D
             else:
                 raise NotImplementedError(f"Dimension {dim} is not supported")
             args["amplitudes"] = np.zeros(modes)

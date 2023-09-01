@@ -64,12 +64,23 @@ def test_perturbed_droplet_2d():
 
 
 def test_perturbed_droplet_3d():
-    """test methods of perturbed droplets in 2d"""
+    """test methods of perturbed droplets in 3d"""
     d = droplets.PerturbedDroplet3D([0, 1, 2], 1, 0.1, [0.0, 0.1, 0.2, 0.3])
     d.volume_approx
     d.interface_distance(0.1, 0.2)
     d.interface_position(0.1, 0.2)
     d.interface_curvature(0.1, 0.2)
+
+
+def test_perturbed_droplet_3d_axis_sym():
+    """test methods of axisymmetrically perturbed droplets in 3d"""
+    d = droplets.PerturbedDroplet3DAxisSym([0, 0, 0], 1, 0.1, [0.0, 0.1])
+    d.volume_approx
+    d.interface_distance(0.1)
+    d.interface_curvature(0.1)
+
+    with pytest.raises(ValueError):
+        droplets.PerturbedDroplet3DAxisSym([0, 1, 0], 1)
 
 
 def test_perturbed_volume():

@@ -90,8 +90,10 @@ def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
     """Return the radius of a sphere with a given volume
 
     Args:
-        volume (float or :class:`~numpy.ndarray`): Volume of the sphere
-        dim (int): Dimension of the space
+        volume (float or :class:`~numpy.ndarray`):
+            Volume of the sphere
+        dim (int):
+            Dimension of the space
 
     Returns:
         float or :class:`~numpy.ndarray`: Radius of the sphere
@@ -110,7 +112,8 @@ def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     """Return a function calculating the radius of a sphere with a given volume
 
     Args:
-        dim (int): Dimension of the space. If omitted, a general function is returned
+        dim (int):
+            Dimension of the space
 
     Returns:
         function: A function that takes a volume and returns the radius
@@ -159,7 +162,8 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     """Return a function calculating the volume of a sphere with a given radius
 
     Args:
-        dim (int): Dimension of the space
+        dim (int):
+            Dimension of the space
 
     Returns:
         function: A function that takes a radius and returns the volume
@@ -208,8 +212,10 @@ def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
     """Return the surface area of a sphere with a given radius
 
     Args:
-        radius (float or :class:`~numpy.ndarray`): Radius of the sphere
-        dim (int): Dimension of the space
+        radius (float or :class:`~numpy.ndarray`):
+            Radius of the sphere
+        dim (int):
+            Dimension of the space
 
     Returns:
         float or :class:`~numpy.ndarray`: Surface area of the sphere
@@ -233,8 +239,10 @@ def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
     """Return the radius of a sphere with a given surface area
 
     Args:
-        surface (float or :class:`~numpy.ndarray`): Surface area of the sphere
-        dim (int): Dimension of the space
+        surface (float or :class:`~numpy.ndarray`):
+            Surface area of the sphere
+        dim (int):
+            Dimension of the space
 
     Returns:
         float or :class:`~numpy.ndarray`: Radius of the sphere
@@ -345,8 +353,10 @@ def spherical_index_k(degree: int, order: int = 0) -> int:
     """returns the mode `k` from the degree `degree` and order `order`
 
     Args:
-        degree (int): Degree of the spherical harmonics
-        order (int): Order of the spherical harmonics
+        degree (int):
+            Degree :math:`l` of the spherical harmonics
+        order (int):
+            Order :math:`m` of the spherical harmonics
 
     Raises:
         ValueError: if `order < -degree` or `order > degree`
@@ -363,7 +373,8 @@ def spherical_index_lm(k: int) -> Tuple[int, int]:
     """returns the degree `l` and the order `m` from the mode `k`
 
     Args:
-        k (int): The combined index for the spherical harmonics
+        k (int):
+            The combined index for the spherical harmonics
 
     Returns:
         tuple: The degree `l` and order `m` of the spherical harmonics
@@ -379,7 +390,8 @@ def spherical_index_count(l: int) -> int:
     The returned value is one less than the maximal mode `k` required.
 
     Args:
-        l (int): Maximal degree of the spherical harmonics
+        l (int):
+            Maximal degree of the spherical harmonics
 
     Returns:
         int: The number of modes
@@ -391,7 +403,11 @@ def spherical_index_count_optimal(k_count: int) -> bool:
     """checks whether the modes captures all orders for maximal degree
 
     Args:
-        k_count (int): The number of modes considered
+        k_count (int):
+            The number of modes considered
+
+    Returns:
+        bool: indiciates whether `k_count` is optimally chosen.
     """
     is_square = bool(int(np.sqrt(k_count) + 0.5) ** 2 == k_count)
     return is_square
@@ -401,9 +417,10 @@ def spherical_harmonic_symmetric(degree: int, θ: float) -> float:
     r"""axisymmetric spherical harmonics with degree `degree`, so `m=0`.
 
     Args:
-        degree (int): Degree of the spherical harmonics
-        θ (float): Azimuthal angle at which the spherical harmonics is
-            evaluated (in :math:`[0, \pi]`)
+        degree (int):
+            Degree of the spherical harmonics
+        θ (float):
+            Azimuthal angle at which function is evaluated (in :math:`[0, \pi]`)
 
     Returns:
         float: The value of the spherical harmonics
@@ -417,12 +434,14 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
     r"""real spherical harmonics of degree l and order m
 
     Args:
-        degree (int): Degree :math:`l` of the spherical harmonics
-        order (int): Order :math:`m` of the spherical harmonics
-        θ (float): Azimuthal angle (in :math:`[0, \pi]`) at which the
-            spherical harmonics is evaluated.
-        φ (float): Polar angle (in :math:`[0, 2\pi]`) at which the spherical
-            harmonics is evaluated.
+        degree (int):
+            Degree :math:`l` of the spherical harmonics
+        order (int):
+            Order :math:`m` of the spherical harmonics
+        θ (float):
+            Azimuthal angle (in :math:`[0, \pi]`) at which fucntion is evaluated.
+        φ (float):
+            Polar angle (in :math:`[0, 2\pi]`) at which function is evaluated.
 
     Returns:
         float: The value of the spherical harmonics
@@ -448,12 +467,12 @@ def spherical_harmonic_real_k(k: int, θ: float, φ: float) -> float:
     r"""real spherical harmonics described by mode k
 
     Args:
-        k (int): Combined index determining the degree and order of the
-            spherical harmonics
-        θ (float): Azimuthal angle (in :math:`[0, \pi]`) at which the
-            spherical harmonics is evaluated.
-        φ (float): Polar angle (in :math:`[0, 2\pi]`) at which the spherical
-            harmonics is evaluated.
+        k (int):
+            Combined index determining the degree and order of the spherical harmonics
+        θ (float):
+            Azimuthal angle (in :math:`[0, \pi]`) at which fucntion is evaluated.
+        φ (float):
+            Polar angle (in :math:`[0, 2\pi]`) at which function is evaluated.
 
     Returns:
         float: The value of the spherical harmonics
