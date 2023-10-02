@@ -16,7 +16,12 @@ from pde.grids import (
 )
 
 from droplets import image_analysis
-from droplets.droplets import DiffuseDroplet, PerturbedDroplet2D, PerturbedDroplet3D
+from droplets.droplets import (
+    DiffuseDroplet,
+    PerturbedDroplet2D,
+    PerturbedDroplet3D,
+    SphericalDroplet,
+)
 from droplets.emulsions import Emulsion
 
 
@@ -326,3 +331,30 @@ def test_structure_factor_random():
     k2, s2 = image_analysis.get_structure_factor(100 * f1, wave_numbers=ks)
     np.testing.assert_equal(ks, k2)
     np.testing.assert_allclose(s1, s2, atol=0.05)
+
+
+@pytest.mark.parametrize(
+    "grid",
+    [
+        UnitGrid([5, 5], periodic=True),
+        CylindricalSymGrid(3, (0, 3), 3, periodic_z=True),
+    ],
+)
+def test_locating_stripes(grid):
+    """check whether the locate_droplets function can deal with stripe morphologies"""
+    field = ScalarField(grid, 1)
+    em = image_analysis.locate_droplets(field)
+    assert len(em) == 1
+    assert em[0].volume == pytest.approx(grid.volume)
+
+
+@pytest.mark.parametrize("dim", [1, 2, 3])
+@pytest.mark.parametrize("pos", [0.5, 1.5, 3, 5.5, 6.5])
+def test_droplets_on_periodic_grids(dim, pos):
+    """check whether the locate_droplets function can deal with periodic BCs"""
+    grid = UnitGrid([7] * dim, periodic=True)
+    field = SphericalDroplet([pos] * dim, 3).get_phase_field(grid)
+    em = image_analysis.locate_droplets(field)
+    assert len(em) == 1
+    assert em[0].volume == pytest.approx(field.integral)
+    np.testing.assert_allclose(em[0].position, np.full(dim, pos), atol=0.1)
