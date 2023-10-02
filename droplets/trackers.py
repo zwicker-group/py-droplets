@@ -11,7 +11,7 @@ Module defining classes for tracking droplets in simulations.
 """
 
 import math
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
@@ -36,7 +36,9 @@ class LengthScaleTracker(TrackerBase):
         interval: IntervalData = 1,
         filename: Optional[str] = None,
         *,
-        method: str = "structure_factor_mean",
+        method: Literal[
+            "structure_factor_mean", "structure_factor_maximum", "droplet_detection"
+        ] = "structure_factor_mean",
         source: Union[None, int, Callable] = None,
         verbose: bool = False,
     ):
@@ -131,7 +133,7 @@ class DropletTracker(TrackerBase):
         *,
         emulsion_timecourse=None,
         source: Union[None, int, Callable] = None,
-        threshold: Union[float, str] = 0.5,
+        threshold: Union[float, Literal["auto", "extrema", "mean", "otsu"]] = 0.5,
         minimal_radius: float = 0,
         refine: bool = False,
         refine_args: Optional[Dict[str, Any]] = None,

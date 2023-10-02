@@ -282,15 +282,14 @@ def test_emulsion_merge(modify_data):
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("grid", [True, False])
-def test_emulsion_random(dim, grid):
+def test_emulsion_random(dim, grid, rng):
     """create random emulsions"""
-    rng = np.random.default_rng(dim)
     if grid:
         bounds = CartesianGrid([(10, 30)] * dim, 1)
     else:
         bounds = [(10, 30)] * dim
     em = Emulsion.from_random(10, bounds, radius=(1, 2), rng=rng)
-    assert 1 < len(em) < 10
+    assert 1 < len(em) <= 10
     assert em.dim == dim
     assert np.all(em.data["position"] > 10) and np.all(em.data["position"] < 30)
     assert np.all(em.data["radius"] > 1) and np.all(em.data["radius"] < 2)

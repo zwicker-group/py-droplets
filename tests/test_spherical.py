@@ -55,12 +55,12 @@ def test_surface(dim):
         assert spherical.radius_from_surface(surface, dim=dim) == pytest.approx(radius)
 
 
-def test_spherical_conversion():
+def test_spherical_conversion(rng):
     """test the conversion between spherical and Cartesian coordinates"""
     s2c = spherical.points_spherical_to_cartesian
     c2s = spherical.points_cartesian_to_spherical
 
-    ps = np.random.randn(64, 3)
+    ps = rng.normal(size=(64, 3))
     np.testing.assert_allclose(s2c(c2s(ps)), ps)
 
     # enforce angles

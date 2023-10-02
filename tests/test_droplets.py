@@ -25,10 +25,10 @@ def test_simple_droplet():
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
-def test_random_droplet(dim):
+def test_random_droplet(dim, rng):
     """tests simple droplet"""
-    pos = np.random.uniform(0, 10, dim)
-    radius = np.random.uniform(2, 3)
+    pos = rng.uniform(0, 10, dim)
+    radius = rng.uniform(2, 3)
     d1 = droplets.SphericalDroplet(pos, radius)
     d2 = droplets.SphericalDroplet(np.zeros(dim), radius)
     d2.position = pos
@@ -42,7 +42,7 @@ def test_random_droplet(dim):
     assert d1 == d3
     assert d1 is not d3
 
-    vol = np.random.uniform(10, 30)
+    vol = rng.uniform(10, 30)
     d2.volume = vol
     assert d2.volume == pytest.approx(vol)
 
@@ -83,11 +83,11 @@ def test_perturbed_droplet_3d_axis_sym():
         droplets.PerturbedDroplet3DAxisSym([0, 1, 0], 1)
 
 
-def test_perturbed_volume():
+def test_perturbed_volume(rng):
     """test volume calculation of perturbed droplets"""
-    pos = np.random.randn(2)
-    radius = 1 + np.random.random()
-    amplitudes = np.random.uniform(-0.2, 0.2, 6)
+    pos = rng.normal(size=2)
+    radius = 1 + rng.random()
+    amplitudes = rng.uniform(-0.2, 0.2, 6)
     d = droplets.PerturbedDroplet2D(pos, radius, 0, amplitudes)
 
     def integrand(φ):
@@ -97,21 +97,21 @@ def test_perturbed_volume():
     vol = integrate.quad(integrand, 0, 2 * np.pi)[0]
     assert vol == pytest.approx(d.volume)
 
-    vol = np.random.uniform(1, 2)
+    vol = rng.uniform(1, 2)
     d.volume = vol
     assert vol == pytest.approx(d.volume)
 
-    pos = np.random.randn(3)
-    radius = 1 + np.random.random()
+    pos = rng.normal(size=3)
+    radius = 1 + rng.random()
     d = droplets.PerturbedDroplet3D(pos, radius, 0, np.zeros(7))
     assert d.volume == pytest.approx(4 * np.pi / 3 * radius**3)
 
 
-def test_surface_area():
+def test_surface_area(rng):
     """test surface area calculation of droplets"""
     # perturbed 2d droplet
     R0 = 3
-    amplitudes = np.random.uniform(-1e-2, 1e-2, 6)
+    amplitudes = rng.uniform(-1e-2, 1e-2, 6)
 
     # unperturbed droplets
     d1 = droplets.SphericalDroplet([0, 0], R0)
@@ -126,11 +126,11 @@ def test_surface_area():
     assert d2.surface_area == pytest.approx(d2.surface_area_approx, rel=1e-4)
 
 
-def test_curvature():
+def test_curvature(rng):
     """test interface curvature calculation"""
     # spherical droplet
     for dim in range(1, 4):
-        d = droplets.SphericalDroplet(np.zeros(dim), radius=np.random.uniform(1, 4))
+        d = droplets.SphericalDroplet(np.zeros(dim), radius=rng.uniform(1, 4))
         assert d.interface_curvature == pytest.approx(1 / d.radius)
 
     # perturbed 2d droplet
