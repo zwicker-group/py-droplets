@@ -349,10 +349,12 @@ def test_locating_stripes(grid):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
-def test_droplets_on_periodic_grids(dim):
+@pytest.mark.parametrize("pos", [0.5, 1.5, 3, 5.5, 6.5])
+def test_droplets_on_periodic_grids(dim, pos):
     """check whether the locate_droplets function can deal with periodic BCs"""
-    grid = UnitGrid([7] * dim)
-    field = SphericalDroplet([0] * dim, 3).get_phase_field(grid)
+    grid = UnitGrid([7] * dim, periodic=True)
+    field = SphericalDroplet([pos] * dim, 3).get_phase_field(grid)
     em = image_analysis.locate_droplets(field)
     assert len(em) == 1
     assert em[0].volume == pytest.approx(field.integral)
+    np.testing.assert_allclose(em[0].position, np.full(dim, pos), atol=0.1)
