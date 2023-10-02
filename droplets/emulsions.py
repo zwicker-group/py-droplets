@@ -1,7 +1,6 @@
 """
 Classes describing collections of droplets, i.e. emulsions, and their temporal dynamics.
 
-
 .. autosummary::
    :nosignatures:
 

@@ -27,11 +27,11 @@ from droplets.emulsions import Emulsion
 
 @pytest.mark.parametrize("size", [16, 17])
 @pytest.mark.parametrize("periodic", [True, False])
-def test_localization_sym_unit(size, periodic):
+def test_localization_sym_unit(size, periodic, rng):
     """tests simple droplets localization in 2d"""
-    pos = np.random.random(2) * size
-    radius = np.random.uniform(2, 5)
-    width = np.random.uniform(1, 2)
+    pos = rng.random(2) * size
+    radius = rng.uniform(2, 5)
+    width = rng.uniform(1, 2)
     d1 = DiffuseDroplet(pos, radius, interface_width=width)
 
     grid = UnitGrid((size, size), periodic=periodic)
@@ -53,17 +53,17 @@ def test_localization_sym_unit(size, periodic):
 
 
 @pytest.mark.parametrize("periodic", [True, False])
-def test_localization_sym_rect(periodic):
+def test_localization_sym_rect(periodic, rng):
     """tests simple droplets localization in 2d with a rectangular grid"""
     size = 16
 
-    pos = np.random.uniform(-4, 4, size=2)
-    radius = np.random.uniform(2, 5)
-    width = np.random.uniform(0.5, 1.5)
+    pos = rng.uniform(-4, 4, size=2)
+    radius = rng.uniform(2, 5)
+    width = rng.uniform(0.5, 1.5)
     d1 = DiffuseDroplet(pos, radius, interface_width=width)
 
-    a = np.random.random(2) - size / 2
-    b = np.random.random(2) + size / 2
+    a = rng.random(2) - size / 2
+    b = rng.random(2) + size / 2
     grid = CartesianGrid(np.c_[a, b], 3 * size, periodic=periodic)
     field = d1.get_phase_field(grid)
 
@@ -80,18 +80,18 @@ def test_localization_sym_rect(periodic):
 
 
 @pytest.mark.parametrize("periodic", [True, False])
-def test_localization_perturbed_2d(periodic):
+def test_localization_perturbed_2d(periodic, rng):
     """tests localization of perturbed 2d droplets"""
     size = 16
 
-    pos = np.random.uniform(-4, 4, size=2)
-    radius = np.random.uniform(2, 5)
-    width = np.random.uniform(0.5, 1.5)
-    ampls = np.random.uniform(-0.01, 0.01, size=4)
+    pos = rng.uniform(-4, 4, size=2)
+    radius = rng.uniform(2, 5)
+    width = rng.uniform(0.5, 1.5)
+    ampls = rng.uniform(-0.01, 0.01, size=4)
     d1 = PerturbedDroplet2D(pos, radius, interface_width=width, amplitudes=ampls)
 
-    a = np.random.random(2) - size / 2
-    b = np.random.random(2) + size / 2
+    a = rng.random(2) - size / 2
+    b = rng.random(2) + size / 2
     grid = CartesianGrid(np.c_[a, b], 2 * size, periodic=periodic)
     field = d1.get_phase_field(grid)
 
@@ -107,18 +107,18 @@ def test_localization_perturbed_2d(periodic):
 
 
 @pytest.mark.parametrize("periodic", [True, False])
-def test_localization_perturbed_3d(periodic):
+def test_localization_perturbed_3d(periodic, rng):
     """tests localization of perturbed 3d droplets"""
     size = 8
 
-    pos = np.random.uniform(-2, 2, size=3)
-    radius = np.random.uniform(2, 3)
-    width = np.random.uniform(0.5, 1.5)
-    ampls = np.random.uniform(-0.01, 0.01, size=3)
+    pos = rng.uniform(-2, 2, size=3)
+    radius = rng.uniform(2, 3)
+    width = rng.uniform(0.5, 1.5)
+    ampls = rng.uniform(-0.01, 0.01, size=3)
     d1 = PerturbedDroplet3D(pos, radius, interface_width=width, amplitudes=ampls)
 
-    a = np.random.random(3) - size / 2
-    b = np.random.random(3) + size / 2
+    a = rng.random(3) - size / 2
+    b = rng.random(3) + size / 2
     grid = CartesianGrid(np.c_[a, b], 2 * size, periodic=periodic)
     assert grid.dim == 3
     field = d1.get_phase_field(grid)
@@ -138,13 +138,13 @@ def test_localization_perturbed_3d(periodic):
     )
 
 
-def test_localization_polar():
+def test_localization_polar(rng):
     """tests simple droplets localization in polar grid"""
-    radius = np.random.uniform(2, 3)
-    width = np.random.uniform(0.5, 1.5)
+    radius = rng.uniform(2, 3)
+    width = rng.uniform(0.5, 1.5)
     d1 = DiffuseDroplet((0, 0), radius, interface_width=width)
 
-    grid_radius = 6 + 2 * np.random.random()
+    grid_radius = 6 + 2 * rng.random()
     grid = PolarSymGrid(grid_radius, 16)
     field = d1.get_phase_field(grid)
 
@@ -160,13 +160,13 @@ def test_localization_polar():
     assert len(emulsion) == 0
 
 
-def test_localization_spherical():
+def test_localization_spherical(rng):
     """tests simple droplets localization in spherical grid"""
-    radius = np.random.uniform(2, 3)
-    width = np.random.uniform(0.5, 1.5)
+    radius = rng.uniform(2, 3)
+    width = rng.uniform(0.5, 1.5)
     d1 = DiffuseDroplet((0, 0, 0), radius, interface_width=width)
 
-    grid_radius = 6 + 2 * np.random.random()
+    grid_radius = 6 + 2 * rng.random()
     grid = SphericalSymGrid(grid_radius, 16)
     field = d1.get_phase_field(grid)
 
@@ -183,15 +183,15 @@ def test_localization_spherical():
 
 
 @pytest.mark.parametrize("periodic", [True, False])
-def test_localization_cylindrical(periodic):
+def test_localization_cylindrical(periodic, rng):
     """tests simple droplets localization in cylindrical grid"""
-    pos = (0, 0, np.random.uniform(-4, 4))
-    radius = np.random.uniform(2, 3)
-    width = np.random.uniform(0.5, 1.5)
+    pos = (0, 0, rng.uniform(-4, 4))
+    radius = rng.uniform(2, 3)
+    width = rng.uniform(0.5, 1.5)
     d1 = DiffuseDroplet(pos, radius, interface_width=width)
 
-    grid_radius = 6 + 2 * np.random.random()
-    bounds_z = np.random.uniform(1, 2, size=2) * np.array([-4, 4])
+    grid_radius = 6 + 2 * rng.random()
+    bounds_z = rng.uniform(1, 2, size=2) * np.array([-4, 4])
     grid = CylindricalSymGrid(grid_radius, bounds_z, (16, 32), periodic_z=periodic)
     field = d1.get_phase_field(grid)
 
@@ -207,11 +207,11 @@ def test_localization_cylindrical(periodic):
     assert len(emulsion) == 0
 
 
-def test_localization_threshold():
+def test_localization_threshold(rng):
     """tests different localization thresholds"""
-    pos = np.random.random(2) * 16
-    radius = np.random.uniform(2, 5)
-    width = np.random.uniform(1, 2)
+    pos = rng.random(2) * 16
+    radius = rng.uniform(2, 5)
+    width = rng.uniform(1, 2)
     d1 = DiffuseDroplet(pos, radius, interface_width=width)
 
     grid = UnitGrid((16, 16), periodic=False)
@@ -254,10 +254,10 @@ def test_localization_vmin_vmax(adjust_values, auto_values):
     assert d1.interface_width == pytest.approx(d2.interface_width)
 
 
-def test_get_structure_factor():
+def test_get_structure_factor(rng):
     """test the structure factor method"""
     grid = UnitGrid([512], periodic=True)
-    k0 = np.random.uniform(1, 3)
+    k0 = rng.uniform(1, 3)
     field = ScalarField.from_expression(grid, f"sin({k0} * x)")
     k, S = image_analysis.get_structure_factor(field)
     k_max = k[S.argmax()]

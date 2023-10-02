@@ -344,7 +344,7 @@ def locate_droplets_in_mask(mask: ScalarField) -> Emulsion:
 
 def locate_droplets(
     phase_field: ScalarField,
-    threshold: Union[float, str] = 0.5,
+    threshold: Union[float, Literal["auto", "extrema", "mean", "otsu"]] = 0.5,
     *,
     minimal_radius: float = 0,
     modes: int = 0,
@@ -533,7 +533,7 @@ def refine_droplet(
         droplet.interface_width = phase_field.grid.typical_discretization
 
     # enlarge the mask to also contain the shape change
-    mask = droplet._get_phase_field(phase_field.grid, dtype=np.bool_)
+    mask = droplet._get_phase_field(phase_field.grid, dtype=bool)
     dilation_iterations = 1 + int(2 * droplet.interface_width)
     mask = ndimage.binary_dilation(mask, iterations=dilation_iterations)
 
@@ -609,8 +609,8 @@ def refine_droplet(
 
 def get_structure_factor(
     scalar_field: ScalarField,
-    smoothing: Union[None, float, str] = "auto",
-    wave_numbers: Union[Sequence[float], str] = "auto",
+    smoothing: Union[None, float, Literal["auto", "none"]] = "auto",
+    wave_numbers: Union[Sequence[float], Literal["auto"]] = "auto",
     add_zero: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     r"""Calculates the structure factor associated with a field

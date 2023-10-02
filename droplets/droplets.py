@@ -32,11 +32,12 @@ import math
 import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
 from numba.extending import register_jitable
 from numpy.lib.recfunctions import structured_to_unstructured
+from numpy.typing import DTypeLike
 from scipy import integrate
 
 from pde.fields import ScalarField
@@ -47,17 +48,11 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 
 from .tools import spherical
 
-# work-around to satisfy type checking in python 3.6
-if TYPE_CHECKING:
-    # TYPE_CHECKING will always be False in production and this circular import
-    # will thus be resolved.
-    from .emulsions import EmulsionTimeCourse  # @UnusedImport
-
-
 TDroplet = TypeVar("TDroplet", bound="DropletBase")
+DTypeList = List[Union[Tuple[str, Type[Any]], Tuple[str, Type[Any], Tuple[int, ...]]]]
 
 
-def get_dtype_field_size(dtype, field_name: str) -> int:
+def get_dtype_field_size(dtype: DTypeLike, field_name: str) -> int:
     """return the number of elements in a field of structured numpy array
 
     Args:
@@ -66,7 +61,7 @@ def get_dtype_field_size(dtype, field_name: str) -> int:
         field_name (str):
             The name of the field that needs to be checked
     """
-    shape = dtype.fields[field_name][0].shape
+    shape = dtype.fields[field_name][0].shape  # type: ignore
     return np.prod(shape) if shape else 1  # type: ignore
 
 
@@ -114,6 +109,9 @@ class DropletBase:
 
     data: np.recarray  # all information about the droplet in a record array
 
+    _merge_data: Callable[[np.ndarray, np.ndarray, np.ndarray], None]
+    """private method for merging droplet data, created by __init_subclass__"""
+
     @classmethod
     def from_data(cls, data: np.recarray) -> DropletBase:
         """create droplet class from a given data
@@ -147,14 +145,14 @@ class DropletBase:
 
     @classmethod
     @abstractmethod
-    def get_dtype(cls, **kwargs):
+    def get_dtype(cls, **kwargs) -> DTypeList:
         """determine the dtype representing this droplet class
 
         Returns:
             :class:`numpy.dtype`:
                 The (structured) dtype associated with this class
         """
-        pass
+        ...
 
     def _init_data(self, **kwargs) -> None:
         """initializes the `data` attribute if it is not present
@@ -271,7 +269,7 @@ class SphericalDroplet(DropletBase):
             raise ValueError("Radius must be positive")
 
     @classmethod
-    def get_dtype(cls, **kwargs):
+    def get_dtype(cls, **kwargs) -> DTypeList:
         """determine the dtype representing this droplet class
 
         Args:
@@ -320,7 +318,7 @@ class SphericalDroplet(DropletBase):
         return self.data["position"]
 
     @position.setter
-    def position(self, value: np.ndarray):
+    def position(self, value: np.ndarray) -> None:
         value = np.asanyarray(value)
         if len(value) != self.dim:
             raise ValueError(f"The dimension of the position must be {self.dim}")
@@ -332,7 +330,7 @@ class SphericalDroplet(DropletBase):
         return float(self.data["radius"])
 
     @radius.setter
-    def radius(self, value: float):
+    def radius(self, value: float) -> None:
         self.data["radius"] = value
         self.check_data()
 
@@ -342,7 +340,7 @@ class SphericalDroplet(DropletBase):
         return spherical.volume_from_radius(self.radius, self.dim)
 
     @volume.setter
-    def volume(self, volume: float):
+    def volume(self, volume: float) -> None:
         """set the radius from a supplied volume"""
         self.radius = spherical.radius_from_volume(volume, self.dim)
 
@@ -447,7 +445,7 @@ class SphericalDroplet(DropletBase):
         """float: the mean curvature of the interface of the droplet"""
         return 1 / self.radius
 
-    def _get_phase_field(self, grid: GridBase, dtype=np.double) -> np.ndarray:
+    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> np.ndarray:
         """Creates an image of the droplet on the `grid`
 
         Args:
@@ -626,7 +624,7 @@ class DiffuseDroplet(SphericalDroplet):
         return l, h
 
     @classmethod
-    def get_dtype(cls, **kwargs):
+    def get_dtype(cls, **kwargs) -> DTypeList:
         """determine the dtype representing this droplet class
 
         Args:
@@ -661,7 +659,7 @@ class DiffuseDroplet(SphericalDroplet):
             return float(self.data["interface_width"])
 
     @interface_width.setter
-    def interface_width(self, value: Optional[float]):
+    def interface_width(self, value: Optional[float]) -> None:
         if value is None:
             self.data["interface_width"] = math.nan
         elif value < 0:
@@ -670,7 +668,7 @@ class DiffuseDroplet(SphericalDroplet):
             self.data["interface_width"] = value
         self.check_data()
 
-    def _get_phase_field(self, grid: GridBase, dtype=np.double) -> np.ndarray:
+    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> np.ndarray:
         """Creates an image of the droplet on the `grid`
 
         Args:
@@ -699,7 +697,7 @@ class DiffuseDroplet(SphericalDroplet):
         dist: np.ndarray = grid.polar_coordinates_real(self.position, ret_angle=False)  # type: ignore
 
         # make the image
-        if interface_width == 0 or dtype == np.bool_:
+        if interface_width == 0 or np.issubdtype(dtype, bool):
             result = dist < self.radius
         else:
             result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)  # type: ignore
@@ -745,7 +743,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
             raise ValueError(f"Space dimension must be {self.__class__.dim}")
 
     @classmethod
-    def get_dtype(cls, **kwargs):
+    def get_dtype(cls, **kwargs) -> DTypeList:
         """determine the dtype representing this droplet class
 
         Args:
@@ -791,7 +789,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         return np.atleast_1d(self.data["amplitudes"])  # type: ignore
 
     @amplitudes.setter
-    def amplitudes(self, value: Optional[np.ndarray] = None):
+    def amplitudes(self, value: Optional[np.ndarray] = None) -> None:
         if value is None:
             assert self.modes == 0
             self.data["amplitudes"] = np.broadcast_to(0.0, (0,))
@@ -812,14 +810,14 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         raise NotImplementedError
 
     @volume.setter
-    def volume(self, volume: float):
+    def volume(self, volume: float) -> None:
         raise NotImplementedError
 
     @property
     def surface_area(self) -> float:
         raise NotImplementedError
 
-    def _get_phase_field(self, grid: GridBase, dtype=np.double) -> np.ndarray:
+    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> np.ndarray:
         """Creates a normalized image of the droplet on the `grid`
 
         Args:
@@ -848,7 +846,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         interface = self.interface_distance(*angles)
 
         # make the image
-        if interface_width == 0 or dtype == np.bool_:
+        if interface_width == 0 or np.issubdtype(dtype, bool):
             result = dist < interface
         else:
             result = 0.5 + 0.5 * np.tanh((interface - dist) / interface_width)
@@ -927,7 +925,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         Returns:
             Array with distances of the interfacial points associated with each angle φ
         """
-        dist = np.ones(φ.shape, dtype=np.double)
+        dist = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φ)
@@ -964,7 +962,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         Returns:
             Array with curvature at the interfacial points associated with each angle φ
         """
-        curv_radius = np.ones(φ.shape, dtype=np.double)
+        curv_radius = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             factor = n * n - 1
             if a != 0:
@@ -980,7 +978,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         return np.pi * self.radius**2 * term  # type: ignore
 
     @volume.setter
-    def volume(self, volume: float):
+    def volume(self, volume: float) -> None:
         """set volume keeping relative perturbations"""
         term = 1 + np.sum(self.amplitudes**2) / 2
         self.radius = np.sqrt(volume / (np.pi * term))
@@ -991,8 +989,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         # discretize surface for simple approximation to integral
         φs, dφ = np.linspace(0, 2 * np.pi, 256, endpoint=False, retstep=True)
 
-        dist = np.ones(φs.shape, dtype=np.double)
-        dist_dφ = np.zeros(φs.shape, dtype=np.double)
+        dist = np.ones(φs.shape, dtype=float)
+        dist_dφ = np.zeros(φs.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φs)
@@ -1116,7 +1114,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             φ = np.zeros_like(θ)
         elif θ.shape != φ.shape:
             raise ValueError("Shape of θ and φ must agree")
-        dist = np.ones(θ.shape, dtype=np.double)
+        dist = np.ones(θ.shape, dtype=float)
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)  # type: ignore
@@ -1192,7 +1190,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         return volume  # type: ignore
 
     @volume.setter
-    def volume(self, volume: float):
+    def volume(self, volume: float) -> None:
         """set volume keeping relative perturbations"""
         raise NotImplementedError("Cannot set volume")
 
@@ -1242,7 +1240,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         Returns:
             Array with distances of the interfacial points associated with the angles
         """
-        dist = np.ones(θ.shape, dtype=np.double)
+        dist = np.ones(θ.shape, dtype=float)
         for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
