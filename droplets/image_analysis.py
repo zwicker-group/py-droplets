@@ -5,6 +5,7 @@ Functions for analyzing phase field images of emulsions.
    :nosignatures:
 
    locate_droplets
+   refine_droplets
    refine_droplet
    get_structure_factor
    get_length_scale
@@ -13,12 +14,25 @@ Functions for analyzing phase field images of emulsions.
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+from __future__ import annotations
+
+import functools
 import logging
 import math
 import warnings
 from functools import reduce
 from itertools import product
-from typing import Any, Dict, Iterable, List, Literal, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import numpy as np
 from numpy.lib.recfunctions import (
@@ -120,8 +134,8 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
     # connect clusters linked viaperiodic boundary conditions
     for ax in np.flatnonzero(grid.periodic):  # look at all periodic axes
         # compile list of all boundary points connected along the current axis
-        low: List[Union[List[int], np.ndarray]] = []
-        high: List[Union[List[int], np.ndarray]] = []
+        low: List[List[int] | np.ndarray] = []
+        high: List[List[int] | np.ndarray] = []
         for a in range(grid.num_axes):
             if a == ax:
                 low.append([0])
@@ -344,13 +358,14 @@ def locate_droplets_in_mask(mask: ScalarField) -> Emulsion:
 
 def locate_droplets(
     phase_field: ScalarField,
-    threshold: Union[float, Literal["auto", "extrema", "mean", "otsu"]] = 0.5,
+    threshold: float | Literal["auto", "extrema", "mean", "otsu"] = 0.5,
     *,
     minimal_radius: float = 0,
     modes: int = 0,
     interface_width: Optional[float] = None,
     refine: bool = False,
     refine_args: Optional[Dict[str, Any]] = None,
+    num_processes: int | Literal["auto"] = 1,
 ) -> Emulsion:
     """Locates droplets in the phase field
 
@@ -404,6 +419,9 @@ def locate_droplets(
         refine_args (dict):
             Additional keyword arguments passed on to :func:`refine_droplet`. Only has
             an effect if `refine=True`.
+        num_processes (int):
+            Number of processes used for the refinement. If set to "auto", the number of
+            processes is choosen automatically.
 
     Returns:
         :class:`~droplets.emulsions.Emulsion`: All detected droplets
@@ -461,19 +479,71 @@ def locate_droplets(
         if droplet_class != droplet.__class__:
             droplet = droplet_class.from_droplet(droplet, **args)
 
-        # refine droplets if necessary
-        if refine:
-            try:
-                droplet = refine_droplet(phase_field, droplet, **refine_args)
-            except ValueError:
-                continue  # do not add the droplet to the list
         droplets.append(droplet)
+
+    # refine droplets if necessary
+    if refine:
+        droplets = refine_droplets(
+            phase_field, droplets, num_processes=num_processes, **refine_args
+        )
 
     # return droplets as an emulsion
     emulsion = Emulsion(droplets)
     if minimal_radius > -np.inf:
         emulsion.remove_small(minimal_radius)
     return emulsion
+
+
+def refine_droplets(
+    phase_field: ScalarField,
+    candidates: Iterable[DiffuseDroplet],
+    *,
+    num_processes: int | Literal["auto"] = 1,
+    **kwargs,
+) -> List[DiffuseDroplet]:
+    r"""Refines many droplets by fitting to phase field
+
+    Args:
+        phase_field (:class:`~pde.fields.ScalarField`):
+            Phase_field that is being used to refine the droplet
+        droplets (sequence of :class:`~droplets.droplets.SphericalDroplet`):
+            Droplets that should be refined.
+        num_processes (int or "auto"):
+            Number of processes used for the refinement. If set to "auto", the number of
+            processes is choosen automatically.
+        \**kwargs (dict):
+            Additional keyword arguments are passed on to :func:`refine_droplet`.
+
+    Returns:
+        list of :class:`~droplets.droplets.DiffuseDroplet`:
+            The refined droplets
+    """
+
+    if num_processes == 1:
+        # refine droplets serially in this process
+        droplets = [
+            drop
+            for candidate in candidates
+            if (drop := refine_droplet(phase_field, candidate, **kwargs)) is not None
+        ]
+
+    else:
+        # use multiprocessing to refine droplets
+        from concurrent.futures import ProcessPoolExecutor
+
+        _refine_one: Callable[[DiffuseDroplet], DiffuseDroplet] = functools.partial(
+            refine_droplet, phase_field, **kwargs
+        )
+
+        max_workers = None if num_processes == "auto" else num_processes
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            droplets = [
+                candidate_refined
+                for candidate_refined in executor.map(_refine_one, candidates)
+                if candidate_refined is not None
+            ]
+
+    return droplets
 
 
 def refine_droplet(
@@ -609,8 +679,8 @@ def refine_droplet(
 
 def get_structure_factor(
     scalar_field: ScalarField,
-    smoothing: Union[None, float, Literal["auto", "none"]] = "auto",
-    wave_numbers: Union[Sequence[float], Literal["auto"]] = "auto",
+    smoothing: None | float | Literal["auto", "none"] = "auto",
+    wave_numbers: Sequence[float] | Literal["auto"] = "auto",
     add_zero: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     r"""Calculates the structure factor associated with a field
@@ -721,7 +791,7 @@ def get_length_scale(
         "structure_factor_mean", "structure_factor_maximum", "droplet_detection"
     ] = "structure_factor_maximum",
     **kwargs,
-) -> Union[float, Tuple[float, Any]]:
+) -> float | Tuple[float, Any]:
     """Calculates a length scale associated with a phase field
 
     Args:

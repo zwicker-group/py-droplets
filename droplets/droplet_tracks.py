@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Literal, Optional
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -118,7 +118,7 @@ class DropletTrack:
         """number of time points"""
         return len(self.times)
 
-    def __getitem__(self, key: Union[int, slice]):
+    def __getitem__(self, key: int | slice):
         """return the droplets identified by the given index/slice"""
         result = self.droplets.__getitem__(key)
         if isinstance(key, slice):
@@ -357,7 +357,12 @@ class DropletTrack:
 
     @plot_on_axes()
     def plot(
-        self, attribute: str = "radius", smoothing: float = 0, ax=None, **kwargs
+        self,
+        attribute: str = "radius",
+        smoothing: float = 0,
+        t_max: Optional[float] = None,
+        ax=None,
+        **kwargs,
     ) -> PlotReference:
         """plot the time evolution of the droplet
 
@@ -390,7 +395,14 @@ class DropletTrack:
             data = self.get_trajectory(smoothing=smoothing, attribute=attribute)
             ylabel = attribute.capitalize()
 
-        (line,) = ax.plot(self.times, data, **kwargs)
+        if t_max is not None and len(self.times) >= 2 and self.times[-1] < t_max:
+            dt = self.times[-1] - self.times[-2]
+            times = np.r_[self.times, self.times[-1] + dt]
+            data = np.r_[data, 0]
+        else:
+            times = self.times
+
+        (line,) = ax.plot(times, data, **kwargs)
         ax.set_xlabel("Time")
         ax.set_ylabel(ylabel)
         return PlotReference(ax, line, {"attribute": attribute})
@@ -469,7 +481,7 @@ class DropletTrack:
 class DropletTrackList(list):
     """a list of instances of :class:`DropletTrack`"""
 
-    def __getitem__(self, key: Union[int, slice]):  # type: ignore
+    def __getitem__(self, key: int | slice):  # type: ignore
         """return the droplets identified by the given index/slice"""
         result = super().__getitem__(key)
         if isinstance(key, slice):
@@ -482,7 +494,7 @@ class DropletTrackList(list):
         cls,
         time_course: EmulsionTimeCourse,
         *,
-        method: str = "overlap",
+        method: Literal["distance", "overlap"] = "overlap",
         grid: Optional[GridBase] = None,
         progress: bool = False,
         **kwargs,
@@ -554,7 +566,7 @@ class DropletTrackList(list):
                 # calculate the distance between droplets
                 if tracks_alive:
                     if grid is None:
-                        metric: Union[str, Callable] = "euclidean"
+                        metric: str | Callable = "euclidean"
                     else:
                         metric = grid.distance_real
                     points_prev = [track.last.position for track in tracks_alive]
@@ -603,8 +615,10 @@ class DropletTrackList(list):
     def from_storage(
         cls,
         storage: StorageBase,
+        *,
+        method: Literal["distance", "overlap"] = "overlap",
         refine: bool = False,
-        method: str = "overlap",
+        num_processes: int | Literal["auto"] = 1,
         progress: Optional[bool] = None,
     ) -> DropletTrackList:
         r"""obtain droplet tracks from stored scalar field data
@@ -615,14 +629,17 @@ class DropletTrackList(list):
         Args:
             storage (:class:`~pde.storage.base.StorageBase`):
                 The phase fields for many time instances
-            refine (bool):
-                Flag determining whether the droplet properties should be refined
-                using fitting. This is a potentially slow procedure.
             method (str):
                 The method used for tracking droplet identities. Possible methods are
                 "overlap" (adding droplets that overlap with those in previous frames)
                 and "distance" (matching droplets to minimize center-to-center
                 distances).
+            refine (bool):
+                Flag determining whether the droplet properties should be refined
+                using fitting. This is a potentially slow procedure.
+            num_processes (int or "auto"):
+                Number of processes used for the refinement. If set to "auto", the
+                number of processes is choosen automatically.
             progress (bool):
                 Whether to show the progress of the process. If `None`, the progress is
                 not shown, except for the first step if `refine` is `True`.
@@ -630,7 +647,9 @@ class DropletTrackList(list):
         Returns:
             :class:`DropletTrackList`: the resulting droplet tracks
         """
-        etc = EmulsionTimeCourse.from_storage(storage, refine=refine, progress=progress)
+        etc = EmulsionTimeCourse.from_storage(
+            storage, refine=refine, num_processes=num_processes, progress=progress
+        )
         if progress is None:
             progress = False
         return cls.from_emulsion_time_course(etc, method=method, progress=progress)
@@ -717,11 +736,19 @@ class DropletTrackList(list):
         else:
             kwargs["color"] = "k"  # use black by default
 
+        # get maximal time
+        if self:
+            t_max = max(track.times[-1] for track in self if len(track.times) > 0)
+        else:
+            t_max = None
+
         # adjust alpha such that multiple tracks are visible well
         kwargs.setdefault("alpha", min(0.8, 20 / len(self)))
         elements = []
         for track in self:
-            elements.append(track.plot(attribute=attribute, ax=ax, **kwargs).element)
+            elements.append(
+                track.plot(attribute=attribute, t_max=t_max, ax=ax, **kwargs).element
+            )
             kwargs["label"] = ""  # set potential plot label only for first track
 
         return PlotReference(ax, elements, {"attribute": attribute})
