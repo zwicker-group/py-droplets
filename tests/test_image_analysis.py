@@ -358,3 +358,23 @@ def test_droplets_on_periodic_grids(dim, pos):
     assert len(em) == 1
     assert em[0].volume == pytest.approx(field.integral)
     np.testing.assert_allclose(em[0].position, np.full(dim, pos), atol=0.1)
+
+
+@pytest.mark.parametrize("num_processes", [1, 2])
+def test_droplet_refine_parallel(num_processes):
+    """tests droplets localization in 2d with and without multiprocessing"""
+    grid = UnitGrid([32, 32])
+    radii = [3, 2.7, 4.3]
+    pos = [[7, 8], [9, 22], [22, 10]]
+    em = Emulsion([DiffuseDroplet(p, r, interface_width=1) for p, r in zip(pos, radii)])
+    field = em.get_phasefield(grid)
+
+    emulsion = image_analysis.locate_droplets(
+        field, refine=True, num_processes=num_processes
+    )
+    assert len(emulsion) == 3
+
+    for droplet, p, r in zip(emulsion, pos, radii):
+        np.testing.assert_almost_equal(droplet.position, p, decimal=4)
+        assert droplet.radius == pytest.approx(r, rel=1e-4)
+        assert droplet.interface_width == pytest.approx(1, rel=1e-4)

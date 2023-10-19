@@ -8,10 +8,11 @@ import math
 import numpy as np
 import pytest
 
-from pde import CartesianGrid, ScalarField, UnitGrid
+from pde import CartesianGrid, MemoryStorage, ScalarField, UnitGrid
 from pde.tools.misc import skipUnlessModule
 
 from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emulsions
+from droplets.emulsions import EmulsionTimeCourse
 
 
 def test_empty_emulsion(caplog):
@@ -293,3 +294,25 @@ def test_emulsion_random(dim, grid, rng):
     assert em.dim == dim
     assert np.all(em.data["position"] > 10) and np.all(em.data["position"] < 30)
     assert np.all(em.data["radius"] > 1) and np.all(em.data["radius"] < 2)
+
+
+@pytest.mark.parametrize("proc", [1, 2])
+def test_emulsion_from_storage(proc):
+    """test reading emulsion time courses from a file"""
+    grid = UnitGrid([32, 32])
+    radii = [3, 2.7, 4.3]
+    pos = [[7, 8], [9, 22], [22, 10]]
+    em1 = Emulsion(
+        [DiffuseDroplet(p, r, interface_width=1) for p, r in zip(pos, radii)]
+    )
+    field1 = em1.get_phasefield(grid)
+    em2 = em1[1:]
+    field2 = em2.get_phasefield(grid)
+
+    storage = MemoryStorage()
+    storage.start_writing(field1)
+    storage.append(field1, 1)
+    storage.append(field2, 2)
+
+    etc = EmulsionTimeCourse.from_storage(storage, num_processes=proc, refine=True)
+    assert len(etc) == 2

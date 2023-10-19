@@ -12,6 +12,7 @@ Classes describing collections of droplets, i.e. emulsions, and their temporal d
 
 from __future__ import annotations
 
+import functools
 import json
 import logging
 import math
@@ -24,11 +25,11 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Optional,
     Sequence,
     Tuple,
     Type,
-    Union,
     overload,
 )
 
@@ -62,7 +63,7 @@ class Emulsion(list):
         droplets: Optional[Iterable[SphericalDroplet]] = None,
         *,
         copy: bool = True,
-        dtype: Union[np.typing.DTypeLike, np.ndarray, SphericalDroplet] = None,
+        dtype: np.typing.DTypeLike | np.ndarray | SphericalDroplet = None,
         force_consistency: bool = False,
         grid: Optional[GridBase] = None,
     ):
@@ -121,8 +122,8 @@ class Emulsion(list):
     def from_random(
         cls,
         num: int,
-        grid_or_bounds: Union[GridBase, Sequence[Tuple[float, float]]],
-        radius: Union[float, Tuple[float, float]],
+        grid_or_bounds: GridBase | Sequence[Tuple[float, float]],
+        radius: float | Tuple[float, float],
         *,
         remove_overlapping: bool = True,
         droplet_class: Type[SphericalDroplet] = SphericalDroplet,
@@ -267,7 +268,10 @@ class Emulsion(list):
             force_consistency (bool, optional):
                 Whether to ensure that all droplets are of the same type
         """
-        if self.dtype is None:
+        # during some multiprocessing examples, Emulsions might apparently not have
+        # a proper `dtype` define. This might be because they use some copying or
+        # __getstate__ methods of the underlying list class
+        if not hasattr(self, "dtype") or self.dtype is None:
             self.dtype = droplet.data.dtype
         elif force_consistency and self.dtype != droplet.data.dtype:
             raise ValueError(
@@ -646,7 +650,7 @@ class Emulsion(list):
         color_value: Optional[Callable] = None,
         cmap=None,
         norm=None,
-        colorbar: Union[bool, str] = True,
+        colorbar: bool | str = True,
         **kwargs,
     ) -> PlotReference:
         """plot the current emulsion together with a corresponding field
@@ -791,7 +795,7 @@ class EmulsionTimeCourse:
     def __init__(
         self,
         emulsions: Optional[Iterable[Emulsion]] = None,
-        times: Union[np.ndarray, Sequence[float], None] = None,
+        times: np.ndarray | Sequence[float] | None = None,
     ) -> None:
         """
         Args:
@@ -858,7 +862,7 @@ class EmulsionTimeCourse:
     def __len__(self):
         return len(self.times)
 
-    def __getitem__(self, key: Union[int, slice]):
+    def __getitem__(self, key: int | slice):
         """return the information for the given index"""
         result = self.emulsions.__getitem__(key)
         if isinstance(key, slice):
@@ -882,6 +886,8 @@ class EmulsionTimeCourse:
     def from_storage(
         cls,
         storage: StorageBase,
+        *,
+        num_processes: int | Literal["auto"] = 1,
         refine: bool = False,
         progress: Optional[bool] = None,
         **kwargs,
@@ -894,9 +900,13 @@ class EmulsionTimeCourse:
             refine (bool):
                 Flag determining whether the droplet properties should be refined
                 using fitting. This is a potentially slow procedure.
+            num_processes (int or "auto"):
+                Number of processes used for the refinement. If set to "auto", the
+                number of processes is choosen automatically.
             progress (bool):
                 Whether to show the progress of the process. If `None`, the progress is
-                only shown when `refine` is `True`.
+                only shown when `refine` is `True`. Progress bars are only shown for
+                serial calculations (where `num_processes == 1`).
             \**kwargs:
                 All other parameters are forwarded to the
                 :meth:`~droplets.image_analysis.locate_droplets`.
@@ -906,14 +916,28 @@ class EmulsionTimeCourse:
         """
         from .image_analysis import locate_droplets
 
-        if progress is None:
-            progress = refine  # show progress only when refining by default
+        if num_processes == 1:
+            # obtain the emulsion data for all frames in this process
 
-        # obtain the emulsion data for all frames
-        emulsions = (
-            locate_droplets(frame, refine=refine, **kwargs)
-            for frame in display_progress(storage, enabled=progress)
-        )
+            if progress is None:
+                progress = refine  # show progress only when refining by default
+
+            emulsions: Iterable[Emulsion] = (
+                locate_droplets(frame, refine=refine, **kwargs)
+                for frame in display_progress(storage, enabled=progress)
+            )
+
+        else:
+            # use multiprocessing to obtain emulsion data
+            from concurrent.futures import ProcessPoolExecutor
+
+            _get_emulsion: Callable[[Emulsion], Emulsion] = functools.partial(
+                locate_droplets, refine=refine, **kwargs
+            )
+
+            max_workers = None if num_processes == "auto" else num_processes
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                emulsions = list(executor.map(_get_emulsion, storage))
 
         return cls(emulsions, times=storage.times)
 
