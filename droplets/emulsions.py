@@ -30,6 +30,7 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    Union,
     overload,
 )
 
@@ -739,7 +740,7 @@ class Emulsion(list):
 
             # and map them to colors
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-            colors = mapper.to_rgba(values)
+            colors: Union[List, np.ndarray] = mapper.to_rgba(values)
 
             if kwargs.pop("color", None) is not None:
                 logger = logging.getLogger(self.__class__.__name__)

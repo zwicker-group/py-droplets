@@ -613,7 +613,7 @@ def refine_droplet(
     # determine the coordinate constraints and only vary the free data points
     data_flat = structured_to_unstructured(droplet.data)  # unstructured data
     dtype = droplet.data.dtype
-    free = np.ones(len(data_flat), dtype=bool)
+    free: np.ndarray = np.ones(len(data_flat), dtype=bool)
     free[phase_field.grid.coordinate_constraints] = False
 
     # determine data bounds

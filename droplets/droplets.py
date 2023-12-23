@@ -700,7 +700,7 @@ class DiffuseDroplet(SphericalDroplet):
         if interface_width == 0 or np.issubdtype(dtype, bool):
             result = dist < self.radius
         else:
-            result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)  # type: ignore
+            result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)
 
         return result.astype(dtype)
 
@@ -925,7 +925,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         Returns:
             Array with distances of the interfacial points associated with each angle φ
         """
-        dist = np.ones(φ.shape, dtype=float)
+        dist: np.ndarray = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φ)
@@ -934,7 +934,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         return self.radius * dist
 
     @preserve_scalars
-    def interface_position(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
+    def interface_position(self, φ: np.ndarray) -> np.ndarray:
         """calculates the position of the interface of the droplet
 
         Args:
@@ -962,7 +962,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         Returns:
             Array with curvature at the interfacial points associated with each angle φ
         """
-        curv_radius = np.ones(φ.shape, dtype=float)
+        curv_radius: np.ndarray = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             factor = n * n - 1
             if a != 0:
@@ -989,8 +989,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         # discretize surface for simple approximation to integral
         φs, dφ = np.linspace(0, 2 * np.pi, 256, endpoint=False, retstep=True)
 
-        dist = np.ones(φs.shape, dtype=float)
-        dist_dφ = np.zeros(φs.shape, dtype=float)
+        dist: np.ndarray = np.ones(φs.shape, dtype=float)
+        dist_dφ: np.ndarray = np.zeros(φs.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φs)
@@ -1114,14 +1114,14 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             φ = np.zeros_like(θ)
         elif θ.shape != φ.shape:
             raise ValueError("Shape of θ and φ must agree")
-        dist = np.ones(θ.shape, dtype=float)
+        dist: np.ndarray = np.ones(θ.shape, dtype=float)
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)  # type: ignore
         return self.radius * dist
 
     @preserve_scalars
-    def interface_position(  # type: ignore
+    def interface_position(
         self, θ: np.ndarray, φ: Optional[np.ndarray] = None
     ) -> np.ndarray:
         r"""calculates the position of the interface of the droplet
@@ -1240,7 +1240,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         Returns:
             Array with distances of the interfacial points associated with the angles
         """
-        dist = np.ones(θ.shape, dtype=float)
+        dist: np.ndarray = np.ones(θ.shape, dtype=float)
         for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
