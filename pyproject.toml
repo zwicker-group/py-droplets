@@ -30,7 +30,7 @@ dependencies = [
     "numpy>=1.22.0",
     "scipy>=1.4.0",
     "sympy>=1.5.0",
-    "py-pde>=0.22",
+    "py-pde>=0.34",
 ]
 
 [project.optional-dependencies]

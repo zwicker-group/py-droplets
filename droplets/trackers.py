@@ -17,7 +17,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional
 
 from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
-from pde.trackers.base import InfoDict, IntervalData, TrackerBase
+from pde.trackers.base import InfoDict, InterruptData, TrackerBase
 
 from .emulsions import EmulsionTimeCourse
 
@@ -35,7 +35,7 @@ class LengthScaleTracker(TrackerBase):
     @fill_in_docstring
     def __init__(
         self,
-        interval: IntervalData = 1,
+        interrupts: InterruptData = 1,
         filename: Optional[str] = None,
         *,
         method: Literal[
@@ -43,11 +43,12 @@ class LengthScaleTracker(TrackerBase):
         ] = "structure_factor_mean",
         source: None | int | Callable = None,
         verbose: bool = False,
+        interval=None,
     ):
         r"""
         Args:
-            interval:
-                {ARG_TRACKER_INTERVAL}
+            interrupts:
+                {ARG_TRACKER_INTERRUPTS}
             filename (str, optional):
                 Determines the file to which the data is written in JSON format
             method (str):
@@ -65,7 +66,7 @@ class LengthScaleTracker(TrackerBase):
             verbose (bool):
                 Determines whether errors in determining the length scales are logged.
         """
-        super().__init__(interval=interval)
+        super().__init__(interrupts=interrupts, interval=interval)
         self.length_scales: List[float] = []
         self.times: List[float] = []
         self.filename = filename
@@ -130,7 +131,7 @@ class DropletTracker(TrackerBase):
     @fill_in_docstring
     def __init__(
         self,
-        interval: IntervalData = 1,
+        interrupts: InterruptData = 1,
         filename: Optional[str] = None,
         *,
         emulsion_timecourse=None,
@@ -140,6 +141,7 @@ class DropletTracker(TrackerBase):
         refine: bool = False,
         refine_args: Optional[Dict[str, Any]] = None,
         perturbation_modes: int = 0,
+        interval=None,
     ):
         """
 
@@ -158,8 +160,8 @@ class DropletTracker(TrackerBase):
             the droplet.
 
         Args:
-            interval:
-                {ARG_TRACKER_INTERVAL}
+            interrupts:
+                {ARG_TRACKER_INTERRUPTS}
             filename (str, optional):
                 Determines the file to which the final data is written as an HDF5 file.
             emulsion_timecourse (:class:`EmulsionTimeCourse`, optional):
@@ -195,7 +197,7 @@ class DropletTracker(TrackerBase):
                 An option describing how many perturbation modes should be considered
                 when refining droplets. Only has an effect if `refine=True`.
         """
-        super().__init__(interval=interval)
+        super().__init__(interrupts=interrupts, interval=interval)
         if emulsion_timecourse is None:
             self.data = EmulsionTimeCourse()
         else:

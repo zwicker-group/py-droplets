@@ -30,6 +30,7 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    Union,
     overload,
 )
 
@@ -43,7 +44,7 @@ from pde.tools.cuboid import Cuboid
 from pde.tools.docstrings import fill_in_docstring
 from pde.tools.output import display_progress
 from pde.tools.plotting import PlotReference, plot_on_axes
-from pde.trackers.base import InfoDict, IntervalData
+from pde.trackers.base import InfoDict, InterruptData
 
 from .droplets import SphericalDroplet, droplet_from_data
 
@@ -739,7 +740,7 @@ class Emulsion(list):
 
             # and map them to colors
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-            colors = mapper.to_rgba(values)
+            colors: Union[List, np.ndarray] = mapper.to_rgba(values)
 
             if kwargs.pop("color", None) is not None:
                 logger = logging.getLogger(self.__class__.__name__)
@@ -1007,20 +1008,27 @@ class EmulsionTimeCourse:
 
     @fill_in_docstring
     def tracker(
-        self, interval: IntervalData = 1, filename: Optional[str] = None
+        self,
+        interrupts: InterruptData = 1,
+        filename: Optional[str] = None,
+        *,
+        interval=None,
     ) -> "DropletTracker":
         """return a tracker that analyzes emulsions during simulations
 
         Args:
-            interval:
-                {ARG_TRACKER_INTERVAL}
+            interrupts:
+                {ARG_TRACKER_INTERRUPTS}
             filename (str): determines where the EmulsionTimeCourse data is
                 stored
         """
         from .trackers import DropletTracker  # @Reimport
 
         return DropletTracker(
-            emulsion_timecourse=self, filename=filename, interval=interval
+            emulsion_timecourse=self,
+            filename=filename,
+            interrupts=interrupts,
+            interval=interval,
         )
 
 
