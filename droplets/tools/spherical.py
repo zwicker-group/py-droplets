@@ -68,11 +68,12 @@ harmonics, where the order is always zero and the degree :math:`l` and the mode
    spherical_harmonic_real
    spherical_harmonic_real_k
 
-
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>    
 """
 
-from typing import Callable, Tuple, TypeVar
+from __future__ import annotations
+
+from typing import Callable, TypeVar
 
 import numpy as np
 from numba.extending import overload, register_jitable
@@ -369,7 +370,7 @@ def spherical_index_k(degree: int, order: int = 0) -> int:
     return degree * (degree + 1) + order
 
 
-def spherical_index_lm(k: int) -> Tuple[int, int]:
+def spherical_index_lm(k: int) -> tuple[int, int]:
     """returns the degree `l` and the order `m` from the mode `k`
 
     Args:
