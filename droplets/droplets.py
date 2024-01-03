@@ -32,7 +32,7 @@ import math
 import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, List, Tuple, Type, TypeVar, Union
 
 import numpy as np
 from numba.extending import register_jitable
@@ -103,7 +103,7 @@ class DropletBase:
     `dtype` of the array determines what information the droplet class stores.
     """
 
-    _subclasses: Dict[str, DropletBase] = {}  # collect all inheriting classes
+    _subclasses: dict[str, DropletBase] = {}  # collect all inheriting classes
 
     __slots__ = ["data"]
 
@@ -238,7 +238,7 @@ class DropletBase:
             return self.__class__.from_data(result)  # type: ignore
 
     @property
-    def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """tuple: lower and upper bounds on the parameters"""
         num = len(self._data_array)
         return np.full(num, -np.inf), np.full(num, np.inf)
@@ -290,7 +290,7 @@ class SphericalDroplet(DropletBase):
         return get_dtype_field_size(self.data.dtype, "position")
 
     @property
-    def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         l[self.dim] = 0  # radius must be non-negative
@@ -356,9 +356,7 @@ class SphericalDroplet(DropletBase):
             self.position - self.radius, self.position + self.radius
         )
 
-    def overlaps(
-        self, other: SphericalDroplet, grid: Optional[GridBase] = None
-    ) -> bool:
+    def overlaps(self, other: SphericalDroplet, grid: GridBase | None = None) -> bool:
         """determine whether another droplet overlaps with this one
 
         Note that this function so far only compares the distances of the droplets to
@@ -475,7 +473,7 @@ class SphericalDroplet(DropletBase):
         *,
         vmin: float = 0,
         vmax: float = 1,
-        label: Optional[str] = None,
+        label: str | None = None,
     ) -> ScalarField:
         """Creates an image of the droplet on the `grid`
 
@@ -497,7 +495,7 @@ class SphericalDroplet(DropletBase):
         data = vmin + (vmax - vmin) * data  # scale data
         return ScalarField(grid, data=data, label=label)
 
-    def get_triangulation(self, resolution: float = 1) -> Dict[str, Any]:
+    def get_triangulation(self, resolution: float = 1) -> dict[str, Any]:
         """obtain a triangulated shape of the droplet surface
 
         Args:
@@ -567,7 +565,7 @@ class SphericalDroplet(DropletBase):
         return mpl.patches.Circle(position, self.radius, **kwargs)
 
     @plot_on_axes()
-    def plot(self, ax, value: Optional[Callable] = None, **kwargs) -> PlotReference:
+    def plot(self, ax, value: Callable | None = None, **kwargs) -> PlotReference:
         """Plot the droplet
 
         Args:
@@ -601,7 +599,7 @@ class DiffuseDroplet(SphericalDroplet):
         self,
         position: np.ndarray,
         radius: float,
-        interface_width: Optional[float] = None,
+        interface_width: float | None = None,
     ):
         """
         Args:
@@ -617,7 +615,7 @@ class DiffuseDroplet(SphericalDroplet):
         self.interface_width = interface_width
 
     @property
-    def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         l[self.dim + 1] = 0  # interface width must be non-negative
@@ -651,7 +649,7 @@ class DiffuseDroplet(SphericalDroplet):
         return merge_data  # type: ignore
 
     @property
-    def interface_width(self) -> Optional[float]:
+    def interface_width(self) -> float | None:
         """float: the width of the interface of this droplet"""
         if np.isnan(self.data["interface_width"]):
             return None
@@ -659,7 +657,7 @@ class DiffuseDroplet(SphericalDroplet):
             return float(self.data["interface_width"])
 
     @interface_width.setter
-    def interface_width(self, value: Optional[float]) -> None:
+    def interface_width(self, value: float | None) -> None:
         if value is None:
             self.data["interface_width"] = math.nan
         elif value < 0:
@@ -718,8 +716,8 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         self,
         position: np.ndarray,
         radius: float,
-        interface_width: Optional[float] = None,
-        amplitudes: Optional[np.ndarray] = None,
+        interface_width: float | None = None,
+        amplitudes: np.ndarray | None = None,
     ):
         """
         Args:
@@ -768,7 +766,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         return dtype + [("amplitudes", float, (modes,))]
 
     @property
-    def data_bounds(self) -> Tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         n = self.dim + 2
@@ -789,7 +787,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         return np.atleast_1d(self.data["amplitudes"])  # type: ignore
 
     @amplitudes.setter
-    def amplitudes(self, value: Optional[np.ndarray] = None) -> None:
+    def amplitudes(self, value: np.ndarray | None = None) -> None:
         if value is None:
             assert self.modes == 0
             self.data["amplitudes"] = np.broadcast_to(0.0, (0,))
@@ -888,8 +886,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         self,
         position: np.ndarray,
         radius: float,
-        interface_width: Optional[float] = None,
-        amplitudes: Optional[np.ndarray] = None,
+        interface_width: float | None = None,
+        amplitudes: np.ndarray | None = None,
     ):
         r"""
         Args:
@@ -1066,8 +1064,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         self,
         position: np.ndarray,
         radius: float,
-        interface_width: Optional[float] = None,
-        amplitudes: Optional[np.ndarray] = None,
+        interface_width: float | None = None,
+        amplitudes: np.ndarray | None = None,
     ):
         r"""
         Args:
@@ -1097,7 +1095,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_distance(  # type: ignore
-        self, θ: np.ndarray, φ: Optional[np.ndarray] = None
+        self, θ: np.ndarray, φ: np.ndarray | None = None
     ) -> np.ndarray:
         r"""calculates the distance of the droplet interface to the origin
 
@@ -1122,7 +1120,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_position(
-        self, θ: np.ndarray, φ: Optional[np.ndarray] = None
+        self, θ: np.ndarray, φ: np.ndarray | None = None
     ) -> np.ndarray:
         r"""calculates the position of the interface of the droplet
 
@@ -1146,7 +1144,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     @preserve_scalars
     def interface_curvature(  # type: ignore
-        self, θ: np.ndarray, φ: Optional[np.ndarray] = None
+        self, θ: np.ndarray, φ: np.ndarray | None = None
     ) -> np.ndarray:
         r"""calculates the mean curvature of the interface of the droplet
 
@@ -1296,7 +1294,7 @@ class _TriangulatedSpheres:
     def __init__(self) -> None:
         self.path = Path(__file__).resolve().parent / "resources" / "spheres_3d.hdf5"
         self.num_list = np.zeros((0,))
-        self.data: Optional[Dict[int, Dict[str, Any]]] = None
+        self.data: dict[int, dict[str, Any]] | None = None
 
     def _load(self):
         """load the stored resource"""
@@ -1316,7 +1314,7 @@ class _TriangulatedSpheres:
                 }
                 self.data[num] = tri
 
-    def get_triangulation(self, num_est: int = 1) -> Dict[str, Any]:
+    def get_triangulation(self, num_est: int = 1) -> dict[str, Any]:
         """get a triangulation of a sphere
 
         Args:

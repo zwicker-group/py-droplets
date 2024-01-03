@@ -22,17 +22,7 @@ import math
 import warnings
 from functools import reduce
 from itertools import product
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Any, Callable, Iterable, Literal, Sequence
 
 import numpy as np
 from numpy.lib.recfunctions import (
@@ -134,8 +124,8 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
     # connect clusters linked viaperiodic boundary conditions
     for ax in np.flatnonzero(grid.periodic):  # look at all periodic axes
         # compile list of all boundary points connected along the current axis
-        low: List[List[int] | np.ndarray] = []
-        high: List[List[int] | np.ndarray] = []
+        low: list[list[int] | np.ndarray] = []
+        high: list[list[int] | np.ndarray] = []
         for a in range(grid.num_axes):
             if a == ax:
                 low.append([0])
@@ -362,9 +352,9 @@ def locate_droplets(
     *,
     minimal_radius: float = 0,
     modes: int = 0,
-    interface_width: Optional[float] = None,
+    interface_width: float | None = None,
     refine: bool = False,
-    refine_args: Optional[Dict[str, Any]] = None,
+    refine_args: dict[str, Any] | None = None,
     num_processes: int | Literal["auto"] = 1,
 ) -> Emulsion:
     """Locates droplets in the phase field
@@ -455,7 +445,7 @@ def locate_droplets(
     for droplet in candidates:
         # check whether we need to add the interface width
         droplet_class = droplet.__class__
-        args: Dict[str, NumberOrArray] = {}
+        args: dict[str, NumberOrArray] = {}
 
         # change droplet class when interface width is given
         if interface_width is not None:
@@ -500,7 +490,7 @@ def refine_droplets(
     *,
     num_processes: int | Literal["auto"] = 1,
     **kwargs,
-) -> List[DiffuseDroplet]:
+) -> list[DiffuseDroplet]:
     r"""Refines many droplets by fitting to phase field
 
     Args:
@@ -553,8 +543,8 @@ def refine_droplet(
     vmin: float = 0.0,
     vmax: float = 1.0,
     adjust_values: bool = False,
-    tolerance: Optional[float] = None,
-    least_squares_params: Optional[Dict[str, Any]] = None,
+    tolerance: float | None = None,
+    least_squares_params: dict[str, Any] | None = None,
 ) -> DiffuseDroplet:
     """Refines droplet parameters by fitting to phase field
 
@@ -682,7 +672,7 @@ def get_structure_factor(
     smoothing: None | float | Literal["auto", "none"] = "auto",
     wave_numbers: Sequence[float] | Literal["auto"] = "auto",
     add_zero: bool = False,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     r"""Calculates the structure factor associated with a field
 
     Here, the structure factor is basically the power spectral density of the field
@@ -791,7 +781,7 @@ def get_length_scale(
         "structure_factor_mean", "structure_factor_maximum", "droplet_detection"
     ] = "structure_factor_maximum",
     **kwargs,
-) -> float | Tuple[float, Any]:
+) -> float | tuple[float, Any]:
     """Calculates a length scale associated with a phase field
 
     Args:

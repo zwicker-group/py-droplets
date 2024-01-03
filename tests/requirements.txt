@@ -2,6 +2,7 @@
 black>=19.*
 h5py
 isort>=5.1
+pyupgrade>=3
 pytest>=5.4
 pytest-cov>=2.8
 pytest-xdist>=1.30
