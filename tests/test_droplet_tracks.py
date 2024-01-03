@@ -3,9 +3,10 @@
 """
 
 import numpy as np
+import pytest
 
 from pde.grids import UnitGrid
-from pde.tools.misc import skipUnlessModule
+from pde.tools.misc import module_available
 
 from droplets.droplet_tracks import DropletTrack, DropletTrackList
 from droplets.droplets import DiffuseDroplet, SphericalDroplet
@@ -41,7 +42,7 @@ def test_droplettrack():
     assert t1 is not t2
 
 
-@skipUnlessModule("h5py")
+@pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_droplettrack_io(tmp_path):
     """test writing and reading droplet tracks"""
     path = tmp_path / "test_droplettrack_io.hdf5"
@@ -83,7 +84,7 @@ def test_droplettracklist():
     assert len(tl) == 1
 
 
-@skipUnlessModule("h5py")
+@pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_droplettracklist_io(tmp_path):
     """test writing and reading droplet tracks"""
     path = tmp_path / "test_droplettracklist_io.hdf5"

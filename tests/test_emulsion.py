@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 from pde import CartesianGrid, MemoryStorage, ScalarField, UnitGrid
-from pde.tools.misc import skipUnlessModule
+from pde.tools.misc import module_available
 
 from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emulsions
 from droplets.emulsions import EmulsionTimeCourse
@@ -163,7 +163,7 @@ def test_emulsion_linked_data():
     np.testing.assert_array_equal(e[1]._data_array, 5)
 
 
-@skipUnlessModule("h5py")
+@pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_emulsion_io(tmp_path):
     """test writing and reading emulsions"""
     path = tmp_path / "test_emulsion_io.hdf5"
@@ -206,7 +206,7 @@ def test_timecourse():
     assert len(t1) == 0
 
 
-@skipUnlessModule("h5py")
+@pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_timecourse_io(tmp_path):
     """test writing and reading emulsions time courses"""
     path = tmp_path / "test_timecourse_io.hdf5"
