@@ -13,7 +13,7 @@ Module defining classes for tracking droplets in simulations.
 from __future__ import annotations
 
 import math
-from typing import Any, Callable, Dict, List, Literal, Optional
+from typing import Any, Callable, Literal
 
 from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
@@ -36,7 +36,7 @@ class LengthScaleTracker(TrackerBase):
     def __init__(
         self,
         interrupts: InterruptData = 1,
-        filename: Optional[str] = None,
+        filename: str | None = None,
         *,
         method: Literal[
             "structure_factor_mean", "structure_factor_maximum", "droplet_detection"
@@ -67,8 +67,8 @@ class LengthScaleTracker(TrackerBase):
                 Determines whether errors in determining the length scales are logged.
         """
         super().__init__(interrupts=interrupts, interval=interval)
-        self.length_scales: List[float] = []
-        self.times: List[float] = []
+        self.length_scales: list[float] = []
+        self.times: list[float] = []
         self.filename = filename
         self.method = method
         self.source = source
@@ -101,7 +101,7 @@ class LengthScaleTracker(TrackerBase):
         self.times.append(t)
         self.length_scales.append(length)  # type: ignore
 
-    def finalize(self, info: Optional[InfoDict] = None) -> None:
+    def finalize(self, info: InfoDict | None = None) -> None:
         """finalize the tracker, supplying additional information
 
         Args:
@@ -132,14 +132,14 @@ class DropletTracker(TrackerBase):
     def __init__(
         self,
         interrupts: InterruptData = 1,
-        filename: Optional[str] = None,
+        filename: str | None = None,
         *,
         emulsion_timecourse=None,
         source: None | int | Callable = None,
         threshold: float | Literal["auto", "extrema", "mean", "otsu"] = 0.5,
         minimal_radius: float = 0,
         refine: bool = False,
-        refine_args: Optional[Dict[str, Any]] = None,
+        refine_args: dict[str, Any] | None = None,
         perturbation_modes: int = 0,
         interval=None,
     ):
@@ -234,7 +234,7 @@ class DropletTracker(TrackerBase):
         )
         self.data.append(emulsion, t)
 
-    def finalize(self, info: Optional[InfoDict] = None) -> None:
+    def finalize(self, info: InfoDict | None = None) -> None:
         """finalize the tracker, supplying additional information
 
         Args:

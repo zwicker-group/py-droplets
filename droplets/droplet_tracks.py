@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Callable, List, Literal, Optional
+from typing import Callable, Literal
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -159,7 +159,7 @@ class DropletTrack:
         return self.droplets[-1]  # type: ignore
 
     @property
-    def dim(self) -> Optional[int]:
+    def dim(self) -> int | None:
         """return the space dimension of the droplets"""
         try:
             return self.last.dim
@@ -167,7 +167,7 @@ class DropletTrack:
             return None
 
     @property
-    def data(self) -> Optional[np.ndarray]:
+    def data(self) -> np.ndarray | None:
         """:class:`~numpy.ndarray`: an array containing the data of the full track"""
         if len(self) == 0:
             return None
@@ -187,7 +187,7 @@ class DropletTrack:
         """iterate over all times and droplets, returning them in pairs"""
         return zip(self.times, self.droplets)
 
-    def append(self, droplet: SphericalDroplet, time: Optional[float] = None) -> None:
+    def append(self, droplet: SphericalDroplet, time: float | None = None) -> None:
         """append a new droplet with a time code
 
         Args:
@@ -260,7 +260,7 @@ class DropletTrack:
         """
         return self.get_trajectory(smoothing, attribute="volume")
 
-    def time_overlaps(self, other: "DropletTrack") -> bool:
+    def time_overlaps(self, other: DropletTrack) -> bool:
         """determine whether two DropletTrack instances overlaps in time
 
         Args:
@@ -334,7 +334,7 @@ class DropletTrack:
 
         return dataset
 
-    def to_file(self, path: str, info: Optional[InfoDict] = None) -> None:
+    def to_file(self, path: str, info: InfoDict | None = None) -> None:
         """store data in hdf5 file
 
         The data can be read using the classmethod :meth:`DropletTrack.from_file`.
@@ -360,7 +360,7 @@ class DropletTrack:
         self,
         attribute: str = "radius",
         smoothing: float = 0,
-        t_max: Optional[float] = None,
+        t_max: float | None = None,
         ax=None,
         **kwargs,
     ) -> PlotReference:
@@ -409,7 +409,7 @@ class DropletTrack:
 
     @plot_on_axes()
     def plot_positions(
-        self, grid: Optional[GridBase] = None, arrow: bool = True, ax=None, **kwargs
+        self, grid: GridBase | None = None, arrow: bool = True, ax=None, **kwargs
     ) -> PlotReference:
         """plot the droplet track
 
@@ -495,7 +495,7 @@ class DropletTrackList(list):
         time_course: EmulsionTimeCourse,
         *,
         method: Literal["distance", "overlap"] = "overlap",
-        grid: Optional[GridBase] = None,
+        grid: GridBase | None = None,
         progress: bool = False,
         **kwargs,
     ) -> DropletTrackList:
@@ -531,13 +531,13 @@ class DropletTrackList(list):
             # track droplets by their physical overlap
 
             def match_tracks(
-                emulsion: Emulsion, tracks_alive: List[DropletTrack], time: float
+                emulsion: Emulsion, tracks_alive: list[DropletTrack], time: float
             ) -> None:
                 """helper function adding emulsions to the tracks"""
                 found_multiple_overlap = False
                 for droplet in emulsion:
                     # determine which old tracks could be extended
-                    overlaps: List[DropletTrack] = []
+                    overlaps: list[DropletTrack] = []
                     for track in tracks_alive:
                         if track.last.overlaps(droplet, grid=grid):
                             overlaps.append(track)
@@ -558,7 +558,7 @@ class DropletTrackList(list):
             max_dist = kwargs.pop("max_dist", np.inf)
 
             def match_tracks(
-                emulsion: Emulsion, tracks_alive: List[DropletTrack], time: float
+                emulsion: Emulsion, tracks_alive: list[DropletTrack], time: float
             ) -> None:
                 """helper function adding emulsions to the tracks"""
                 added = set()
@@ -619,7 +619,7 @@ class DropletTrackList(list):
         method: Literal["distance", "overlap"] = "overlap",
         refine: bool = False,
         num_processes: int | Literal["auto"] = 1,
-        progress: Optional[bool] = None,
+        progress: bool | None = None,
     ) -> DropletTrackList:
         r"""obtain droplet tracks from stored scalar field data
 
@@ -675,7 +675,7 @@ class DropletTrackList(list):
                 obj.append(DropletTrack._from_hdf_dataset(dataset))
         return obj
 
-    def to_file(self, path: str, info: Optional[InfoDict] = None) -> None:
+    def to_file(self, path: str, info: InfoDict | None = None) -> None:
         """store data in hdf5 file
 
         The data can be read using the classmethod :meth:`DropletTrackList.from_file`.

@@ -21,16 +21,10 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Iterable,
     Iterator,
-    List,
     Literal,
-    Optional,
     Sequence,
-    Tuple,
-    Type,
-    Union,
     overload,
 )
 
@@ -61,12 +55,12 @@ class Emulsion(list):
 
     def __init__(
         self,
-        droplets: Optional[Iterable[SphericalDroplet]] = None,
+        droplets: Iterable[SphericalDroplet] | None = None,
         *,
         copy: bool = True,
         dtype: np.typing.DTypeLike | np.ndarray | SphericalDroplet = None,
         force_consistency: bool = False,
-        grid: Optional[GridBase] = None,
+        grid: GridBase | None = None,
     ):
         """
         Args:
@@ -123,12 +117,12 @@ class Emulsion(list):
     def from_random(
         cls,
         num: int,
-        grid_or_bounds: GridBase | Sequence[Tuple[float, float]],
-        radius: float | Tuple[float, float],
+        grid_or_bounds: GridBase | Sequence[tuple[float, float]],
+        radius: float | tuple[float, float],
         *,
         remove_overlapping: bool = True,
-        droplet_class: Type[SphericalDroplet] = SphericalDroplet,
-        rng: Optional[np.random.Generator] = None,
+        droplet_class: type[SphericalDroplet] = SphericalDroplet,
+        rng: np.random.Generator | None = None,
     ) -> Emulsion:
         """
         Create an emulsion with random droplets
@@ -188,7 +182,7 @@ class Emulsion(list):
         return emulsion
 
     @property
-    def dim(self) -> Optional[int]:
+    def dim(self) -> int | None:
         """int: dimensionality of space in which droplets are defined"""
         if self.dtype:
             return self.dtype["position"].shape[0]  # type: ignore
@@ -227,7 +221,7 @@ class Emulsion(list):
                 exactly min_radius are removed, so `min_radius == 0` can be used to
                 filter vanished droplets.
         """
-        droplets: List[SphericalDroplet] = [
+        droplets: list[SphericalDroplet] = [
             droplet.copy() for droplet in self if droplet.radius > min_radius
         ]
         return self.__class__(droplets, copy=False)
@@ -303,7 +297,7 @@ class Emulsion(list):
 
         else:
             # emulsion contains at least one droplet
-            classes = set(d.__class__ for d in self)
+            classes = {d.__class__ for d in self}
             if len(classes) > 1:
                 raise TypeError(
                     "Emulsion data cannot be stored contiguously if it contains a "
@@ -343,7 +337,7 @@ class Emulsion(list):
         # there are values, so the emulsion is not empty
         droplet_class = dataset.attrs["droplet_class"]
         if droplet_class == "None":
-            droplets: List[SphericalDroplet] = []
+            droplets: list[SphericalDroplet] = []
         else:
             droplets = [
                 droplet_from_data(droplet_class, data)  # type: ignore
@@ -416,7 +410,7 @@ class Emulsion(list):
             self._write_hdf_dataset(fp)
 
     @property
-    def interface_width(self) -> Optional[float]:
+    def interface_width(self) -> float | None:
         """float: the average interface width across all droplets
 
         This averages the interface widths of the individual droplets weighted by their
@@ -446,9 +440,7 @@ class Emulsion(list):
             raise RuntimeError("Bounding box of empty emulsion is undefined")
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
 
-    def get_phasefield(
-        self, grid: GridBase, label: Optional[str] = None
-    ) -> ScalarField:
+    def get_phasefield(self, grid: GridBase, label: str | None = None) -> ScalarField:
         """create a phase field representing a list of droplets
 
         Args:
@@ -487,7 +479,7 @@ class Emulsion(list):
                 self.pop(i)
 
     def get_pairwise_distances(
-        self, subtract_radius: bool = False, grid: Optional[GridBase] = None
+        self, subtract_radius: bool = False, grid: GridBase | None = None
     ) -> np.ndarray:
         """return the pairwise distance between droplets
 
@@ -566,7 +558,7 @@ class Emulsion(list):
             return dist[:, 1]  # type: ignore
 
     def remove_overlapping(
-        self, min_distance: float = 0, grid: Optional[GridBase] = None
+        self, min_distance: float = 0, grid: GridBase | None = None
     ) -> None:
         """remove all droplets that are overlapping
 
@@ -607,7 +599,7 @@ class Emulsion(list):
         """float: the total volume of all droplets"""
         return sum(droplet.volume for droplet in self)  # type: ignore
 
-    def get_size_statistics(self, incl_vanished: bool = True) -> Dict[str, float]:
+    def get_size_statistics(self, incl_vanished: bool = True) -> dict[str, float]:
         """determine size statistics of the current emulsion
 
         Args:
@@ -645,10 +637,10 @@ class Emulsion(list):
     def plot(
         self,
         ax,
-        field: Optional[ScalarField] = None,
-        image_args: Optional[Dict[str, Any]] = None,
+        field: ScalarField | None = None,
+        image_args: dict[str, Any] | None = None,
         repeat_periodically: bool = True,
-        color_value: Optional[Callable] = None,
+        color_value: Callable | None = None,
         cmap=None,
         norm=None,
         colorbar: bool | str = True,
@@ -740,7 +732,7 @@ class Emulsion(list):
 
             # and map them to colors
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-            colors: Union[List, np.ndarray] = mapper.to_rgba(values)
+            colors: list | np.ndarray = mapper.to_rgba(values)
 
             if kwargs.pop("color", None) is not None:
                 logger = logging.getLogger(self.__class__.__name__)
@@ -795,7 +787,7 @@ class EmulsionTimeCourse:
 
     def __init__(
         self,
-        emulsions: Optional[Iterable[Emulsion]] = None,
+        emulsions: Iterable[Emulsion] | None = None,
         times: np.ndarray | Sequence[float] | None = None,
     ) -> None:
         """
@@ -808,8 +800,8 @@ class EmulsionTimeCourse:
             times = emulsions.times
             emulsions = emulsions.emulsions
 
-        self.emulsions: List[Emulsion] = []
-        self.times: List[float] = []
+        self.emulsions: list[Emulsion] = []
+        self.times: list[float] = []
 
         # add all emulsions
         if emulsions is not None:
@@ -826,7 +818,7 @@ class EmulsionTimeCourse:
             raise ValueError("Lists of emulsions and times must have same length")
 
     def append(
-        self, emulsion: Emulsion, time: Optional[float] = None, copy: bool = True
+        self, emulsion: Emulsion, time: float | None = None, copy: bool = True
     ) -> None:
         """add an emulsion to the list
 
@@ -875,7 +867,7 @@ class EmulsionTimeCourse:
         """iterate over the emulsions"""
         return iter(self.emulsions)
 
-    def items(self) -> Iterator[Tuple[float, Emulsion]]:
+    def items(self) -> Iterator[tuple[float, Emulsion]]:
         """iterate over all times and emulsions, returning them in pairs"""
         return zip(self.times, self.emulsions)
 
@@ -890,9 +882,9 @@ class EmulsionTimeCourse:
         *,
         num_processes: int | Literal["auto"] = 1,
         refine: bool = False,
-        progress: Optional[bool] = None,
+        progress: bool | None = None,
         **kwargs,
-    ) -> "EmulsionTimeCourse":
+    ) -> EmulsionTimeCourse:
         r"""create an emulsion time course from a stored phase field
 
         Args:
@@ -943,7 +935,7 @@ class EmulsionTimeCourse:
         return cls(emulsions, times=storage.times)
 
     @classmethod
-    def from_file(cls, path: str, progress: bool = True) -> "EmulsionTimeCourse":
+    def from_file(cls, path: str, progress: bool = True) -> EmulsionTimeCourse:
         """create emulsion time course by reading file
 
         Args:
@@ -970,7 +962,7 @@ class EmulsionTimeCourse:
                 )
         return obj
 
-    def to_file(self, path: str, info: Optional[InfoDict] = None) -> None:
+    def to_file(self, path: str, info: InfoDict | None = None) -> None:
         """store data in hdf5 file
 
         The data can be read using the classmethod :meth:`EmulsionTimeCourse.from_file`.
@@ -1010,10 +1002,10 @@ class EmulsionTimeCourse:
     def tracker(
         self,
         interrupts: InterruptData = 1,
-        filename: Optional[str] = None,
+        filename: str | None = None,
         *,
         interval=None,
-    ) -> "DropletTracker":
+    ) -> DropletTracker:
         """return a tracker that analyzes emulsions during simulations
 
         Args:
