@@ -6,13 +6,13 @@ import numpy as np
 import pytest
 
 from pde import CahnHilliardPDE, CartesianGrid, DiffusionPDE, ScalarField, UnitGrid
-from pde.tools.misc import skipUnlessModule
+from pde.tools.misc import module_available
 
 from droplets import LengthScaleTracker, SphericalDroplet
 from droplets.emulsions import EmulsionTimeCourse
 
 
-@skipUnlessModule("h5py")
+@pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_emulsion_tracker(tmp_path):
     """test using the emulsions tracker"""
     path = tmp_path / "test_emulsion_tracker.hdf5"
