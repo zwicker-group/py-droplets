@@ -45,7 +45,7 @@ and
 We will use these indices interchangeably, although the mode :math:`k` is
 preferred internally. Note that we also consider axisymmetric spherical
 harmonics, where the order is always zero and the degree :math:`l` and the mode
-:math:`k` are thus identical.    
+:math:`k` are thus identical.
 
 
 .. autosummary::
