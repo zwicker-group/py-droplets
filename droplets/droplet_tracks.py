@@ -7,12 +7,12 @@ Classes representing the time evolution of droplets
    DropletTrack
    DropletTrackList
 
-
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
 from __future__ import annotations
 
+import functools
 import json
 import logging
 from typing import Callable, Literal
@@ -448,7 +448,7 @@ class DropletTrack:
             segments = []
             for p1, p2 in zip(xy[:-1], xy[1:]):
                 dist_direct = np.hypot(p1[0] - p2[0], p1[1] - p2[1])
-                dist_real = grid.distance_real(p1, p2)
+                dist_real = grid.distance(p1, p2, coords="cartesian")
                 close = np.isclose(dist_direct, dist_real)
                 segments.append(close)
 
@@ -568,7 +568,7 @@ class DropletTrackList(list):
                     if grid is None:
                         metric: str | Callable = "euclidean"
                     else:
-                        metric = grid.distance_real
+                        metric = functools.partial(grid.distance, coords="cartesian")
                     points_prev = [track.last.position for track in tracks_alive]
                     points_now = [droplet.position for droplet in emulsion]
                     dists = distance.cdist(points_prev, points_now, metric=metric)

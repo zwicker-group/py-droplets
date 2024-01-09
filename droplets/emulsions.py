@@ -502,7 +502,7 @@ class Emulsion(list):
                 return np.linalg.norm(p1 - p2)
 
         else:
-            get_distance = grid.distance_real
+            get_distance = functools.partial(grid.distance, coords="cartesian")
 
         # calculate pairwise distance and return it in requested form
         num = len(self)
