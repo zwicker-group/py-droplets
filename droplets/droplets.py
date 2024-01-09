@@ -32,7 +32,7 @@ import math
 import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Callable, List, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, List, Literal, Tuple, Type, TypeVar, Union, overload
 
 import numpy as np
 from numba.extending import register_jitable
@@ -41,7 +41,7 @@ from numpy.typing import DTypeLike
 from scipy import integrate
 
 from pde.fields import ScalarField
-from pde.grids.base import GridBase
+from pde.grids.base import DimensionError, GridBase
 from pde.tools.cuboid import Cuboid
 from pde.tools.misc import preserve_scalars
 from pde.tools.plotting import PlotReference, plot_on_axes
@@ -94,6 +94,77 @@ def iterate_in_pairs(it, fill=0):
         except StopIteration:
             yield first, fill
             break
+
+
+@overload
+def polar_coordinates(
+    grid: GridBase,
+    *,
+    origin: np.ndarray | None = None,
+    ret_angle: Literal[False] = False,
+) -> np.ndarray:
+    ...
+
+
+@overload
+def polar_coordinates(
+    grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: Literal[True]
+) -> tuple[np.ndarray, ...]:
+    ...
+
+
+def polar_coordinates(
+    grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: bool = False
+) -> np.ndarray | tuple[np.ndarray, ...]:
+    """return polar coordinates associated with grid points
+
+    Args:
+        grid (:class:`~pde.grids.base.GridBase`):
+            The grid whose cell coordinates are used.
+        origin (:class:`~numpy.ndarray`, optional):
+            Cartesian coordinates of the origin at which polar coordinates are anchored.
+        ret_angle (bool):
+            Determines whether angles are returned alongside the distance. If `False`
+            only the distance to the origin is returned for each support point of the
+            grid. If `True`, the distance and angles are returned. For a 1d system
+            system, the angle is defined as the sign of the difference between the
+            point and the origin, so that angles can either be 1 or -1. For 2d
+            systems and 3d systems, polar coordinates and spherical coordinates are
+            used, respectively.
+
+    Returns:
+        :class:`~numpy.ndarray` or tuple of :class:`~numpy.ndarray`:
+            Coordinates values in polar coordinates
+    """
+    if origin is None:
+        origin = np.zeros(grid.dim)
+    else:
+        origin = np.asarray(origin, dtype=float)
+        if origin.shape != (grid.dim,):
+            raise DimensionError("Dimensions are not compatible")
+
+    # calculate the difference vector between all cells and the origin
+    origin_grid = grid.transform(origin, source="cartesian", target="grid")
+    diff = grid.difference_vector(grid.cell_coords, origin_grid)
+    dist: np.ndarray = np.linalg.norm(diff, axis=-1)  # get distance
+
+    # determine distance and optionally angles for these vectors
+    if not ret_angle:
+        return dist
+
+    elif grid.dim == 1:
+        return dist, np.sign(diff)[..., 0]
+
+    elif grid.dim == 2:
+        return dist, np.arctan2(diff[..., 0], diff[..., 1])
+
+    elif grid.dim == 3:
+        theta = np.arccos(diff[..., 2] / dist)
+        phi = np.arctan2(diff[..., 0], diff[..., 1])
+        return dist, theta, phi
+
+    else:
+        raise NotImplementedError(f"Cannot calculate angles for dimension {grid.dim}")
 
 
 class DropletBase:
@@ -376,7 +447,7 @@ class SphericalDroplet(DropletBase):
         if grid is None:
             distance = float(np.linalg.norm(self.position - other.position))
         else:
-            distance = grid.distance_real(self.position, other.position)
+            distance = grid.distance(self.position, other.position, coords="cartesian")
         return distance < self.radius + other.radius
 
     @classmethod
@@ -464,8 +535,8 @@ class SphericalDroplet(DropletBase):
             )
 
         # calculate distances from droplet center
-        dist = grid.polar_coordinates_real(self.position)
-        return (dist < self.radius).astype(dtype)  # type: ignore
+        dist = polar_coordinates(grid, origin=self.position, ret_angle=False)
+        return (dist < self.radius).astype(dtype)
 
     def get_phase_field(
         self,
@@ -692,7 +763,7 @@ class DiffuseDroplet(SphericalDroplet):
             interface_width = self.interface_width
 
         # calculate distances from droplet center
-        dist: np.ndarray = grid.polar_coordinates_real(self.position, ret_angle=False)  # type: ignore
+        dist = polar_coordinates(grid, origin=self.position, ret_angle=False)
 
         # make the image
         if interface_width == 0 or np.issubdtype(dtype, bool):
@@ -838,7 +909,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
             interface_width = self.interface_width
 
         # calculate grid distance from droplet center
-        dist, *angles = grid.polar_coordinates_real(self.position, ret_angle=True)
+        dist, *angles = polar_coordinates(grid, origin=self.position, ret_angle=True)
 
         # calculate interface distance from droplet center
         interface = self.interface_distance(*angles)
