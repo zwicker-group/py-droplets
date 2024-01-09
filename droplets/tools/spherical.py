@@ -60,6 +60,7 @@ harmonics, where the order is always zero and the degree :math:`l` and the mode
    make_surface_from_radius_compiled
    points_cartesian_to_spherical
    points_spherical_to_cartesian
+   polar_coordinates
    spherical_index_k
    spherical_index_lm
    spherical_index_count
@@ -73,12 +74,14 @@ harmonics, where the order is always zero and the degree :math:`l` and the mode
 
 from __future__ import annotations
 
-from typing import Callable, TypeVar
+import typing as t
+from typing import Callable, Literal, TypeVar
 
 import numpy as np
 from numba.extending import overload, register_jitable
 from scipy.special import sph_harm
 
+from pde.grids.base import DimensionError, GridBase
 from pde.grids.spherical import volume_from_radius
 from pde.tools.numba import jit
 
@@ -348,6 +351,77 @@ def points_spherical_to_cartesian(points: np.ndarray) -> np.ndarray:
     ps_cartesian[..., 1] = points[..., 0] * np.sin(points[..., 2]) * sin_θ
     ps_cartesian[..., 2] = points[..., 0] * np.cos(points[..., 1])
     return ps_cartesian
+
+
+@t.overload
+def polar_coordinates(
+    grid: GridBase,
+    *,
+    origin: np.ndarray | None = None,
+    ret_angle: Literal[False] = False,
+) -> np.ndarray:
+    ...
+
+
+@t.overload
+def polar_coordinates(
+    grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: Literal[True]
+) -> tuple[np.ndarray, ...]:
+    ...
+
+
+def polar_coordinates(
+    grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: bool = False
+) -> np.ndarray | tuple[np.ndarray, ...]:
+    """return polar coordinates associated with grid points
+
+    Args:
+        grid (:class:`~pde.grids.base.GridBase`):
+            The grid whose cell coordinates are used.
+        origin (:class:`~numpy.ndarray`, optional):
+            Cartesian coordinates of the origin at which polar coordinates are anchored.
+        ret_angle (bool):
+            Determines whether angles are returned alongside the distance. If `False`
+            only the distance to the origin is returned for each support point of the
+            grid. If `True`, the distance and angles are returned. For a 1d system
+            system, the angle is defined as the sign of the difference between the
+            point and the origin, so that angles can either be 1 or -1. For 2d
+            systems and 3d systems, polar coordinates and spherical coordinates are
+            used, respectively.
+
+    Returns:
+        :class:`~numpy.ndarray` or tuple of :class:`~numpy.ndarray`:
+            Coordinates values in polar coordinates
+    """
+    if origin is None:
+        origin = np.zeros(grid.dim)
+    else:
+        origin = np.asarray(origin, dtype=float)
+        if origin.shape != (grid.dim,):
+            raise DimensionError("Dimensions are not compatible")
+
+    # calculate the difference vector between all cells and the origin
+    origin_grid = grid.transform(origin, source="cartesian", target="grid")
+    diff = grid.difference_vector(origin_grid, grid.cell_coords)
+    dist: np.ndarray = np.linalg.norm(diff, axis=-1)  # get distance
+
+    # determine distance and optionally angles for these vectors
+    if not ret_angle:
+        return dist
+
+    elif grid.dim == 1:
+        return dist, np.sign(diff)[..., 0]
+
+    elif grid.dim == 2:
+        return dist, np.arctan2(diff[..., 1], diff[..., 0])
+
+    elif grid.dim == 3:
+        theta = np.arccos(diff[..., 2] / dist)
+        phi = np.arctan2(diff[..., 1], diff[..., 0])
+        return dist, theta, phi
+
+    else:
+        raise NotImplementedError(f"Cannot calculate angles for dimension {grid.dim}")
 
 
 def spherical_index_k(degree: int, order: int = 0) -> int:

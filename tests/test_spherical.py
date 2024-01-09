@@ -10,6 +10,8 @@ import pytest
 from numba import njit
 from scipy import integrate
 
+import pde
+
 from droplets.tools import spherical
 
 
@@ -126,3 +128,33 @@ def test_spherical_harmonics_real():
                 assert overlap == pytest.approx(1)
             else:
                 assert overlap == pytest.approx(0)
+
+
+def test_polar_coordinates_1d():
+    """test polar_coordinates function in 1d"""
+    grid = pde.UnitGrid([2])
+    p1, a1 = spherical.polar_coordinates(grid, ret_angle=True)
+    p2 = grid.point_from_cartesian(grid.cell_coords, full=True)
+    np.testing.assert_allclose(a1, 1)
+    np.testing.assert_allclose(p1[:, np.newaxis], p2)
+
+
+def test_polar_coordinates_2d():
+    """test polar_coordinates function in 2d"""
+    grid = pde.UnitGrid([2, 2])
+    grid_sph = pde.PolarSymGrid(5, 1)
+    p1 = spherical.polar_coordinates(grid, ret_angle=True)
+    p2 = grid_sph.point_from_cartesian(grid.cell_coords, full=True)
+    np.testing.assert_allclose(np.moveaxis(p1, 0, -1), p2)
+
+
+def test_polar_coordinates_3d():
+    """test polar_coordinates function in 3d"""
+    grid = pde.UnitGrid([2, 2, 2])
+    p1 = spherical.polar_coordinates(grid, ret_angle=True)
+    p2 = spherical.points_cartesian_to_spherical(grid.cell_coords)
+    np.testing.assert_allclose(np.moveaxis(p1, 0, -1), p2)
+
+    grid_sph = pde.SphericalSymGrid(5, 1)
+    p3 = grid_sph.point_from_cartesian(grid.cell_coords, full=True)
+    np.testing.assert_allclose(np.moveaxis(p1, 0, -1), p3)
