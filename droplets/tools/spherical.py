@@ -359,15 +359,13 @@ def polar_coordinates(
     *,
     origin: np.ndarray | None = None,
     ret_angle: Literal[False] = False,
-) -> np.ndarray:
-    ...
+) -> np.ndarray: ...
 
 
 @t.overload
 def polar_coordinates(
     grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: Literal[True]
-) -> tuple[np.ndarray, ...]:
-    ...
+) -> tuple[np.ndarray, ...]: ...
 
 
 def polar_coordinates(

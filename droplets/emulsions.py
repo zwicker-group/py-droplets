@@ -197,12 +197,10 @@ class Emulsion(list):
         return Emulsion(list.__add__(self, rhs))
 
     @overload  # type: ignore
-    def __getitem__(self, key: int) -> SphericalDroplet:
-        ...
+    def __getitem__(self, key: int) -> SphericalDroplet: ...
 
     @overload
-    def __getitem__(self, key: slice) -> Emulsion:
-        ...
+    def __getitem__(self, key: slice) -> Emulsion: ...
 
     def __getitem__(self, key):
         # return result from extended slicing as Emulsion
