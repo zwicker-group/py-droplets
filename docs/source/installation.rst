@@ -1,7 +1,7 @@
 Installation
 ############
 
-This `py-droplets` package is developed for python 3.8+ and should run on all
+This `py-droplets` package is developed for python 3.9+ and should run on all
 common platforms.
 The code is tested under Linux, Windows, and macOS.
 
@@ -37,11 +37,11 @@ The required packages are listed in the table below:
 ===========  ========= =========
 Package      Version   Usage 
 ===========  ========= =========
-matplotlib   >=3.1.0   Visualizing results
+matplotlib   >=3.1     Visualizing results
 numpy        >=1.22    Array library used for storing data
-numba        >=0.48    Just-in-time compilation to accelerate numerics
+numba        >=0.59    Just-in-time compilation to accelerate numerics
 scipy        >=1.4     Miscellaneous scientific functions
-py-pde       >=0.35    Simulating partial differential equations
+py-pde       >=0.37    Simulating partial differential equations
 ===========  ========= =========
 
 These package can be installed via your operating system's package manager, e.g.

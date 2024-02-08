@@ -20,9 +20,10 @@ import functools
 import logging
 import math
 import warnings
+from collections.abc import Iterable, Sequence
 from functools import reduce
 from itertools import product
-from typing import Any, Callable, Iterable, Literal, Sequence
+from typing import Any, Callable, Literal
 
 import numpy as np
 from numpy.lib.recfunctions import (

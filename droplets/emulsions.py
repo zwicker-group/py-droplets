@@ -17,16 +17,8 @@ import json
 import logging
 import math
 import warnings
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    Literal,
-    Sequence,
-    overload,
-)
+from collections.abc import Iterable, Iterator, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Literal, overload
 
 import numpy as np
 
