@@ -6,7 +6,7 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.8,<3.12"
+requires-python = ">=3.9,<3.13"
 dynamic = ["version"]
 
 keywords = ["emulsions", "image-analysis"]
@@ -17,20 +17,20 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 # Requirements for setuptools
 dependencies = [
-    "matplotlib>=3.1.0",
-    "numba>=0.56.0",
-    "numpy>=1.22.0",
-    "scipy>=1.4.0",
-    "sympy>=1.5.0",
-    "py-pde>=0.35",
+    "matplotlib>=3.1",
+    "numba>=0.59",
+    "numpy>=1.22",
+    "scipy>=1.4",
+    "sympy>=1.5",
+    "py-pde>=0.37",
 ]
 
 [project.optional-dependencies]
@@ -64,7 +64,7 @@ namespaces = false
 write_to = "droplets/_version.py"
 
 [tool.black]
-target_version = ["py38"]
+target_version = ["py39"]
 
 [tool.isort]
 profile = "black"
@@ -85,7 +85,7 @@ filterwarnings = [
 omit = ['*/test*']
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 plugins = "numpy.typing.mypy_plugin"
 warn_return_any = true
 warn_unused_configs = true

@@ -32,7 +32,7 @@ import math
 import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Callable, List, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, TypeVar, Union
 
 import numpy as np
 from numba.extending import register_jitable
@@ -49,7 +49,7 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 from .tools import spherical
 
 TDroplet = TypeVar("TDroplet", bound="DropletBase")
-DTypeList = List[Union[Tuple[str, Type[Any]], Tuple[str, Type[Any], Tuple[int, ...]]]]
+DTypeList = list[Union[tuple[str, type[Any]], tuple[str, type[Any], tuple[int, ...]]]]
 
 
 def get_dtype_field_size(dtype: DTypeLike, field_name: str) -> int:
