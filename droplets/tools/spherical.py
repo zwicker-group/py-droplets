@@ -320,7 +320,8 @@ def points_cartesian_to_spherical(points: np.ndarray) -> np.ndarray:
         :class:`~numpy.ndarray`: Points (r, θ, φ) in spherical coordinates
     """
     points = np.atleast_1d(points)
-    assert points.shape[-1] == 3, "Points must have 3 coordinates"
+    if points.shape[-1] != 3:
+        raise DimensionError("Points must have 3 coordinates")
 
     ps_spherical = np.empty(points.shape)
     # calculate radius in [0, infinity]
@@ -343,7 +344,8 @@ def points_spherical_to_cartesian(points: np.ndarray) -> np.ndarray:
         :class:`~numpy.ndarray`: Points in Cartesian coordinates
     """
     points = np.atleast_1d(points)
-    assert points.shape[-1] == 3, "Points must have 3 coordinates"
+    if points.shape[-1] != 3:
+        raise DimensionError("Points must have 3 coordinates")
 
     sin_θ = np.sin(points[..., 1])
     ps_cartesian = np.empty(points.shape)
