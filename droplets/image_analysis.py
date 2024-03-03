@@ -417,7 +417,8 @@ def locate_droplets(
     Returns:
         :class:`~droplets.emulsions.Emulsion`: All detected droplets
     """
-    assert isinstance(phase_field, ScalarField)
+    if not isinstance(phase_field, ScalarField):
+        raise TypeError("`phase_field` must be ScalarField")
     dim = phase_field.grid.dim  # dimensionality of the space
 
     if modes > 0 and dim not in [2, 3]:
@@ -581,7 +582,8 @@ def refine_droplet(
         :class:`~droplets.droplets.DiffuseDroplet`:
             The refined droplet as an instance of the argument `droplet`
     """
-    assert isinstance(phase_field, ScalarField)
+    if not isinstance(phase_field, ScalarField):
+        raise TypeError("`phase_field` must be ScalarField")
     if least_squares_params is None:
         least_squares_params = {}
     if tolerance is not None:

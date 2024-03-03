@@ -153,7 +153,8 @@ class Emulsion(list):
 
         else:
             bnds = np.atleast_2d(grid_or_bounds)
-            assert bnds.ndim == 2 and bnds.shape[0] > 0 and bnds.shape[1] == 2
+            if bnds.ndim != 2 or bnds.shape[0] == 0 or bnds.shape[1] != 2:
+                raise ValueError(f"Bounds must be array of shape (n, 2), got {bnds}")
 
             def get_position():
                 return rng.uniform(bnds[:, 0], bnds[:, 1])

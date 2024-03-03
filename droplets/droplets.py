@@ -280,7 +280,8 @@ class SphericalDroplet(DropletBase):
             :class:`numpy.dtype`: the (structured) dtype associated with this class
         """
         position = np.atleast_1d(kwargs.pop("position"))
-        assert not kwargs  # no more keyword arguments
+        if kwargs:
+            raise ValueError(f"Leftover keyword arguments: {kwargs}")
         dim = len(position)
         return [("position", float, (dim,)), ("radius", float)]
 
@@ -789,7 +790,8 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     @amplitudes.setter
     def amplitudes(self, value: np.ndarray | None = None) -> None:
         if value is None:
-            assert self.modes == 0
+            if self.modes != 0:
+                raise ValueError("Require values for amplitudes")
             self.data["amplitudes"] = np.broadcast_to(0.0, (0,))
         else:
             self.data["amplitudes"] = np.broadcast_to(value, (self.modes,))
