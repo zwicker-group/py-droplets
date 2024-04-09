@@ -789,12 +789,13 @@ def get_length_scale(
 
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):
-            The scala field being analyzed
+            The scalar field to analyze
         method (str):
             A string determining which method is used to calculate the length scale.
             Valid options are `structure_factor_maximum` (numerically determine the
-            maximum in the structure factor) and `structure_factor_mean` (calculate the
-            mean of the structure factor).
+            maximum in the structure factor), `structure_factor_mean` (calculate the
+            mean of the structure factor), and `droplet_detection` (determine the number
+            of droplets and estimate average separation).
 
     Additional supported keyword arguments depend on the chosen method. For instance,
     the methods involving the structure factor allow for a boolean flag `full_output`,
