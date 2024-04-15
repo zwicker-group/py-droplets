@@ -122,6 +122,8 @@ class DropletTracker(TrackerBase):
 
     This tracker is useful when only the parameters of actual droplets are needed, since
     it stores considerably less information compared to the full scalar field.
+    The file written when `filename` is supplied can be read in later using
+    :meth:`~droplets.emulsions.EmulsionTimeCourse.from_file`.
 
     Attributes:
         data (:class:`~droplets.emulsions.EmulsionTimeCourse`):
@@ -134,7 +136,7 @@ class DropletTracker(TrackerBase):
         interrupts: InterruptData = 1,
         filename: str | None = None,
         *,
-        emulsion_timecourse=None,
+        emulsion_timecourse: EmulsionTimeCourse | None = None,
         source: None | int | Callable = None,
         threshold: float | Literal["auto", "extrema", "mean", "otsu"] = 0.5,
         minimal_radius: float = 0,
@@ -161,12 +163,13 @@ class DropletTracker(TrackerBase):
 
         Args:
             interrupts:
-                {ARG_TRACKER_INTERRUPTS}
+                {ARG_TRACKER_INTERRUPT}
             filename (str, optional):
-                Determines the file to which the final data is written as an HDF5 file.
+                Determines the path to the HDF5 file to which the
+                :class:`~droplets.emulsions.EmulsionTimeCourse` data is written.
             emulsion_timecourse (:class:`EmulsionTimeCourse`, optional):
                 Can be an instance of :class:`~droplets.emulsions.EmulsionTimeCourse`
-                that is used to store the data.
+                that is used to store the data. If omitted, an empty class is initiated.
             source (int or callable, optional):
                 Determines how a field is extracted from `fields`. If `None`, `fields`
                 is passed as is, assuming it is already a scalar field. This works for
