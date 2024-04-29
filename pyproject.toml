@@ -29,7 +29,6 @@ dependencies = [
     "numba>=0.59",
     "numpy>=1.22",
     "scipy>=1.4",
-    "sympy>=1.5",
     "py-pde>=0.37",
 ]
 
