@@ -30,7 +30,7 @@ dependencies = [
     "numba>=0.59",
     "numpy>=1.22",
     "scipy>=1.4",
-    "py-pde>=0.37",
+    "py-pde>=0.38",
 ]
 
 [project.urls]

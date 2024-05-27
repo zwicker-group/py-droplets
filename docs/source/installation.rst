@@ -42,7 +42,7 @@ matplotlib   >=3.1     Visualizing results
 numpy        >=1.22    Array library used for storing data
 numba        >=0.59    Just-in-time compilation to accelerate numerics
 scipy        >=1.4     Miscellaneous scientific functions
-py-pde       >=0.37    Simulating partial differential equations
+py-pde       >=0.38    Simulating partial differential equations
 ===========  ========= =========
 
 These package can be installed via your operating system's package manager, e.g.
