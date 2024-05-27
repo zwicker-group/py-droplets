@@ -13,12 +13,12 @@ the installation is in principle as simple as running
     pip install py-droplets
 
 
-In order to have all features of the package available, you might also want to 
+In order to have all features of the package available, you might also want to
 install the following optional packages:
 
 .. code-block:: bash
 
-	pip install h5py pyfftw
+    pip install h5py pyfftw
 
 
 Installing from source
@@ -35,8 +35,9 @@ The code builds on other python packages, which need to be installed for
 The required packages are listed in the table below:
 
 ===========  ========= =========
-Package      Version   Usage 
+Package      Version   Usage
 ===========  ========= =========
+h5py         >=2.10    Reading and writing data
 matplotlib   >=3.1     Visualizing results
 numpy        >=1.22    Array library used for storing data
 numba        >=0.59    Just-in-time compilation to accelerate numerics
@@ -53,7 +54,7 @@ latest version of the package.
 The `py-pde` package is available on `pip`, but if this is inconvenient the
 package can also be installed from github sources, as `described in its 
 documentation 
-<https://py-pde.readthedocs.io/en/latest/installation.html#installing-from-source>`_.  
+<https://py-pde.readthedocs.io/en/latest/installation.html#installing-from-source>`_
 
 A small subset of the package will only be available if extra optional packages are
 installed. Currently, this only concerns the `h5py` package for reading hdf files.
