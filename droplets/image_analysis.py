@@ -747,7 +747,7 @@ def get_structure_factor(
         isinstance(wave_numbers, str) and wave_numbers == "auto"
     )
 
-    if smoothing is not None and smoothing != "none":
+    if smoothing is not None and smoothing != "none" and smoothing != 0:
         # construct the smoothed function of the structure factor
         if smoothing == "auto":
             smoothing = k_mag.max() / 128
@@ -827,7 +827,8 @@ def get_length_scale(
         k_mag, sf = get_structure_factor(scalar_field, smoothing=None, add_zero=True)
 
         # smooth the structure factor
-        if kwargs.pop("smoothing", None) is None:
+        smoothing = kwargs.pop("smoothing", None)
+        if smoothing is None:
             smoothing = 0.01 * scalar_field.grid.typical_discretization
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
 
@@ -837,22 +838,27 @@ def get_length_scale(
 
             # determine maximum (excluding k=0)
             max_est = k_mag[1 + np.argmax(sf[1:])]
-            bracket = np.array([0.2, 1, 5]) * max_est
-            logger.debug(f"Search maximum of structure factor in interval {bracket}")
-            try:
-                result = optimize.minimize_scalar(
-                    lambda x: -sf_smooth(x), bracket=bracket
+            for window_size in [5, 1, 0.2]:
+                bracket = [max_est / window_size, max_est, max_est * window_size]
+                logger.debug(
+                    f"Search maximum of structure factor in interval {bracket} with "
+                    f"window_size={window_size}"
                 )
-            except Exception:
-                logger.exception("Could not determine maximal structure factor")
-                length_scale = math.nan
-            else:
-                if not result.success:
-                    logger.warning(
-                        "Maximization of structure factor resulted in the following "
-                        f"message: {result.message}"
+                try:
+                    result = optimize.minimize_scalar(
+                        lambda x: -sf_smooth(x), bracket=bracket
                     )
-                length_scale = 2 * np.pi / result.x
+                except Exception:
+                    logger.warning("Could not determine maximal structure factor")
+                    length_scale = math.nan
+                else:
+                    if not result.success:
+                        logger.warning(
+                            "Maximization of structure factor resulted in the "
+                            f"following message: {result.message}"
+                        )
+                    length_scale = 2 * np.pi / result.x
+                    break  # found some answer, which we will use
 
         if kwargs.pop("full_output", False):
             return length_scale, sf_smooth
