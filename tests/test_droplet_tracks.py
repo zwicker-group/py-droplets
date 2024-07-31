@@ -14,7 +14,7 @@ from droplets.emulsions import Emulsion, EmulsionTimeCourse
 
 
 def test_droplettrack():
-    """test some droplet track functions"""
+    """Test some droplet track functions."""
     t1 = DropletTrack()
     for i in range(4):
         t1.append(SphericalDroplet([i], i), i)
@@ -44,7 +44,7 @@ def test_droplettrack():
 
 @pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_droplettrack_io(tmp_path):
-    """test writing and reading droplet tracks"""
+    """Test writing and reading droplet tracks."""
     path = tmp_path / "test_droplettrack_io.hdf5"
 
     t1 = DropletTrack()
@@ -60,7 +60,7 @@ def test_droplettrack_io(tmp_path):
 
 
 def test_droplettrack_plotting():
-    """test writing and reading droplet tracks"""
+    """Test writing and reading droplet tracks."""
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
     t = DropletTrack(droplets=ds, times=[0, 10])
     t.plot("radius")
@@ -70,7 +70,7 @@ def test_droplettrack_plotting():
 
 
 def test_droplettracklist():
-    """test droplet tracks"""
+    """Test droplet tracks."""
     t1 = DropletTrack()
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
     t2 = DropletTrack(droplets=ds, times=[0, 10])
@@ -86,7 +86,7 @@ def test_droplettracklist():
 
 @pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_droplettracklist_io(tmp_path):
-    """test writing and reading droplet tracks"""
+    """Test writing and reading droplet tracks."""
     path = tmp_path / "test_droplettracklist_io.hdf5"
 
     t1 = DropletTrack()
@@ -100,7 +100,7 @@ def test_droplettracklist_io(tmp_path):
 
 
 def test_droplettracklist_plotting():
-    """test plotting droplet tracks"""
+    """Test plotting droplet tracks."""
     t1 = DropletTrack()
     ds = [DiffuseDroplet([0, 1], 10, 0.5)] * 2
     t2 = DropletTrack(droplets=ds, times=[0, 10])
@@ -109,7 +109,7 @@ def test_droplettracklist_plotting():
 
 
 def test_conversion_from_emulsion_timecourse():
-    """test converting between DropletTrackList and EmulsionTimecourse"""
+    """Test converting between DropletTrackList and EmulsionTimecourse."""
     d1 = SphericalDroplet([0, 1], 5)
     d2 = SphericalDroplet([10, 15], 4)
     times = [0, 10]

@@ -28,7 +28,7 @@ from droplets.emulsions import Emulsion
 @pytest.mark.parametrize("size", [16, 17])
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_sym_unit(size, periodic, rng):
-    """tests simple droplets localization in 2d"""
+    """Tests simple droplets localization in 2d."""
     pos = rng.random(2) * size
     radius = rng.uniform(2, 5)
     width = rng.uniform(1, 2)
@@ -54,7 +54,7 @@ def test_localization_sym_unit(size, periodic, rng):
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_sym_rect(periodic, rng):
-    """tests simple droplets localization in 2d with a rectangular grid"""
+    """Tests simple droplets localization in 2d with a rectangular grid."""
     size = 16
 
     pos = rng.uniform(-4, 4, size=2)
@@ -81,7 +81,7 @@ def test_localization_sym_rect(periodic, rng):
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_perturbed_2d(periodic, rng):
-    """tests localization of perturbed 2d droplets"""
+    """Tests localization of perturbed 2d droplets."""
     size = 16
 
     pos = rng.uniform(-4, 4, size=2)
@@ -108,7 +108,7 @@ def test_localization_perturbed_2d(periodic, rng):
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_perturbed_3d(periodic, rng):
-    """tests localization of perturbed 3d droplets"""
+    """Tests localization of perturbed 3d droplets."""
     size = 8
 
     pos = rng.uniform(-2, 2, size=3)
@@ -139,7 +139,7 @@ def test_localization_perturbed_3d(periodic, rng):
 
 
 def test_localization_polar(rng):
-    """tests simple droplets localization in polar grid"""
+    """Tests simple droplets localization in polar grid."""
     radius = rng.uniform(2, 3)
     width = rng.uniform(0.5, 1.5)
     d1 = DiffuseDroplet((0, 0), radius, interface_width=width)
@@ -161,7 +161,7 @@ def test_localization_polar(rng):
 
 
 def test_localization_spherical(rng):
-    """tests simple droplets localization in spherical grid"""
+    """Tests simple droplets localization in spherical grid."""
     radius = rng.uniform(2, 3)
     width = rng.uniform(0.5, 1.5)
     d1 = DiffuseDroplet((0, 0, 0), radius, interface_width=width)
@@ -184,7 +184,7 @@ def test_localization_spherical(rng):
 
 @pytest.mark.parametrize("periodic", [True, False])
 def test_localization_cylindrical(periodic, rng):
-    """tests simple droplets localization in cylindrical grid"""
+    """Tests simple droplets localization in cylindrical grid."""
     pos = (0, 0, rng.uniform(-4, 4))
     radius = rng.uniform(2, 3)
     width = rng.uniform(0.5, 1.5)
@@ -208,7 +208,7 @@ def test_localization_cylindrical(periodic, rng):
 
 
 def test_localization_threshold(rng):
-    """tests different localization thresholds"""
+    """Tests different localization thresholds."""
     pos = rng.random(2) * 16
     radius = rng.uniform(2, 5)
     width = rng.uniform(1, 2)
@@ -233,7 +233,7 @@ def test_localization_threshold(rng):
     "adjust_values, auto_values", [(False, False), (True, False), (True, True)]
 )
 def test_localization_vmin_vmax(adjust_values, auto_values):
-    """tests localization of droplets with non-normalized densities"""
+    """Tests localization of droplets with non-normalized densities."""
     # create perturbed droplet
     grid = CartesianGrid(bounds=[[-2, 2], [-2, 2]], shape=32, periodic=True)
     d1 = DiffuseDroplet([0, 0], 1, 0.2)
@@ -255,7 +255,7 @@ def test_localization_vmin_vmax(adjust_values, auto_values):
 
 
 def test_get_structure_factor(rng):
-    """test the structure factor method"""
+    """Test the structure factor method."""
     grid = UnitGrid([512], periodic=True)
     k0 = rng.uniform(1, 3)
     field = ScalarField.from_expression(grid, f"sin({k0} * x)")
@@ -273,7 +273,7 @@ def test_get_structure_factor(rng):
     ],
 )
 def test_get_length_scale(method):
-    """test determining the length scale"""
+    """Test determining the length scale."""
     grid = CartesianGrid([[0, 8 * np.pi]], 64, periodic=True)
     c = ScalarField.from_expression(grid, "sin(x)")
     s = image_analysis.get_length_scale(c, method=method)
@@ -281,7 +281,7 @@ def test_get_length_scale(method):
 
 
 def test_get_length_scale_edge():
-    """test determining the length scale for edge cases"""
+    """Test determining the length scale for edge cases."""
     grid = CartesianGrid(bounds=[[0, 1]], shape=32, periodic=True)
     for n in range(1, 4):
         c = ScalarField.from_expression(grid, f"0.2 + 0.2*sin(2*{n}*pi*x)")
@@ -290,7 +290,7 @@ def test_get_length_scale_edge():
 
 
 def test_emulsion_processing():
-    """test identifying emulsions in phase fields"""
+    """Test identifying emulsions in phase fields."""
     e1 = Emulsion(
         [
             DiffuseDroplet(position=[5, 6], radius=9, interface_width=1),
@@ -311,7 +311,7 @@ def test_emulsion_processing():
 
 
 def test_structure_factor_random():
-    """test the structure factor function for random input"""
+    """Test the structure factor function for random input."""
     g1 = CartesianGrid([[0, 10]] * 2, 64, periodic=True)
     f1 = ScalarField.random_colored(g1, -2)
 
@@ -341,7 +341,7 @@ def test_structure_factor_random():
     ],
 )
 def test_locating_stripes(grid):
-    """check whether the locate_droplets function can deal with stripe morphologies"""
+    """Check whether the locate_droplets function can deal with stripe morphologies."""
     field = ScalarField(grid, 1)
     em = image_analysis.locate_droplets(field)
     assert len(em) == 1
@@ -351,7 +351,7 @@ def test_locating_stripes(grid):
 @pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("pos", [0.5, 1.5, 3, 5.5, 6.5])
 def test_droplets_on_periodic_grids(dim, pos):
-    """check whether the locate_droplets function can deal with periodic BCs"""
+    """Check whether the locate_droplets function can deal with periodic BCs."""
     grid = UnitGrid([7] * dim, periodic=True)
     field = SphericalDroplet([pos] * dim, 3).get_phase_field(grid)
     em = image_analysis.locate_droplets(field)
@@ -362,7 +362,7 @@ def test_droplets_on_periodic_grids(dim, pos):
 
 @pytest.mark.parametrize("num_processes", [1, 2])
 def test_droplet_refine_parallel(num_processes):
-    """tests droplets localization in 2d with and without multiprocessing"""
+    """Tests droplets localization in 2d with and without multiprocessing."""
     grid = UnitGrid([32, 32])
     radii = [3, 2.7, 4.3]
     pos = [[7, 8], [9, 22], [22, 10]]

@@ -1,5 +1,4 @@
-"""
-Functions and classes for analyzing emulsions and droplets
+"""Functions and classes for analyzing emulsions and droplets.
 
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """

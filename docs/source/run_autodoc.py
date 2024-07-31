@@ -11,8 +11,8 @@ OUTPUT_PATH = "packages"
 
 
 def replace_in_file(infile, replacements, outfile=None):
-    """reads in a file, replaces the given data using python formatting and
-    writes back the result to a file.
+    """Reads in a file, replaces the given data using python formatting and writes back
+    the result to a file.
 
     Args:
         infile (str):
@@ -22,7 +22,6 @@ def replace_in_file(infile, replacements, outfile=None):
         outfile (str):
             Output file to which the data is written. If it is omitted, the
             input file will be overwritten instead
-
     """
     if outfile is None:
         outfile = infile

@@ -1,5 +1,4 @@
-"""
-Module defining classes for tracking droplets in simulations.
+"""Module defining classes for tracking droplets in simulations.
 
 .. autosummary::
    :nosignatures:
@@ -23,7 +22,7 @@ from .emulsions import EmulsionTimeCourse
 
 
 class LengthScaleTracker(TrackerBase):
-    """Tracker that stores length scales measured in simulations
+    """Tracker that stores length scales measured in simulations.
 
     Attributes:
         times (list):
@@ -75,7 +74,7 @@ class LengthScaleTracker(TrackerBase):
         self.verbose = verbose
 
     def handle(self, field: FieldBase, t: float):
-        """handle data supplied to this tracker
+        """Handle data supplied to this tracker.
 
         Args:
             field (:class:`~pde.fields.FieldBase`):
@@ -102,7 +101,7 @@ class LengthScaleTracker(TrackerBase):
         self.length_scales.append(length)  # type: ignore
 
     def finalize(self, info: InfoDict | None = None) -> None:
-        """finalize the tracker, supplying additional information
+        """Finalize the tracker, supplying additional information.
 
         Args:
             info (dict):
@@ -118,7 +117,7 @@ class LengthScaleTracker(TrackerBase):
 
 
 class DropletTracker(TrackerBase):
-    """Detect droplets in a scalar field during simulations
+    """Detect droplets in a scalar field during simulations.
 
     This tracker is useful when only the parameters of actual droplets are needed, since
     it stores considerably less information compared to the full scalar field.
@@ -214,7 +213,7 @@ class DropletTracker(TrackerBase):
         self.perturbation_modes = perturbation_modes
 
     def handle(self, field: FieldBase, t: float) -> None:
-        """handle data supplied to this tracker
+        """Handle data supplied to this tracker.
 
         Args:
             field (:class:`~pde.fields.base.FieldBase`):
@@ -238,7 +237,7 @@ class DropletTracker(TrackerBase):
         self.data.append(emulsion, t)
 
     def finalize(self, info: InfoDict | None = None) -> None:
-        """finalize the tracker, supplying additional information
+        """Finalize the tracker, supplying additional information.
 
         Args:
             info (dict):
