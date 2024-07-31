@@ -1,5 +1,5 @@
 -r ../requirements.txt
-black>=24.*
+black>=24
 docformatter>=1.7
 isort>=5.1
 pyupgrade>=3
