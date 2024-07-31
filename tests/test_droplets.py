@@ -14,7 +14,7 @@ from droplets import droplets
 
 
 def test_simple_droplet():
-    """test a given simple droplet"""
+    """Test a given simple droplet."""
     d = droplets.SphericalDroplet((1, 2), 1)
     assert d.surface_area == pytest.approx(2 * np.pi)
     np.testing.assert_allclose(d.interface_position(0), [2, 2])
@@ -26,7 +26,7 @@ def test_simple_droplet():
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_random_droplet(dim, rng):
-    """tests simple droplet"""
+    """Tests simple droplet."""
     pos = rng.uniform(0, 10, dim)
     radius = rng.uniform(2, 3)
     d1 = droplets.SphericalDroplet(pos, radius)
@@ -55,7 +55,7 @@ def test_random_droplet(dim, rng):
 
 
 def test_perturbed_droplet_2d():
-    """test methods of perturbed droplets in 2d"""
+    """Test methods of perturbed droplets in 2d."""
     d = droplets.PerturbedDroplet2D([0, 1], 1, 0.1, [0.0, 0.1, 0.2])
     d.volume
     d.interface_distance(0.1)
@@ -64,7 +64,7 @@ def test_perturbed_droplet_2d():
 
 
 def test_perturbed_droplet_3d():
-    """test methods of perturbed droplets in 3d"""
+    """Test methods of perturbed droplets in 3d."""
     d = droplets.PerturbedDroplet3D([0, 1, 2], 1, 0.1, [0.0, 0.1, 0.2, 0.3])
     d.volume_approx
     d.interface_distance(0.1, 0.2)
@@ -73,7 +73,7 @@ def test_perturbed_droplet_3d():
 
 
 def test_perturbed_droplet_3d_axis_sym():
-    """test methods of axisymmetrically perturbed droplets in 3d"""
+    """Test methods of axisymmetrically perturbed droplets in 3d."""
     d = droplets.PerturbedDroplet3DAxisSym([0, 0, 0], 1, 0.1, [0.0, 0.1])
     d.volume_approx
     d.interface_distance(0.1)
@@ -84,7 +84,7 @@ def test_perturbed_droplet_3d_axis_sym():
 
 
 def test_perturbed_volume(rng):
-    """test volume calculation of perturbed droplets"""
+    """Test volume calculation of perturbed droplets."""
     pos = rng.normal(size=2)
     radius = 1 + rng.random()
     amplitudes = rng.uniform(-0.2, 0.2, 6)
@@ -108,7 +108,7 @@ def test_perturbed_volume(rng):
 
 
 def test_surface_area(rng):
-    """test surface area calculation of droplets"""
+    """Test surface area calculation of droplets."""
     # perturbed 2d droplet
     R0 = 3
     amplitudes = rng.uniform(-1e-2, 1e-2, 6)
@@ -127,7 +127,7 @@ def test_surface_area(rng):
 
 
 def test_curvature(rng):
-    """test interface curvature calculation"""
+    """Test interface curvature calculation."""
     # spherical droplet
     for dim in range(1, 4):
         d = droplets.SphericalDroplet(np.zeros(dim), radius=rng.uniform(1, 4))
@@ -139,7 +139,7 @@ def test_curvature(rng):
     amplitudes = epsilon * np.array([0.1, 0.2, 0.3, 0.4])
 
     def curvature_analytical(φ):
-        """analytical expression for curvature"""
+        """Analytical expression for curvature."""
         radius = (
             3.0
             * (
@@ -195,7 +195,7 @@ def test_curvature(rng):
 
 
 def test_from_data():
-    """test the from_data constructor"""
+    """Test the from_data constructor."""
     for d1 in [
         droplets.SphericalDroplet((1,), 2),
         droplets.SphericalDroplet((1, 2), 3),
@@ -209,7 +209,7 @@ def test_from_data():
 
 @pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_triangulation_2d():
-    """test the 2d triangulation of droplets"""
+    """Test the 2d triangulation of droplets."""
     d1 = droplets.SphericalDroplet([1, 3], 5)
     d2 = droplets.PerturbedDroplet2D([2, 4], 5, amplitudes=[0.1, 0.2, 0.1, 0.2])
     for drop in [d1, d2]:
@@ -223,7 +223,7 @@ def test_triangulation_2d():
 
 @pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_triangulation_3d():
-    """test the 3d triangulation of droplets"""
+    """Test the 3d triangulation of droplets."""
     d1 = droplets.SphericalDroplet([1, 2, 3], 5)
     d2 = droplets.PerturbedDroplet3D([2, 3, 4], 5, amplitudes=[0.1, 0.2, 0.1, 0.2])
     for drop in [d1, d2]:
@@ -241,7 +241,7 @@ def test_triangulation_3d():
 @pytest.mark.parametrize("cls", [droplets.SphericalDroplet, droplets.DiffuseDroplet])
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_droplet_merge(cls, dim):
-    """test merging of droplets"""
+    """Test merging of droplets."""
     if cls == droplets.SphericalDroplet:
         d1 = droplets.SphericalDroplet([0] * dim, 1)
         d2 = droplets.SphericalDroplet([2] * dim, 1)
@@ -276,7 +276,7 @@ def test_droplet_merge(cls, dim):
 
 
 def test_droplet_interface_merge():
-    """test merging of droplets with diffuse interfaces"""
+    """Test merging of droplets with diffuse interfaces."""
     d1 = droplets.DiffuseDroplet([0, 0], 1, 1)
     d2 = droplets.DiffuseDroplet([2, 2], 1, 2)
     d1.merge(d2, inplace=True)

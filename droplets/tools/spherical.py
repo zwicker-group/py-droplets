@@ -1,5 +1,4 @@
-r"""
-Module collecting functions for handling spherical geometry
+r"""Module collecting functions for handling spherical geometry.
 
 The coordinate systems use the following convention for polar coordinates
 :math:`(r, \phi)`, where :math:`r` is the radial coordinate and :math:`\phi` is
@@ -29,7 +28,7 @@ is the radial coordinate, :math:`\theta` is the azimuthal angle, and
 
 
 The module also provides functions for handling spherical harmonics.
-These spherical harmonics are described by the degree :math:`l` and the order 
+These spherical harmonics are described by the degree :math:`l` and the order
 :math:`m` or, alternatively, by the mode :math:`k`. The relation between these
 values is
 
@@ -69,7 +68,7 @@ harmonics, where the order is always zero and the degree :math:`l` and the mode
    spherical_harmonic_real
    spherical_harmonic_real_k
 
-.. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>    
+.. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
 from __future__ import annotations
@@ -91,7 +90,7 @@ TNumArr = TypeVar("TNumArr", float, np.ndarray)
 
 
 def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
-    """Return the radius of a sphere with a given volume
+    """Return the radius of a sphere with a given volume.
 
     Args:
         volume (float or :class:`~numpy.ndarray`):
@@ -113,7 +112,7 @@ def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
 
 
 def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
-    """Return a function calculating the radius of a sphere with a given volume
+    """Return a function calculating the radius of a sphere with a given volume.
 
     Args:
         dim (int):
@@ -143,7 +142,7 @@ def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
 
 
 def make_radius_from_volume_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
-    """Return a function calculating the radius of a sphere with a given volume
+    """Return a function calculating the radius of a sphere with a given volume.
 
     Returns:
         function: A function that calculate the radius from a volume and dimension
@@ -163,7 +162,7 @@ def make_radius_from_volume_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
 
 
 def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
-    """Return a function calculating the volume of a sphere with a given radius
+    """Return a function calculating the volume of a sphere with a given radius.
 
     Args:
         dim (int):
@@ -193,7 +192,7 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
 
 
 def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
-    """Return a function calculating the volume of a sphere with a given radius
+    """Return a function calculating the volume of a sphere with a given radius.
 
     Returns:
         function: A function that calculates the volume using a radius and dimension
@@ -213,7 +212,7 @@ def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
 
 
 def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
-    """Return the surface area of a sphere with a given radius
+    """Return the surface area of a sphere with a given radius.
 
     Args:
         radius (float or :class:`~numpy.ndarray`):
@@ -240,7 +239,7 @@ def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
 
 
 def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
-    """Return the radius of a sphere with a given surface area
+    """Return the radius of a sphere with a given surface area.
 
     Args:
         surface (float or :class:`~numpy.ndarray`):
@@ -262,7 +261,7 @@ def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
 
 
 def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
-    """Return a function calculating the surface area of a sphere
+    """Return a function calculating the surface area of a sphere.
 
     Args:
         dim (int): Dimension of the space
@@ -311,7 +310,7 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
 
 
 def points_cartesian_to_spherical(points: np.ndarray) -> np.ndarray:
-    """Convert points from Cartesian to spherical coordinates
+    """Convert points from Cartesian to spherical coordinates.
 
     Args:
         points (:class:`~numpy.ndarray`): Points in Cartesian coordinates
@@ -334,7 +333,7 @@ def points_cartesian_to_spherical(points: np.ndarray) -> np.ndarray:
 
 
 def points_spherical_to_cartesian(points: np.ndarray) -> np.ndarray:
-    """Convert points from spherical to Cartesian coordinates
+    """Convert points from spherical to Cartesian coordinates.
 
     Args:
         points (:class:`~numpy.ndarray`):
@@ -373,7 +372,7 @@ def polar_coordinates(
 def polar_coordinates(
     grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: bool = False
 ) -> np.ndarray | tuple[np.ndarray, ...]:
-    """return polar coordinates associated with grid points
+    """Return polar coordinates associated with grid points.
 
     Args:
         grid (:class:`~pde.grids.base.GridBase`):
@@ -425,7 +424,7 @@ def polar_coordinates(
 
 
 def spherical_index_k(degree: int, order: int = 0) -> int:
-    """returns the mode `k` from the degree `degree` and order `order`
+    """Returns the mode `k` from the degree `degree` and order `order`
 
     Args:
         degree (int):
@@ -445,7 +444,7 @@ def spherical_index_k(degree: int, order: int = 0) -> int:
 
 
 def spherical_index_lm(k: int) -> tuple[int, int]:
-    """returns the degree `l` and the order `m` from the mode `k`
+    """Returns the degree `l` and the order `m` from the mode `k`
 
     Args:
         k (int):
@@ -460,7 +459,7 @@ def spherical_index_lm(k: int) -> tuple[int, int]:
 
 
 def spherical_index_count(l: int) -> int:
-    """return the number of modes for all indices <= l
+    """Return the number of modes for all indices <= l.
 
     The returned value is one less than the maximal mode `k` required.
 
@@ -475,7 +474,7 @@ def spherical_index_count(l: int) -> int:
 
 
 def spherical_index_count_optimal(k_count: int) -> bool:
-    """checks whether the modes captures all orders for maximal degree
+    """Checks whether the modes captures all orders for maximal degree.
 
     Args:
         k_count (int):
@@ -489,7 +488,7 @@ def spherical_index_count_optimal(k_count: int) -> bool:
 
 
 def spherical_harmonic_symmetric(degree: int, θ: float) -> float:
-    r"""axisymmetric spherical harmonics with degree `degree`, so `m=0`.
+    r"""Axisymmetric spherical harmonics with degree `degree`, so `m=0`.
 
     Args:
         degree (int):
@@ -506,7 +505,7 @@ def spherical_harmonic_symmetric(degree: int, θ: float) -> float:
 
 
 def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> float:
-    r"""real spherical harmonics of degree l and order m
+    r"""Real spherical harmonics of degree l and order m.
 
     Args:
         degree (int):
@@ -539,7 +538,7 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
 
 
 def spherical_harmonic_real_k(k: int, θ: float, φ: float) -> float:
-    r"""real spherical harmonics described by mode k
+    r"""Real spherical harmonics described by mode k.
 
     Args:
         k (int):

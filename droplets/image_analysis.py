@@ -1,5 +1,4 @@
-"""
-Functions for analyzing phase field images of emulsions.
+"""Functions for analyzing phase field images of emulsions.
 
 .. autosummary::
    :nosignatures:
@@ -92,7 +91,7 @@ def threshold_otsu(data: np.ndarray, nbins: int = 256) -> float:
 
 
 def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
-    """locate droplets in a (potentially periodic) data set on a Cartesian grid
+    """Locate droplets in a (potentially periodic) data set on a Cartesian grid.
 
     This function locates droplets respecting periodic boundary conditions.
 
@@ -175,7 +174,7 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
 
 
 def _locate_droplets_in_mask_spherical(mask: ScalarField) -> Emulsion:
-    """locates droplets in a binary data set on a spherical grid
+    """Locates droplets in a binary data set on a spherical grid.
 
     Args:
         mask (:class:`~pde.fields.scalar.ScalarField`):
@@ -211,7 +210,7 @@ def _locate_droplets_in_mask_spherical(mask: ScalarField) -> Emulsion:
 
 
 class _SpanningDropletSignal(RuntimeError):
-    """exception signaling that an untypical droplet spanning the system was found"""
+    """Exception signaling that an untypical droplet spanning the system was found."""
 
     ...
 
@@ -219,7 +218,7 @@ class _SpanningDropletSignal(RuntimeError):
 def _locate_droplets_in_mask_cylindrical_single(
     grid: CylindricalSymGrid, mask: np.ndarray
 ) -> Emulsion:
-    """locate droplets in a data set on a single cylindrical grid
+    """Locate droplets in a data set on a single cylindrical grid.
 
     Args:
         grid:
@@ -271,7 +270,7 @@ def _locate_droplets_in_mask_cylindrical_single(
 
 
 def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
-    """locate droplets in a data set on a (periodic) cylindrical grid
+    """Locate droplets in a data set on a (periodic) cylindrical grid.
 
     This function locates droplets respecting periodic boundary conditions.
 
@@ -324,7 +323,7 @@ def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
 
 
 def locate_droplets_in_mask(mask: ScalarField) -> Emulsion:
-    """locates droplets in a binary image
+    """Locates droplets in a binary image.
 
     This function locates droplets respecting periodic boundary conditions.
 
@@ -358,7 +357,7 @@ def locate_droplets(
     refine_args: dict[str, Any] | None = None,
     num_processes: int | Literal["auto"] = 1,
 ) -> Emulsion:
-    """Locates droplets in the phase field
+    """Locates droplets in the phase field.
 
     This uses a binarized image to locate clusters of large concentration in the phase
     field, which are interpreted as droplets. Basic quantities, like position and size,
@@ -493,7 +492,7 @@ def refine_droplets(
     num_processes: int | Literal["auto"] = 1,
     **kwargs,
 ) -> list[DiffuseDroplet]:
-    r"""Refines many droplets by fitting to phase field
+    r"""Refines many droplets by fitting to phase field.
 
     Args:
         phase_field (:class:`~pde.fields.ScalarField`):
@@ -548,7 +547,7 @@ def refine_droplet(
     tolerance: float | None = None,
     least_squares_params: dict[str, Any] | None = None,
 ) -> DiffuseDroplet:
-    """Refines droplet parameters by fitting to phase field
+    """Refines droplet parameters by fitting to phase field.
 
     This function varies droplet parameters, like position, size, interface width, and
     potential perturbation amplitudes until the overlap with the respective phase field
@@ -628,7 +627,7 @@ def refine_droplet(
         bounds = np.r_[bounds[0], vmin - vrng, 0], np.r_[bounds[1], vmax, 3 * vrng]
 
         def _image_deviation(params):
-            """helper function evaluating the residuals"""
+            """Helper function evaluating the residuals."""
             # generate the droplet
             data_flat[free] = params[:-2]
             vmin, vrng = params[-2:]
@@ -647,7 +646,7 @@ def refine_droplet(
         # fit only droplet parameters and assume all intensities fixed
 
         def _image_deviation(params):
-            """helper function evaluating the residuals"""
+            """Helper function evaluating the residuals."""
             # generate the droplet
             data_flat[free] = params
             droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
@@ -676,7 +675,7 @@ def get_structure_factor(
     wave_numbers: Sequence[float] | Literal["auto"] = "auto",
     add_zero: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
-    r"""Calculates the structure factor associated with a field
+    r"""Calculates the structure factor associated with a field.
 
     Here, the structure factor is basically the power spectral density of the field
     `scalar_field` normalized so that re-gridding or rescaling the field does not change
@@ -785,7 +784,7 @@ def get_length_scale(
     ] = "structure_factor_maximum",
     **kwargs,
 ) -> float | tuple[float, Any]:
-    """Calculates a length scale associated with a phase field
+    """Calculates a length scale associated with a phase field.
 
     Args:
         scalar_field (:class:`~pde.fields.ScalarField`):

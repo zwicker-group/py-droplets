@@ -1,5 +1,5 @@
-"""
-Classes describing collections of droplets, i.e. emulsions, and their temporal dynamics.
+"""Classes describing collections of droplets, i.e. emulsions, and their temporal
+dynamics.
 
 .. autosummary::
    :nosignatures:
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 
 class Emulsion(list):
-    """class representing a collection of droplets in a common system"""
+    """Class representing a collection of droplets in a common system."""
 
     _show_projection_warning: bool = True
     """bool: Flag determining whether a warning is shown when high-dimensional
@@ -94,7 +94,7 @@ class Emulsion(list):
 
     @classmethod
     def empty(cls, droplet: SphericalDroplet) -> Emulsion:
-        """create empty emulsion with particular droplet type
+        """Create empty emulsion with particular droplet type.
 
         Args:
             droplet (:class:`~droplets.droplets.SphericalDroplet`):
@@ -116,8 +116,7 @@ class Emulsion(list):
         droplet_class: type[SphericalDroplet] = SphericalDroplet,
         rng: np.random.Generator | None = None,
     ) -> Emulsion:
-        """
-        Create an emulsion with random droplets
+        """Create an emulsion with random droplets.
 
         Args:
             num (int):
@@ -204,7 +203,7 @@ class Emulsion(list):
             return Emulsion(result)
 
     def copy(self, min_radius: float = -1) -> Emulsion:
-        """return a copy of this emulsion
+        """Return a copy of this emulsion.
 
         Args:
             min_radius (float):
@@ -224,7 +223,7 @@ class Emulsion(list):
         copy: bool = True,
         force_consistency: bool = False,
     ) -> None:
-        """add many droplets to the emulsion
+        """Add many droplets to the emulsion.
 
         Args:
             droplet (list of :class:`droplets.dropelts.SphericalDroplet`):
@@ -244,7 +243,7 @@ class Emulsion(list):
         copy: bool = True,
         force_consistency: bool = False,
     ) -> None:
-        """add a droplet to the emulsion
+        """Add a droplet to the emulsion.
 
         Args:
             droplet (:class:`droplets.dropelts.SphericalDroplet`):
@@ -269,7 +268,7 @@ class Emulsion(list):
 
     @property
     def data(self) -> np.ndarray:
-        """:class:`~numpy.ndarray`: an array containing the data of the full emulsion
+        """:class:`~numpy.ndarray`: an array containing the data of the full emulsion.
 
         Warning:
             This requires all droplets to be of the same class. The returned array is
@@ -302,7 +301,7 @@ class Emulsion(list):
             return result
 
     def get_linked_data(self) -> np.ndarray:
-        """link the data of all droplets in a single array
+        """Link the data of all droplets in a single array.
 
         Returns:
             :class:`~numpy.ndarray`: The array containing all droplet data. If entries in
@@ -316,7 +315,7 @@ class Emulsion(list):
 
     @classmethod
     def _from_hdf_dataset(cls, dataset) -> Emulsion:
-        """construct an emulsion by reading data from an hdf5 dataset
+        """Construct an emulsion by reading data from an hdf5 dataset.
 
         Args:
             dataset:
@@ -338,7 +337,7 @@ class Emulsion(list):
 
     @classmethod
     def from_file(cls, path: str) -> Emulsion:
-        """create emulsion by reading file
+        """Create emulsion by reading file.
 
         Args:
             path (str):
@@ -361,7 +360,7 @@ class Emulsion(list):
         return obj
 
     def _write_hdf_dataset(self, hdf_path, key: str = "emulsion"):
-        """write data to a given hdf5 path `hdf_path`
+        """Write data to a given hdf5 path `hdf_path`
 
         Args:
             hdf_path:
@@ -386,7 +385,7 @@ class Emulsion(list):
         return dataset
 
     def to_file(self, path: str) -> None:
-        """store data in hdf5 file
+        """Store data in hdf5 file.
 
         The data can be read using the classmethod :meth:`Emulsion.from_file`.
 
@@ -426,13 +425,13 @@ class Emulsion(list):
 
     @property
     def bbox(self) -> Cuboid:
-        """:class:`Cuboid`: bounding box of the emulsion"""
+        """:class:`Cuboid`: bounding box of the emulsion."""
         if len(self) == 0:
             raise RuntimeError("Bounding box of empty emulsion is undefined")
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
 
     def get_phasefield(self, grid: GridBase, label: str | None = None) -> ScalarField:
-        """create a phase field representing a list of droplets
+        """Create a phase field representing a list of droplets.
 
         Args:
             grid (:class:`pde.grids.base.GridBase`):
@@ -455,7 +454,7 @@ class Emulsion(list):
             return result
 
     def remove_small(self, min_radius: float = -np.inf) -> None:
-        """remove droplets that are very small
+        """Remove droplets that are very small.
 
         The emulsions is modified in-place.
 
@@ -472,7 +471,7 @@ class Emulsion(list):
     def get_pairwise_distances(
         self, subtract_radius: bool = False, grid: GridBase | None = None
     ) -> np.ndarray:
-        """return the pairwise distance between droplets
+        """Return the pairwise distance between droplets.
 
         Args:
             subtract_radius (bool):
@@ -489,7 +488,7 @@ class Emulsion(list):
         if grid is None:
 
             def get_distance(p1, p2):
-                """helper function calculating the distance between points"""
+                """Helper function calculating the distance between points."""
                 return np.linalg.norm(p1 - p2)
 
         else:
@@ -510,7 +509,7 @@ class Emulsion(list):
         return dists
 
     def get_neighbor_distances(self, subtract_radius: bool = False) -> np.ndarray:
-        """calculates the distance of each droplet to its nearest neighbor
+        """Calculates the distance of each droplet to its nearest neighbor.
 
         Warning:
             This function does not take periodic boundary conditions into account.
@@ -551,7 +550,7 @@ class Emulsion(list):
     def remove_overlapping(
         self, min_distance: float = 0, grid: GridBase | None = None
     ) -> None:
-        """remove all droplets that are overlapping
+        """Remove all droplets that are overlapping.
 
         If a pair of overlapping droplets was found, the smaller one of these is removed
         from the current emulsion. This method modifies the emulsion in place and thus
@@ -591,7 +590,7 @@ class Emulsion(list):
         return sum(droplet.volume for droplet in self)  # type: ignore
 
     def get_size_statistics(self, incl_vanished: bool = True) -> dict[str, float]:
-        """determine size statistics of the current emulsion
+        """Determine size statistics of the current emulsion.
 
         Args:
             incl_vanished (bool):
@@ -637,7 +636,7 @@ class Emulsion(list):
         colorbar: bool | str = True,
         **kwargs,
     ) -> PlotReference:
-        """plot the current emulsion together with a corresponding field
+        """Plot the current emulsion together with a corresponding field.
 
         If the emulsion is defined in a 3d geometry, only a projection on the first two
         axes is shown.
@@ -774,7 +773,7 @@ class Emulsion(list):
 
 
 class EmulsionTimeCourse:
-    """represents emulsions as a function of time"""
+    """Represents emulsions as a function of time."""
 
     def __init__(
         self,
@@ -811,7 +810,7 @@ class EmulsionTimeCourse:
     def append(
         self, emulsion: Emulsion, time: float | None = None, copy: bool = True
     ) -> None:
-        """add an emulsion to the list
+        """Add an emulsion to the list.
 
         Args:
             emulsions (Emulsion):
@@ -833,7 +832,7 @@ class EmulsionTimeCourse:
         self.times.append(time)
 
     def clear(self) -> None:
-        """removes all data stored in this instance"""
+        """Removes all data stored in this instance."""
         self.emulsions = []
         self.times = []
 
@@ -847,7 +846,7 @@ class EmulsionTimeCourse:
         return len(self.times)
 
     def __getitem__(self, key: int | slice):
-        """return the information for the given index"""
+        """Return the information for the given index."""
         result = self.emulsions.__getitem__(key)
         if isinstance(key, slice):
             return self.__class__(emulsions=result, times=self.times[key])
@@ -855,15 +854,15 @@ class EmulsionTimeCourse:
             return result
 
     def __iter__(self) -> Iterator[Emulsion]:
-        """iterate over the emulsions"""
+        """Iterate over the emulsions."""
         return iter(self.emulsions)
 
     def items(self) -> Iterator[tuple[float, Emulsion]]:
-        """iterate over all times and emulsions, returning them in pairs"""
+        """Iterate over all times and emulsions, returning them in pairs."""
         return zip(self.times, self.emulsions)
 
     def __eq__(self, other):
-        """determine whether two EmulsionTimeCourse instance are equal"""
+        """Determine whether two EmulsionTimeCourse instance are equal."""
         return self.times == other.times and self.emulsions == other.emulsions
 
     @classmethod
@@ -876,7 +875,7 @@ class EmulsionTimeCourse:
         progress: bool | None = None,
         **kwargs,
     ) -> EmulsionTimeCourse:
-        r"""create an emulsion time course from a stored phase field
+        r"""Create an emulsion time course from a stored phase field.
 
         Args:
             storage (:class:`~pde.storage.base.StorageBase`):
@@ -927,7 +926,7 @@ class EmulsionTimeCourse:
 
     @classmethod
     def from_file(cls, path: str, progress: bool = True) -> EmulsionTimeCourse:
-        """create emulsion time course by reading file
+        """Create emulsion time course by reading file.
 
         Args:
             path (str):
@@ -954,7 +953,7 @@ class EmulsionTimeCourse:
         return obj
 
     def to_file(self, path: str, info: InfoDict | None = None) -> None:
-        """store data in hdf5 file
+        """Store data in hdf5 file.
 
         The data can be read using the classmethod :meth:`EmulsionTimeCourse.from_file`.
 
@@ -978,7 +977,7 @@ class EmulsionTimeCourse:
                     fp.attrs[k] = json.dumps(v)
 
     def get_emulsion(self, time: float) -> Emulsion:
-        """returns the emulsion clostest to a specific time point
+        """Returns the emulsion clostest to a specific time point.
 
         Args:
             time (float): The time point
@@ -997,7 +996,7 @@ class EmulsionTimeCourse:
         *,
         interval=None,
     ) -> DropletTracker:
-        """return a tracker that analyzes emulsions during simulations
+        """Return a tracker that analyzes emulsions during simulations.
 
         Args:
             interrupts:

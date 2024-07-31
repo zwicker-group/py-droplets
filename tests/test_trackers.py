@@ -14,7 +14,7 @@ from droplets.emulsions import EmulsionTimeCourse
 
 @pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_emulsion_tracker(tmp_path):
-    """test using the emulsions tracker"""
+    """Test using the emulsions tracker."""
     path = tmp_path / "test_emulsion_tracker.hdf5"
 
     d = SphericalDroplet([4, 4], 3)
@@ -34,7 +34,7 @@ def test_emulsion_tracker(tmp_path):
 
 
 def test_length_scale_tracker(tmp_path):
-    """test the length scale tracker"""
+    """Test the length scale tracker."""
     path = tmp_path / "test_length_scale_tracker.json"
 
     grid = CartesianGrid([[0, 10 * np.pi]], 64, periodic=True)

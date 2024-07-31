@@ -23,7 +23,7 @@ if not module_available("matplotlib"):
 @pytest.mark.skipif(sys.platform == "win32", reason="Assumes unix setup")
 @pytest.mark.parametrize("path", EXAMPLES)
 def test_example(path):
-    """runs an example script given by path"""
+    """Runs an example script given by path."""
     if path.name.startswith("_"):
         pytest.skip("skip examples starting with an underscore")
     if any(name in str(path) for name in SKIP_EXAMPLES):

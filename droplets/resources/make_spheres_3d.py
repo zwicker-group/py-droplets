@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""script that creates the resource with discretized surfaces of unit spheres """
+"""Script that creates the resource with discretized surfaces of unit spheres."""
 
 from __future__ import annotations
 

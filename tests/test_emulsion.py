@@ -16,7 +16,7 @@ from droplets.emulsions import EmulsionTimeCourse
 
 
 def test_empty_emulsion(caplog):
-    """test an emulsions without any droplets"""
+    """Test an emulsions without any droplets."""
     caplog.set_level(logging.WARNING)
 
     e = Emulsion([])
@@ -78,7 +78,7 @@ def test_empty_emulsion(caplog):
 
 
 def test_emulsion_single():
-    """test an emulsions with a single droplet"""
+    """Test an emulsions with a single droplet."""
     e = Emulsion([])
     e.append(DiffuseDroplet([10], 3, 1))
     assert e
@@ -102,7 +102,7 @@ def test_emulsion_single():
 
 
 def test_emulsion_two():
-    """test an emulsions with two droplets"""
+    """Test an emulsions with two droplets."""
     e = Emulsion([DiffuseDroplet([10], 3, 1)])
     e1 = Emulsion([DiffuseDroplet([20], 5, 1)])
     e.extend(e1)
@@ -129,7 +129,7 @@ def test_emulsion_two():
 
 
 def test_emulsion_incompatible():
-    """test incompatible droplets in an emulsion"""
+    """Test incompatible droplets in an emulsion."""
     # different type
     d1 = SphericalDroplet([1], 2)
     d2 = DiffuseDroplet([1], 2, 1)
@@ -148,7 +148,7 @@ def test_emulsion_incompatible():
 
 
 def test_emulsion_linked_data():
-    """test whether emulsions link the data to droplets correctly"""
+    """Test whether emulsions link the data to droplets correctly."""
     d1 = SphericalDroplet([0, 0], 1)
     d2 = SphericalDroplet([1, 2], 3)
     e = Emulsion([d1, d2])
@@ -165,7 +165,7 @@ def test_emulsion_linked_data():
 
 @pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_emulsion_io(tmp_path):
-    """test writing and reading emulsions"""
+    """Test writing and reading emulsions."""
     path = tmp_path / "test_emulsion_io.hdf5"
 
     drop_diff = DiffuseDroplet([0, 1], 10, 0.5)
@@ -184,7 +184,7 @@ def test_emulsion_io(tmp_path):
 
 
 def test_timecourse():
-    """test some droplet track functions"""
+    """Test some droplet track functions."""
     t1 = emulsions.EmulsionTimeCourse()
     for i in range(4):
         d = droplets.SphericalDroplet([i], i)
@@ -208,7 +208,7 @@ def test_timecourse():
 
 @pytest.mark.skipif(not module_available("h5py"), reason="requires `h5py` module")
 def test_timecourse_io(tmp_path):
-    """test writing and reading emulsions time courses"""
+    """Test writing and reading emulsions time courses."""
     path = tmp_path / "test_timecourse_io.hdf5"
 
     e1 = Emulsion()
@@ -223,7 +223,7 @@ def test_timecourse_io(tmp_path):
 
 
 def test_emulsion_plotting():
-    """test plotting emulsions"""
+    """Test plotting emulsions."""
     # 1d emulsion
     e1 = Emulsion([DiffuseDroplet([1], 10, 0.5)] * 2)
     with pytest.raises(NotImplementedError):
@@ -256,7 +256,7 @@ def test_emulsion_plotting():
 
 
 def test_remove_overlapping():
-    """test that removing overlapping droplets works"""
+    """Test that removing overlapping droplets works."""
     e = Emulsion([SphericalDroplet([0, 1], 2), SphericalDroplet([1, 1], 2)])
     assert len(e) == 2
     e.remove_overlapping()
@@ -265,7 +265,7 @@ def test_remove_overlapping():
 
 @pytest.mark.parametrize("modify_data", [True, False])
 def test_emulsion_merge(modify_data):
-    """test merging of droplets"""
+    """Test merging of droplets."""
     em = Emulsion([DiffuseDroplet([0], 1, 1)] * 5, copy=True)
     drop_data = em.get_linked_data()
     for i in range(1, len(em)):
@@ -284,7 +284,7 @@ def test_emulsion_merge(modify_data):
 @pytest.mark.parametrize("dim", [1, 2, 3])
 @pytest.mark.parametrize("grid", [True, False])
 def test_emulsion_random(dim, grid, rng):
-    """create random emulsions"""
+    """Create random emulsions."""
     if grid:
         bounds = CartesianGrid([(10, 30)] * dim, 1)
     else:
@@ -298,7 +298,7 @@ def test_emulsion_random(dim, grid, rng):
 
 @pytest.mark.parametrize("proc", [1, 2])
 def test_emulsion_from_storage(proc):
-    """test reading emulsion time courses from a file"""
+    """Test reading emulsion time courses from a file."""
     grid = UnitGrid([32, 32])
     radii = [3, 2.7, 4.3]
     pos = [[7, 8], [9, 22], [22, 10]]

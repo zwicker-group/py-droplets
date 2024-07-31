@@ -17,7 +17,7 @@ from droplets.tools import spherical
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_volume_conversion(dim):
-    """tests conversion of volume and radius of droplet"""
+    """Tests conversion of volume and radius of droplet."""
     radius = 1 + random.random()
     volume = spherical.volume_from_radius(radius, dim=dim)
     radius2 = spherical.radius_from_volume(volume, dim=dim)
@@ -36,7 +36,7 @@ def test_volume_conversion(dim):
 
 @pytest.mark.parametrize("dim", [1, 2, 3])
 def test_surface(dim):
-    """test whether the surface is calculated correctly"""
+    """Test whether the surface is calculated correctly."""
     radius = 1 + random.random()
     eps = 1e-10
     vol1 = spherical.volume_from_radius(radius + eps, dim=dim)
@@ -58,7 +58,7 @@ def test_surface(dim):
 
 
 def test_spherical_conversion(rng):
-    """test the conversion between spherical and Cartesian coordinates"""
+    """Test the conversion between spherical and Cartesian coordinates."""
     s2c = spherical.points_spherical_to_cartesian
     c2s = spherical.points_cartesian_to_spherical
 
@@ -73,7 +73,7 @@ def test_spherical_conversion(rng):
 
 
 def test_spherical_index():
-    """test the conversion of the spherical index"""
+    """Test the conversion of the spherical index."""
     # check initial state
     assert spherical.spherical_index_lm(0) == (0, 0)
     assert spherical.spherical_index_k(0, 0) == 0
@@ -102,7 +102,7 @@ def test_spherical_index():
 
 
 def test_spherical_harmonics_real():
-    """test spherical harmonics"""
+    """Test spherical harmonics."""
     # test real spherical harmonics for symmetric case
     for deg in range(4):
         for _ in range(5):
@@ -131,7 +131,7 @@ def test_spherical_harmonics_real():
 
 
 def test_polar_coordinates_1d():
-    """test polar_coordinates function in 1d"""
+    """Test polar_coordinates function in 1d."""
     grid = pde.UnitGrid([2])
     p1, a1 = spherical.polar_coordinates(grid, ret_angle=True)
     p2 = grid.c.pos_from_cart(grid.cell_coords)
@@ -140,7 +140,7 @@ def test_polar_coordinates_1d():
 
 
 def test_polar_coordinates_2d():
-    """test polar_coordinates function in 2d"""
+    """Test polar_coordinates function in 2d."""
     grid = pde.UnitGrid([2, 2])
     grid_sph = pde.PolarSymGrid(5, 1)
     p1 = spherical.polar_coordinates(grid, ret_angle=True)
@@ -149,7 +149,7 @@ def test_polar_coordinates_2d():
 
 
 def test_polar_coordinates_3d():
-    """test polar_coordinates function in 3d"""
+    """Test polar_coordinates function in 3d."""
     grid = pde.UnitGrid([2, 2, 2])
     p1 = spherical.polar_coordinates(grid, ret_angle=True)
     p2 = spherical.points_cartesian_to_spherical(grid.cell_coords)
