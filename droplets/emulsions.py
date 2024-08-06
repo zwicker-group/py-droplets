@@ -16,7 +16,6 @@ import functools
 import json
 import logging
 import math
-import warnings
 from collections.abc import Iterable, Iterator, Sequence
 from typing import TYPE_CHECKING, Any, Callable, Literal, overload
 
@@ -52,7 +51,6 @@ class Emulsion(list):
         copy: bool = True,
         dtype: np.typing.DTypeLike | np.ndarray | SphericalDroplet = None,
         force_consistency: bool = False,
-        grid: GridBase | None = None,
     ):
         """
         Args:
@@ -70,10 +68,6 @@ class Emulsion(list):
                 data is described by the same dtype and matches `dtype` if given.
         """
         super().__init__()
-
-        if grid is not None:
-            # deprecated on 2023-08-29
-            warnings.warn("`grid` argument is deprecated", DeprecationWarning)
 
         # store general information about droplets using a single dtype
         if isinstance(dtype, SphericalDroplet):
@@ -630,6 +624,7 @@ class Emulsion(list):
         field: ScalarField | None = None,
         image_args: dict[str, Any] | None = None,
         repeat_periodically: bool = True,
+        grid: GridBase | None = None,
         color_value: Callable | None = None,
         cmap=None,
         norm=None,
@@ -652,6 +647,9 @@ class Emulsion(list):
             repeat_periodically (bool):
                 flag determining whether droplets are shown on both sides of
                 periodic boundary conditions. This option can slow down plotting
+            grid (:class:`~pde.grids.base.GridBase`):
+                The grid on which the droplets are defined, which is necessary if
+                periodic boundary conditions should be respected for measuring distances
             color_value (callable):
                 Function used to determine the color of a droplet. The function is
                 called with individual droplet objects and must return a single scalar
@@ -694,16 +692,18 @@ class Emulsion(list):
                 image_args = {}
             field.plot(kind="image", ax=ax, **image_args)
             ax.autoscale(False)  # fix image bounds to phase field
-            grid = field.grid
-            if isinstance(grid, CartesianGrid):
-                # determine the bounds from the (2d) grid
-                bounds = grid.axes_bounds
-            else:
-                # determine the bounds from the emulsion data itself
-                bounds = self.bbox.bounds
+
+            # extract grid for plotting
+            if grid is None:
+                grid = field.grid
+            elif grid != field.grid:
+                raise ValueError("Argument `grid` is incompatible with `field.grid`")
+
+        if grid is not None and isinstance(grid, CartesianGrid):
+            # determine the bounds from the (2d) grid
+            bounds = grid.axes_bounds
         else:
             # determine the bounds from the emulsion data itself
-            grid = None
             bounds = self.bbox.bounds
 
         ax.set_xlim(*bounds[0])
