@@ -866,7 +866,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
 
 class PerturbedDroplet2D(PerturbedDropletBase):
-    r"""Represents a single droplet in two dimensions with a perturbed shape.
+    r"""Represents a single 2D droplet with a perturbed shape.
 
     The shape is described using the distance :math:`R(\phi)` of the interface from the
     `position`, which is a function of the polar angle :math:`\phi`. This function is
@@ -946,7 +946,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             Array with coordinates of interfacial points associated with each angle φ
         """
         dist = self.interface_distance(φ)
-        pos = dist[:, None] * np.transpose([np.sin(φ), np.cos(φ)])
+        pos = dist[:, None] * np.transpose([np.cos(φ), np.sin(φ)])
         return self.position[None, :] + pos  # type: ignore
 
     @preserve_scalars
@@ -1044,7 +1044,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
 
 class PerturbedDroplet3D(PerturbedDropletBase):
-    r"""Represents a single droplet in three dimensions with a perturbed shape.
+    r"""Represents a single 3D droplet with a perturbed shape.
 
     The shape is described using the distance :math:`R(\theta, \phi)` of the interface
     from the origin as a function of the azimuthal angle :math:`\theta` and the polar
@@ -1205,7 +1205,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
 
 class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
-    r"""Represents a droplet axisymmetrically perturbed shape in three dimensions.
+    r"""Represents a 3D droplet with axisymmetrically perturbed shape.
 
     The shape is described using the distance :math:`R(\theta)` of the interface from
     the origin as a function of the azimuthal angle :math:`\theta`, while polar symmetry

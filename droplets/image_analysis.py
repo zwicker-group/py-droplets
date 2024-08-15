@@ -541,8 +541,8 @@ def refine_droplet(
     phase_field: ScalarField,
     droplet: DiffuseDroplet,
     *,
-    vmin: float = 0.0,
-    vmax: float = 1.0,
+    vmin: float | None = 0.0,
+    vmax: float | None = 1.0,
     adjust_values: bool = False,
     tolerance: float | None = None,
     least_squares_params: dict[str, Any] | None = None,
@@ -565,7 +565,7 @@ def refine_droplet(
         vmax (float):
             The intensity value inside the droplet. If `None`, the value will be
             determined automatically.
-        adjust_value (bool):
+        adjust_values (bool):
             Flag determining whether the intensity values will be included in the
             fitting procedure. The default value `False` implies that the intensity
             values are regarded fixed.

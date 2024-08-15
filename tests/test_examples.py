@@ -31,6 +31,7 @@ def test_example(path):
 
     env = os.environ.copy()
     env["PYTHONPATH"] = str(PACKAGE_PATH) + ":" + env.get("PYTHONPATH", "")
+    env["MPLBACKEND"] = "agg"
     proc = sp.Popen([sys.executable, path], env=env, stdout=sp.PIPE, stderr=sp.PIPE)
     try:
         outs, errs = proc.communicate(timeout=30)
