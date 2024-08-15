@@ -590,7 +590,7 @@ def refine_droplet(
             least_squares_params.setdefault(key, tolerance)
 
     if not isinstance(droplet, DiffuseDroplet):
-        droplet_obj = DiffuseDroplet.from_droplet(droplet)
+        droplet = DiffuseDroplet.from_droplet(droplet)
     if droplet.interface_width is None:
         droplet.interface_width = phase_field.grid.typical_discretization
 
