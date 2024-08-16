@@ -4,10 +4,11 @@ import glob
 import logging
 import os
 import subprocess as sp
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 
-OUTPUT_PATH = "packages"
+OUTPUT_PATH = Path("packages")
 
 
 def replace_in_file(infile, replacements, outfile=None):
@@ -26,21 +27,21 @@ def replace_in_file(infile, replacements, outfile=None):
     if outfile is None:
         outfile = infile
 
-    with open(infile) as fp:
+    with infile.open() as fp:
         content = fp.read()
 
     for key, value in replacements.items():
         content = content.replace(key, value)
 
-    with open(outfile, "w") as fp:
+    with outfile.open("w") as fp:
         fp.write(content)
 
 
 def main(folder="droplets"):
     # remove old files
-    for path in glob.glob(f"{OUTPUT_PATH}/*.rst"):
+    for path in OUTPUT_PATH.glob("*.rst"):
         logging.info("Remove file `%s`", path)
-        os.remove(path)
+        path.unlink()
 
     # run sphinx-apidoc
     sp.check_call(
@@ -50,7 +51,7 @@ def main(folder="droplets"):
             "--maxdepth",
             "4",
             "--output-dir",
-            OUTPUT_PATH,
+            str(OUTPUT_PATH),
             "--module-first",
             f"../../{folder}",  # path of the package
             f"../../{folder}/tests",  # ignored path
@@ -59,7 +60,7 @@ def main(folder="droplets"):
     )
 
     # replace unwanted information
-    for path in glob.glob(f"{OUTPUT_PATH}/*.rst"):
+    for path in OUTPUT_PATH.glob("*.rst"):
         logging.info("Patch file `%s`", path)
         replace_in_file(path, {"Submodules\n----------\n\n": ""})
 

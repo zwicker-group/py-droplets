@@ -192,7 +192,6 @@ class DropletBase:
 
     def check_data(self):
         """Method that checks the validity and consistency of self.data."""
-        pass
 
     @property
     def _args(self):
@@ -1092,8 +1091,10 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             opt_modes = spherical.spherical_index_count(l) - 1
             logger.warning(
                 "The length of `amplitudes` should be such that all orders are "
-                f"captured for the perturbations with the highest degree ({l}). "
-                f"Consider increasing the size of the array to {opt_modes}."
+                "captured for the perturbations with the highest degree (%d). "
+                "Consider increasing the size of the array to %d.",
+                l,
+                opt_modes,
             )
 
     @preserve_scalars

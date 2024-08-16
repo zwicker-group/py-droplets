@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 from typing import Any, Callable, Literal
 
 from pde.fields.base import FieldBase
@@ -112,7 +113,7 @@ class LengthScaleTracker(TrackerBase):
             import json
 
             data = {"times": self.times, "length_scales": self.length_scales}
-            with open(self.filename, "w") as fp:
+            with Path(self.filename).open("w") as fp:
                 json.dump(data, fp)
 
 
@@ -153,7 +154,7 @@ class DropletTracker(TrackerBase):
             .. code-block:: python
 
                 droplet_tracker = DropletTracker(
-                    1, refine=True, refine_args={'vmin': None, 'vmax': None}
+                    1, refine=True, refine_args={"vmin": None, "vmax": None}
                 )
 
             :code:`field` is the scalar field, in which the droplets are located. The

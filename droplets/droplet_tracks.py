@@ -328,7 +328,7 @@ class DropletTrack:
 
         else:
             # create empty dataset to indicate empty emulsion
-            dataset = hdf_path.create_dataset(key, shape=tuple())
+            dataset = hdf_path.create_dataset(key, shape=())
             dataset.attrs["droplet_class"] = "None"
 
         return dataset
@@ -549,7 +549,7 @@ class DropletTrackList(list):
                         tracks.append(DropletTrack(droplets=[droplet], times=[time]))
 
                 if found_multiple_overlap:
-                    logger.debug(f"Found multiple overlapping droplet(s) at t={time}")
+                    logger.debug("Found multiple overlapping droplet(s) at t=%g", time)
 
         elif method == "distance":
             # track droplets by their physical distance
@@ -591,11 +591,11 @@ class DropletTrackList(list):
                         tracks.append(DropletTrack(droplets=[droplet], times=[time]))
 
         else:
-            raise ValueError(f"Unknown tracking method {method}")
+            raise ValueError("Unknown tracking method `%s`", method)
 
         # check kwargs
         if kwargs:
-            logger.warning(f"Unused keyword arguments: {kwargs}")
+            logger.warning("Unused keyword arguments: %s", kwargs)
 
         # add all emulsions successively using the given algorithm
         t_last = None

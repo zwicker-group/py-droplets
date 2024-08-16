@@ -54,4 +54,4 @@ with h5py.File("spheres_3d.hdf5", "w") as f:
                 num_list.add(num)
 
     # store the number of generated spheres
-    f.attrs["num_list"] = list(sorted(num_list))
+    f.attrs["num_list"] = sorted(num_list)

@@ -57,7 +57,7 @@ def test_random_droplet(dim, rng):
 def test_perturbed_droplet_2d():
     """Test methods of perturbed droplets in 2d."""
     d = droplets.PerturbedDroplet2D([0, 1], 1, 0.1, [0.0, 0.1, 0.2])
-    d.volume
+    assert d.volume > 0
     d.interface_distance(0.1)
     d.interface_position(0.1)
     d.interface_curvature(0.1)
@@ -66,7 +66,7 @@ def test_perturbed_droplet_2d():
 def test_perturbed_droplet_3d():
     """Test methods of perturbed droplets in 3d."""
     d = droplets.PerturbedDroplet3D([0, 1, 2], 1, 0.1, [0.0, 0.1, 0.2, 0.3])
-    d.volume_approx
+    assert d.volume_approx > 0
     d.interface_distance(0.1, 0.2)
     d.interface_position(0.1, 0.2)
     d.interface_curvature(0.1, 0.2)
@@ -75,7 +75,7 @@ def test_perturbed_droplet_3d():
 def test_perturbed_droplet_3d_axis_sym():
     """Test methods of axisymmetrically perturbed droplets in 3d."""
     d = droplets.PerturbedDroplet3DAxisSym([0, 0, 0], 1, 0.1, [0.0, 0.1])
-    d.volume_approx
+    assert d.volume_approx > 0
     d.interface_distance(0.1)
     d.interface_curvature(0.1)
 
@@ -251,7 +251,8 @@ def test_droplet_merge(cls, dim):
 
     # test simple merge
     d3 = d1.merge(d2, inplace=False)
-    assert d3 is not d1 and d3 is not d2
+    assert d3 is not d1
+    assert d3 is not d2
     np.testing.assert_allclose(d3.position, [1] * dim)
     assert d3.volume == pytest.approx(d1.volume + d2.volume)
     if cls == droplets.DiffuseDroplet:
@@ -268,7 +269,8 @@ def test_droplet_merge(cls, dim):
 
     # test inplace merge
     d4 = d1.merge(d2, inplace=True)
-    assert d4 is d1 and d3 is not d2
+    assert d4 is d1
+    assert d3 is not d2
     np.testing.assert_allclose(d4.position, [1] * dim)
     assert d4.volume == pytest.approx(d3.volume)
     if cls == droplets.DiffuseDroplet:
