@@ -10,7 +10,7 @@ import pytest
 from pde.tools.numba import random_seed
 
 
-@pytest.fixture(scope="function", autouse=False, name="rng")
+@pytest.fixture(autouse=False, name="rng")
 def init_random_number_generators():
     """Get a random number generator and set the seed of the random number generator.
 
@@ -21,8 +21,8 @@ def init_random_number_generators():
     return np.random.default_rng(0)
 
 
-@pytest.fixture(scope="function", autouse=True)
-def setup_and_teardown():
+@pytest.fixture(autouse=True)
+def _setup_and_teardown():
     """Helper function adjusting environment before and after tests."""
     # ensure we use the Agg backend, so figures are not displayed
     plt.switch_backend("agg")

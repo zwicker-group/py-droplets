@@ -373,7 +373,7 @@ class Emulsion(list):
 
         else:
             # create empty dataset to indicate empty emulsion
-            dataset = hdf_path.create_dataset(key, shape=tuple())
+            dataset = hdf_path.create_dataset(key, shape=())
             dataset.attrs["droplet_class"] = "None"
 
         return dataset
@@ -675,15 +675,15 @@ class Emulsion(list):
         if len(self) == 0:
             # empty emulsions can be plotted in all dimensions :)
             return PlotReference(ax, [], {})
+
         if self.dim is None or self.dim <= 1:
             raise NotImplementedError(
                 f"Plotting emulsions in {self.dim} dimensions is not implemented."
             )
-        elif self.dim > 2:
-            if Emulsion._show_projection_warning:
-                logger = logging.getLogger(self.__class__.__name__)
-                logger.warning("A projection on the first two axes is shown.")
-                Emulsion._show_projection_warning = False
+        elif self.dim > 2 and Emulsion._show_projection_warning:
+            logger = logging.getLogger(self.__class__.__name__)
+            logger.warning("A projection on the first two axes is shown.")
+            Emulsion._show_projection_warning = False
 
         # plot background and determine bounds for the droplets
         if field is not None:

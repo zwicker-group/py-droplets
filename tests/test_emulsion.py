@@ -46,7 +46,7 @@ def test_empty_emulsion(caplog):
     e = Emulsion([])
     assert len(e) == 0
     with pytest.raises(RuntimeError):
-        e.data
+        print(e.data)
     e.append(d1, force_consistency=True)
     assert e.dtype == d1.data.dtype
 
@@ -73,7 +73,7 @@ def test_empty_emulsion(caplog):
     e.append(d2)
     assert len(e) == 1
 
-    e.data  # raises warning
+    print(e.data)  # raises warning
     assert "inconsistent" in caplog.text
 
 
@@ -136,7 +136,7 @@ def test_emulsion_incompatible():
     e = Emulsion([d1, d2])
     assert len(e) == 2
     with pytest.raises(TypeError):
-        e.data
+        print(e.data)
 
     # same type
     d1 = SphericalDroplet([1], 2)
@@ -293,8 +293,10 @@ def test_emulsion_random(dim, grid, rng):
     em = Emulsion.from_random(10, bounds, radius=(1, 2), rng=rng)
     assert 1 < len(em) <= 10
     assert em.dim == dim
-    assert np.all(em.data["position"] > 10) and np.all(em.data["position"] < 30)
-    assert np.all(em.data["radius"] > 1) and np.all(em.data["radius"] < 2)
+    assert np.all(em.data["position"] > 10)
+    assert np.all(em.data["position"] < 30)
+    assert np.all(em.data["radius"] > 1)
+    assert np.all(em.data["radius"] < 2)
 
 
 @pytest.mark.parametrize("proc", [1, 2])

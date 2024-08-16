@@ -119,7 +119,7 @@ def test_spherical_harmonics_real():
         for m2 in range(-deg, m1 + 1):
 
             def integrand(t, p):
-                return Ylm(deg, m1, t, p) * Ylm(deg, m2, t, p) * np.sin(t)
+                return Ylm(deg, m1, t, p) * Ylm(deg, m2, t, p) * np.sin(t)  # noqa: B023
 
             overlap = integrate.dblquad(
                 integrand, 0, 2 * np.pi, lambda _: 0, lambda _: np.pi

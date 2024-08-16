@@ -2,6 +2,8 @@
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+from __future__ import annotations
+
 import os
 import subprocess as sp
 import sys
@@ -39,7 +41,7 @@ def test_example(path):
         proc.kill()
         outs, errs = proc.communicate()
 
-    msg = "Script `%s` failed with following output:" % path
+    msg = f"Script `{path}` failed with following output:"
     if outs:
         msg = f"{msg}\nSTDOUT:\n{outs}"
     if errs:

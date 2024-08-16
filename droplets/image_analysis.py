@@ -107,7 +107,7 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
 
     # locate individual clusters in the padded image
     labels, num_labels = ndimage.label(mask.data)
-    grid._logger.info(f"Found {num_labels} cluster(s) in image")
+    grid._logger.info("Found %d cluster(s) in image", num_labels)
     if num_labels == 0:
         example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
         return Emulsion.empty(example_drop)
@@ -164,11 +164,11 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
     emulsion = Emulsion(droplets)
     num_candidates = len(emulsion)
     if num_candidates < num_labels:
-        grid._logger.info(f"Only {num_candidates} candidate(s) inside bounds")
+        grid._logger.info("Only %d candidate(s) inside bounds", num_candidates)
 
     emulsion.remove_overlapping(grid=grid)
     if len(emulsion) < num_candidates:
-        grid._logger.info(f"Only {num_candidates} candidate(s) not overlapping")
+        grid._logger.info("Only %d candidate(s) not overlapping", num_candidates)
 
     return emulsion
 
@@ -211,8 +211,6 @@ def _locate_droplets_in_mask_spherical(mask: ScalarField) -> Emulsion:
 
 class _SpanningDropletSignal(RuntimeError):
     """Exception signaling that an untypical droplet spanning the system was found."""
-
-    ...
 
 
 def _locate_droplets_in_mask_cylindrical_single(
@@ -299,7 +297,7 @@ def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
         except _SpanningDropletSignal:
             pass
         else:
-            grid._logger.info(f"Found {len(candidates)} droplet candidates.")
+            grid._logger.info("Found %d droplet candidates.", len(candidates))
 
             # keep droplets that are inside the central area
             droplets = Emulsion()
@@ -310,7 +308,7 @@ def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
                 if z_min <= droplet.position[2] <= z_max:
                     droplets.append(droplet)
 
-            grid._logger.info(f"Kept {len(droplets)} central droplets.")
+            grid._logger.info("Kept %d central droplets.", len(droplets))
 
             # filter overlapping droplets (e.g. due to duplicates)
             droplets.remove_overlapping()
@@ -373,7 +371,7 @@ def locate_droplets(
                 field,
                 threshold="auto",
                 refine=True,
-                refine_args={'vmin': None, 'vmax': None},
+                refine_args={"vmin": None, "vmax": None},
             )
 
         :code:`field` is the scalar field, in which the droplets are located. The
@@ -840,8 +838,9 @@ def get_length_scale(
             for window_size in [5, 1, 0.2]:
                 bracket = [max_est / window_size, max_est, max_est * window_size]
                 logger.debug(
-                    f"Search maximum of structure factor in interval {bracket} with "
-                    f"window_size={window_size}"
+                    "Seek maximal structure factor in interval %s with window_size=%g",
+                    bracket,
+                    window_size,
                 )
                 try:
                     result = optimize.minimize_scalar(
@@ -854,7 +853,8 @@ def get_length_scale(
                     if not result.success:
                         logger.warning(
                             "Maximization of structure factor resulted in the "
-                            f"following message: {result.message}"
+                            "following message: %s",
+                            result.message,
                         )
                     length_scale = 2 * np.pi / result.x
                     break  # found some answer, which we will use
