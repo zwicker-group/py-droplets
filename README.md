@@ -6,7 +6,6 @@
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/py-droplets.svg)](https://anaconda.org/conda-forge/py-droplets)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/zwicker-group/py-droplets/branch/master/graph/badge.svg)](https://codecov.io/gh/zwicker-group/py-droplets)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 `py-droplets` provides python code for representing physical droplets using
 key parameters like position, size, or shape.
