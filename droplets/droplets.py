@@ -170,7 +170,7 @@ class DropletBase:
             # on the data.
             self.data = np.recarray(1, dtype=dtype)[0]
 
-    def __init_subclass__(cls, **kwargs):  # @NoSelf
+    def __init_subclass__(cls, **kwargs):
         """Modify subclasses of this base class."""
         super().__init_subclass__(**kwargs)
 
