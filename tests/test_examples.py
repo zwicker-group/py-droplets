@@ -8,7 +8,6 @@ import os
 import subprocess as sp
 import sys
 from pathlib import Path
-from typing import List  # @UnusedImport
 
 import pytest
 

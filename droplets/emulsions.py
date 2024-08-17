@@ -34,7 +34,7 @@ from pde.trackers.base import InfoDict, InterruptData
 from .droplets import SphericalDroplet, droplet_from_data
 
 if TYPE_CHECKING:
-    from .trackers import DropletTracker  # @UnusedImport
+    from .trackers import DropletTracker
 
 
 class Emulsion(list):
@@ -1004,7 +1004,7 @@ class EmulsionTimeCourse:
             filename (str): determines where the EmulsionTimeCourse data is
                 stored
         """
-        from .trackers import DropletTracker  # @Reimport
+        from .trackers import DropletTracker
 
         return DropletTracker(
             emulsion_timecourse=self,
