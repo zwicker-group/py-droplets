@@ -109,9 +109,9 @@ class DropletTrack:
         if len(self.times) == 0:
             return f"{class_name}([])"
         elif len(self.times) == 1:
-            return f"{class_name}(time={self.start})"
+            return f"{class_name}(time={self.start:g})"
         else:
-            return f"{class_name}(timespan={self.start}..{self.end})"
+            return f"{class_name}(timespan={self.start:g}..{self.end:g})"
 
     def __len__(self):
         """Number of time points."""
