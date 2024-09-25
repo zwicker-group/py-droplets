@@ -885,7 +885,7 @@ class EmulsionTimeCourse:
                 using fitting. This is a potentially slow procedure.
             num_processes (int or "auto"):
                 Number of processes used for the refinement. If set to "auto", the
-                number of processes is choosen automatically.
+                number of processes is chosen automatically.
             progress (bool):
                 Whether to show the progress of the process. If `None`, the progress is
                 only shown when `refine` is `True`. Progress bars are only shown for
