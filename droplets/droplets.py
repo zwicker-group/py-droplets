@@ -42,10 +42,10 @@ from scipy import integrate
 from pde.fields import ScalarField
 from pde.grids.base import GridBase
 from pde.tools.cuboid import Cuboid
-from pde.tools.misc import preserve_scalars
 from pde.tools.plotting import PlotReference, plot_on_axes
 
 from .tools import spherical
+from .tools.misc import enable_scalar_args
 
 TDroplet = TypeVar("TDroplet", bound="DropletBase")
 DTypeList = list[Union[tuple[str, type[Any]], tuple[str, type[Any], tuple[int, ...]]]]
@@ -399,7 +399,7 @@ class SphericalDroplet(DropletBase):
 
         return merge_data  # type: ignore
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_position(self, *args) -> np.ndarray:
         r"""Calculates the position of the interface of the droplet.
 
@@ -914,7 +914,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
                 "the highest mode."
             )
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_distance(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
         """Calculates the distance of the droplet interface to the origin.
 
@@ -933,7 +933,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
                 dist += b * np.cos(n * φ)
         return self.radius * dist
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_position(self, φ: np.ndarray) -> np.ndarray:
         """Calculates the position of the interface of the droplet.
 
@@ -948,7 +948,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         pos = dist[:, None] * np.transpose([np.cos(φ), np.sin(φ)])
         return self.position[None, :] + pos  # type: ignore
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_curvature(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
         r"""Calculates the mean curvature of the interface of the droplet.
 
@@ -1097,7 +1097,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
                 opt_modes,
             )
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_distance(  # type: ignore
         self, θ: np.ndarray, φ: np.ndarray | None = None
     ) -> np.ndarray:
@@ -1122,7 +1122,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
                 dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)  # type: ignore
         return self.radius * dist
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_position(
         self, θ: np.ndarray, φ: np.ndarray | None = None
     ) -> np.ndarray:
@@ -1146,7 +1146,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         pos = dist[:, None] * np.transpose(unit_vector)
         return self.position[None, :] + pos  # type: ignore
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_curvature(  # type: ignore
         self, θ: np.ndarray, φ: np.ndarray | None = None
     ) -> np.ndarray:
@@ -1231,7 +1231,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         if not np.allclose(self.position[:2], 0):
             raise ValueError("Droplet must lie on z-axis")
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_distance(self, θ: np.ndarray) -> np.ndarray:  # type: ignore
         r"""Calculates the distance of the droplet interface to the origin.
 
@@ -1248,7 +1248,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
                 dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
         return self.radius * dist
 
-    @preserve_scalars
+    @enable_scalar_args
     def interface_curvature(self, θ: np.ndarray) -> np.ndarray:  # type: ignore
         r"""Calculates the mean curvature of the interface of the droplet.
 
