@@ -285,7 +285,7 @@ class Emulsion(list):
             if len(classes) > 1:
                 raise TypeError(
                     "Emulsion data cannot be stored contiguously if it contains a "
-                    f"multiple of droplet classes: "
+                    "multiple of droplet classes: "
                     + ", ".join(c.__name__ for c in classes)
                 )
             result = np.array([d.data for d in self])

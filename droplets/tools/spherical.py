@@ -199,7 +199,7 @@ def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
     """
 
     @register_jitable
-    def volume_from_radius(radius: TNumArr, dim: int) -> TNumArr:
+    def volume_from_radius_impl(radius: TNumArr, dim: int) -> TNumArr:
         if dim == 1:
             return 2 * radius
         elif dim == 2:
@@ -208,7 +208,7 @@ def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
             return 4 * π / 3 * radius**3
         raise NotImplementedError
 
-    return volume_from_radius  # type: ignore
+    return volume_from_radius_impl  # type: ignore
 
 
 def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
