@@ -99,7 +99,7 @@ def test_localization_perturbed_2d(periodic, rng):
     assert len(emulsion) == 1
     d2 = emulsion[0]
 
-    msg = "size=%d, periodic=%s, %s != %s" % (size, periodic, d1, d2)
+    msg = f"{size=}, {periodic=}, {d1} != {d2}"
     np.testing.assert_almost_equal(d1.position, d2.position, decimal=1, err_msg=msg)
     assert d1.radius == pytest.approx(d2.radius, rel=1e-5)
     assert d1.interface_width == pytest.approx(d2.interface_width, rel=1e-3)
@@ -129,7 +129,7 @@ def test_localization_perturbed_3d(periodic, rng):
     assert len(emulsion) == 1
     d2 = emulsion[0]
 
-    msg = "size=%d, periodic=%s, %s != %s" % (size, periodic, d1, d2)
+    msg = f"{size=}, {periodic=}, {d1} != {d2}"
     np.testing.assert_almost_equal(d1.position, d2.position, decimal=1, err_msg=msg)
     assert d1.radius == pytest.approx(d2.radius, rel=1e-4)
     assert d1.interface_width == pytest.approx(d2.interface_width, rel=1e-3)
