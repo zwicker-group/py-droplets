@@ -47,6 +47,10 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 from .tools import spherical
 from .tools.misc import enable_scalar_args
 
+_logger = logging.getLogger(__name__)
+""":class:`logging.Logger`: Logger instance."""
+
+
 TDroplet = TypeVar("TDroplet", bound="DropletBase")
 DTypeList = list[Union[tuple[str, type[Any]], tuple[str, type[Any], tuple[int, ...]]]]
 
@@ -908,8 +912,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         """
         super().__init__(position, radius, interface_width, amplitudes)
         if len(self.amplitudes) % 2 != 0:
-            logger = logging.getLogger(self.__class__.__name__)
-            logger.warning(
+            _logger.warning(
                 "`amplitudes` should be of even length to capture all perturbations of "
                 "the highest mode."
             )
@@ -1086,10 +1089,9 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         super().__init__(position, radius, interface_width, amplitudes)
         num_modes = len(self.amplitudes) + 1
         if not spherical.spherical_index_count_optimal(num_modes):
-            logger = logging.getLogger(self.__class__.__name__)
             l, _ = spherical.spherical_index_lm(num_modes)
             opt_modes = spherical.spherical_index_count(l) - 1
-            logger.warning(
+            _logger.warning(
                 "The length of `amplitudes` should be such that all orders are "
                 "captured for the perturbations with the highest degree (%d). "
                 "Consider increasing the size of the array to %d.",
@@ -1304,8 +1306,7 @@ class _TriangulatedSpheres:
         """Load the stored resource."""
         import h5py
 
-        logger = logging.getLogger(__name__)
-        logger.info("Open resource `%s`", self.path)
+        _logger.info("Open resource `%s`", self.path)
         with h5py.File(self.path, "r") as f:
             self.num_list = np.array(f.attrs["num_list"])
             self.data = {}

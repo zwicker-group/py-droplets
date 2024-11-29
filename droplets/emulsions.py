@@ -37,6 +37,10 @@ if TYPE_CHECKING:
     from .trackers import DropletTracker
 
 
+_logger = logging.getLogger(__name__)
+""":class:`logging.Logger`: Logger instance."""
+
+
 class Emulsion(list):
     """Class representing a collection of droplets in a common system."""
 
@@ -290,8 +294,7 @@ class Emulsion(list):
                 )
             result = np.array([d.data for d in self])
             if result.dtype != self.dtype:
-                logger = logging.getLogger(self.__class__.__name__)
-                logger.warning("Emulsion had inconsistent dtypes")
+                _logger.warning("Emulsion had inconsistent dtypes")
             return result
 
     def get_linked_data(self) -> np.ndarray:
@@ -681,8 +684,7 @@ class Emulsion(list):
                 f"Plotting emulsions in {self.dim} dimensions is not implemented."
             )
         elif self.dim > 2 and Emulsion._show_projection_warning:
-            logger = logging.getLogger(self.__class__.__name__)
-            logger.warning("A projection on the first two axes is shown.")
+            _logger.warning("A projection on the first two axes is shown.")
             Emulsion._show_projection_warning = False
 
         # plot background and determine bounds for the droplets
@@ -725,8 +727,7 @@ class Emulsion(list):
             colors: list | np.ndarray = mapper.to_rgba(values)
 
             if kwargs.pop("color", None) is not None:
-                logger = logging.getLogger(self.__class__.__name__)
-                logger.warning("`color` is overwritten by `color_value`.")
+                _logger.warning("`color` is overwritten by `color_value`.")
 
         else:
             colors = [kwargs.pop("color", None)] * len(drops_finite)
