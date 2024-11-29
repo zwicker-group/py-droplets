@@ -30,6 +30,9 @@ from pde.trackers.base import InfoDict
 from .droplets import SphericalDroplet, droplet_from_data
 from .emulsions import Emulsion, EmulsionTimeCourse
 
+_logger = logging.getLogger(__name__)
+""":class:`logging.Logger`: Logger instance."""
+
 
 def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
     """Finds contiguous True regions in the boolean array "condition".
@@ -523,7 +526,6 @@ class DropletTrackList(list):
         """
         # get tracks, i.e. clearly overlapping droplets
         tracks = cls()
-        logger = logging.getLogger(cls.__name__)
 
         # determine the tracking method
         if method == "overlap":
@@ -549,7 +551,7 @@ class DropletTrackList(list):
                         tracks.append(DropletTrack(droplets=[droplet], times=[time]))
 
                 if found_multiple_overlap:
-                    logger.debug("Found multiple overlapping droplet(s) at t=%g", time)
+                    _logger.debug("Found multiple overlapping droplet(s) at t=%g", time)
 
         elif method == "distance":
             # track droplets by their physical distance
@@ -595,7 +597,7 @@ class DropletTrackList(list):
 
         # check kwargs
         if kwargs:
-            logger.warning("Unused keyword arguments: %s", kwargs)
+            _logger.warning("Unused keyword arguments: %s", kwargs)
 
         # add all emulsions successively using the given algorithm
         t_last = None

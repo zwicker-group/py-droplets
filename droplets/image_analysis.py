@@ -52,6 +52,9 @@ from .droplets import (
 )
 from .emulsions import Emulsion
 
+_logger = logging.getLogger(__name__)
+""":class:`logging.Logger`: Logger instance."""
+
 
 def threshold_otsu(data: np.ndarray, nbins: int = 256) -> float:
     """Find the threshold value for a bimodal histogram using the Otsu method.
@@ -107,7 +110,7 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
 
     # locate individual clusters in the padded image
     labels, num_labels = ndimage.label(mask.data)
-    grid._logger.info("Found %d cluster(s) in image", num_labels)
+    _logger.info("Found %d cluster(s) in image", num_labels)
     if num_labels == 0:
         example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
         return Emulsion.empty(example_drop)
@@ -164,11 +167,11 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
     emulsion = Emulsion(droplets)
     num_candidates = len(emulsion)
     if num_candidates < num_labels:
-        grid._logger.info("Only %d candidate(s) inside bounds", num_candidates)
+        _logger.info("Only %d candidate(s) inside bounds", num_candidates)
 
     emulsion.remove_overlapping(grid=grid)
     if len(emulsion) < num_candidates:
-        grid._logger.info("Only %d candidate(s) not overlapping", num_candidates)
+        _logger.info("Only %d candidate(s) not overlapping", num_candidates)
 
     return emulsion
 
@@ -198,8 +201,7 @@ def _locate_droplets_in_mask_spherical(mask: ScalarField) -> Emulsion:
             radius = float(grid.transform(slices[0].stop, "cell", "grid").flat[-1])
             droplet = SphericalDroplet(np.zeros(grid.dim), radius=radius)
         else:
-            logger = logging.getLogger(grid.__class__.__module__)
-            logger.warning("Found object not located at origin")
+            _logger.warning("Found object not located at origin")
 
     # return an emulsion of droplets
     if droplet:
@@ -243,8 +245,7 @@ def _locate_droplets_in_mask_cylindrical_single(
                 # the "droplet" extends the entire z-axis
                 raise _SpanningDropletSignal
         else:
-            logger = logging.getLogger(grid.__class__.__module__)
-            logger.warning("Found object not located on symmetry axis")
+            _logger.warning("Found object not located on symmetry axis")
 
     # determine position from binary image and scale it to real space
     pos = ndimage.center_of_mass(mask, labels, index=indices)
@@ -297,7 +298,7 @@ def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
         except _SpanningDropletSignal:
             pass
         else:
-            grid._logger.info("Found %d droplet candidates.", len(candidates))
+            _logger.info("Found %d droplet candidates.", len(candidates))
 
             # keep droplets that are inside the central area
             droplets = Emulsion()
@@ -308,7 +309,7 @@ def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
                 if z_min <= droplet.position[2] <= z_max:
                     droplets.append(droplet)
 
-            grid._logger.info("Kept %d central droplets.", len(droplets))
+            _logger.info("Kept %d central droplets.", len(droplets))
 
             # filter overlapping droplets (e.g. due to duplicates)
             droplets.remove_overlapping()
@@ -700,8 +701,6 @@ def get_structure_factor(
         associated structure factor. Wave numbers :math:`k` are related to distances by
         :math:`2\pi/k`.
     """
-    logger = logging.getLogger(__name__)
-
     if not isinstance(scalar_field, ScalarField):
         raise TypeError(
             "Length scales can only be calculated for scalar "
@@ -714,7 +713,7 @@ def get_structure_factor(
             "Structure factor can currently only be calculated for Cartesian grids"
         )
     if not all(grid.periodic):
-        logger.warning(
+        _logger.warning(
             "Structure factor calculation assumes periodic boundary "
             "conditions, but not all grid dimensions are periodic"
         )
@@ -764,7 +763,7 @@ def get_structure_factor(
         sf = sf_smooth(k_mag)
 
     elif not no_wavenumbers:
-        logger.warning(
+        _logger.warning(
             "Argument `wave_numbers` is only used when `smoothing` is enabled."
         )
 
@@ -809,8 +808,6 @@ def get_length_scale(
     See Also:
         :class:`~droplets.trackers.LengthScaleTracker`: Tracker measuring length scales
     """
-    logger = logging.getLogger(__name__)
-
     if method == "structure_factor_mean" or method == "structure_factor_average":
         # calculate the structure factor
         k_mag, sf = get_structure_factor(scalar_field)
@@ -837,7 +834,7 @@ def get_length_scale(
             max_est = k_mag[1 + np.argmax(sf[1:])]
             for window_size in [5, 1, 0.2]:
                 bracket = [max_est / window_size, max_est, max_est * window_size]
-                logger.debug(
+                _logger.debug(
                     "Seek maximal structure factor in interval %s with window_size=%g",
                     bracket,
                     window_size,
@@ -847,11 +844,11 @@ def get_length_scale(
                         lambda x: -sf_smooth(x), bracket=bracket
                     )
                 except Exception:
-                    logger.warning("Could not determine maximal structure factor")
+                    _logger.warning("Could not determine maximal structure factor")
                     length_scale = math.nan
                 else:
                     if not result.success:
-                        logger.warning(
+                        _logger.warning(
                             "Maximization of structure factor resulted in the "
                             "following message: %s",
                             result.message,
@@ -885,7 +882,7 @@ def get_length_scale(
 
     if kwargs:
         # raise warning if keyword arguments remain
-        logger.warning("Unused keyword arguments: %s", ", ".join(kwargs))
+        _logger.warning("Unused keyword arguments: %s", ", ".join(kwargs))
 
     # return only the length scale with out any additional information
     return length_scale  # type: ignore
