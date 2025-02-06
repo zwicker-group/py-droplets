@@ -63,7 +63,7 @@ class Emulsion(list):
                 :class:`~droplets.droplets.SphericalDroplet`.
             copy (bool, optional):
                 Whether to make a copy of the droplet or not
-            dtype (:class:`~numpy.tpying.DTypeLike`):
+            dtype (:class:`~numpy.typing.DTypeLike`):
                 The dtype describing what droplets are stored in the emulsion. Providing
                 this is usually only necessary for creating empty emulsions. Instead of
                 a dtype, an array or an example droplet can also be supplied.
@@ -224,7 +224,7 @@ class Emulsion(list):
         """Add many droplets to the emulsion.
 
         Args:
-            droplet (list of :class:`droplets.dropelts.SphericalDroplet`):
+            droplet (list of :class:`droplets.droplets.SphericalDroplet`):
                 List of droplets to add to the emulsion
             copy (bool, optional):
                 Whether to make a copy of the droplet or not
@@ -244,7 +244,7 @@ class Emulsion(list):
         """Add a droplet to the emulsion.
 
         Args:
-            droplet (:class:`droplets.dropelts.SphericalDroplet`):
+            droplet (:class:`droplets.droplets.SphericalDroplet`):
                 Droplet to add to the emulsion
             copy (bool, optional):
                 Whether to make a copy of the droplet or not
@@ -321,11 +321,11 @@ class Emulsion(list):
         Returns:
             :class:`Emulsion`: The emulsion read from the file
         """
-        # there are values, so the emulsion is not empty
         droplet_class = dataset.attrs["droplet_class"]
         if droplet_class == "None":
             droplets: list[SphericalDroplet] = []
         else:
+            # there are values, so the emulsion is not empty
             droplets = [
                 droplet_from_data(droplet_class, data)  # type: ignore
                 for data in dataset
@@ -926,7 +926,7 @@ class EmulsionTimeCourse:
         return cls(emulsions, times=storage.times)
 
     @classmethod
-    def from_file(cls, path: str, progress: bool = True) -> EmulsionTimeCourse:
+    def from_file(cls, path: str, *, progress: bool = True) -> EmulsionTimeCourse:
         """Create emulsion time course by reading file.
 
         Args:
