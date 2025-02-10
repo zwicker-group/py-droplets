@@ -656,13 +656,15 @@ class DropletTrackList(list):
         return cls.from_emulsion_time_course(etc, method=method, progress=progress)
 
     @classmethod
-    def from_file(cls, path: str) -> DropletTrackList:
+    def from_file(cls, path: str, *, progress: bool = True) -> DropletTrackList:
         """Create droplet track list by reading file.
 
         Args:
             path (str):
                 The path from which the data is read. This function assumes that the
                 data was written as an HDF5 file using :meth:`to_file`.
+            progress (bool):
+                Whether to show the progress of the process in a progress bar
 
         Returns:
             :class:`DropletTrackList`: an instance describing the droplet track list
@@ -671,7 +673,10 @@ class DropletTrackList(list):
 
         obj = cls()
         with h5py.File(path, "r") as fp:
-            for key in sorted(fp.keys()):  # iterate in the stored order
+            # load the actual droplet track data and iterate in the right order
+            for key in display_progress(
+                sorted(fp.keys()), total=len(fp), enabled=progress
+            ):
                 dataset = fp[key]
                 obj.append(DropletTrack._from_hdf_dataset(dataset))
         return obj
