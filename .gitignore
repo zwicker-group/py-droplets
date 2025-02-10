@@ -1,4 +1,5 @@
 # special project folders
+debug/
 docs/source/packages/
 docs/paper/paper.pdf
 tests/coverage/
