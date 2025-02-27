@@ -534,19 +534,6 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
     else:  # order < 0
         return np.sqrt(2) * (-1) ** order * np.imag(sph_harm_y(degree, -order, θ, φ))  # type: ignore
 
-    if order > 0:
-        term1 = sph_harm_y(degree, order, θ, φ)
-        term2 = (-1) ** order * sph_harm_y(degree, -order, θ, φ)
-        return np.real((term1 + term2) / np.sqrt(2))  # type: ignore
-
-    elif order == 0:
-        return np.real(sph_harm_y(degree, 0, θ, φ))  # type: ignore
-
-    else:  # order < 0
-        term1 = sph_harm_y(degree, -order, θ, φ)
-        term2 = (-1) ** order * sph_harm_y(degree, order, θ, φ)
-        return np.real((term1 - term2) / (complex(0, np.sqrt(2))))  # type: ignore
-
 
 def spherical_harmonic_real_k(k: int, θ: float, φ: float) -> float:
     r"""Real spherical harmonics described by mode k.
