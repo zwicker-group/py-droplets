@@ -78,7 +78,14 @@ from typing import Callable, Literal, TypeVar
 
 import numpy as np
 from numba.extending import overload, register_jitable
-from scipy.special import sph_harm
+
+try:
+    from scipy.special import sph_harm_y
+except ImportError:
+    # support scipy version below 1.15.0
+    from scipy.special import sph_harm
+
+    sph_harm_y = lambda n, m, theta, phi: sph_harm(m, n, phi, theta)
 
 from pde.grids.base import DimensionError, GridBase
 from pde.grids.spherical import volume_from_radius
@@ -452,7 +459,7 @@ def spherical_index_lm(k: int) -> tuple[int, int]:
 
     Returns:
         tuple: The degree `l` and order `m` of the spherical harmonics
-        assoicated with the combined index
+        associated with the combined index
     """
     degree = int(np.floor(np.sqrt(k)))
     return degree, k - degree * (degree + 1)
@@ -481,7 +488,7 @@ def spherical_index_count_optimal(k_count: int) -> bool:
             The number of modes considered
 
     Returns:
-        bool: indiciates whether `k_count` is optimally chosen.
+        bool: indicates whether `k_count` is optimally chosen.
     """
     is_square = bool(int(np.sqrt(k_count) + 0.5) ** 2 == k_count)
     return is_square
@@ -499,9 +506,7 @@ def spherical_harmonic_symmetric(degree: int, θ: float) -> float:
     Returns:
         float: The value of the spherical harmonics
     """
-    # note that the definition of `sph_harm` has a different convention for the
-    # usage of the variables φ and θ and we thus have to swap the args
-    return np.real(sph_harm(0.0, degree, 0.0, θ))  # type: ignore
+    return np.real(sph_harm_y(degree, 0, θ, 0.0))  # type: ignore
 
 
 def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> float:
@@ -513,28 +518,21 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
         order (int):
             Order :math:`m` of the spherical harmonics
         θ (float):
-            Azimuthal angle (in :math:`[0, \pi]`) at which fucntion is evaluated.
+            Azimuthal angle (in :math:`[0, \pi]`) at which function is evaluated.
         φ (float):
             Polar angle (in :math:`[0, 2\pi]`) at which function is evaluated.
 
     Returns:
         float: The value of the spherical harmonics
     """
-    # note that the definition of `sph_harm` has a different convention for the
-    # usage of the variables φ and θ and we thus have to swap the args
-    # Moreover, the scipy functions expect first the order and then the degree
     if order > 0:
-        term1 = sph_harm(order, degree, φ, θ)
-        term2 = (-1) ** order * sph_harm(-order, degree, φ, θ)
-        return np.real((term1 + term2) / np.sqrt(2))  # type: ignore
+        return (-1) ** order * np.sqrt(2) * np.real(sph_harm_y(degree, order, θ, φ))  # type: ignore
 
     elif order == 0:
-        return np.real(sph_harm(0, degree, φ, θ))  # type: ignore
+        return np.real(sph_harm_y(degree, 0, θ, φ))  # type: ignore
 
     else:  # order < 0
-        term1 = sph_harm(-order, degree, φ, θ)
-        term2 = (-1) ** order * sph_harm(order, degree, φ, θ)
-        return np.real((term1 - term2) / (complex(0, np.sqrt(2))))  # type: ignore
+        return np.sqrt(2) * (-1) ** order * np.imag(sph_harm_y(degree, -order, θ, φ))  # type: ignore
 
 
 def spherical_harmonic_real_k(k: int, θ: float, φ: float) -> float:
@@ -544,7 +542,7 @@ def spherical_harmonic_real_k(k: int, θ: float, φ: float) -> float:
         k (int):
             Combined index determining the degree and order of the spherical harmonics
         θ (float):
-            Azimuthal angle (in :math:`[0, \pi]`) at which fucntion is evaluated.
+            Azimuthal angle (in :math:`[0, \pi]`) at which function is evaluated.
         φ (float):
             Polar angle (in :math:`[0, 2\pi]`) at which function is evaluated.
 
