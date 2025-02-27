@@ -625,11 +625,10 @@ class Emulsion(list):
         self,
         ax,
         field: ScalarField | None = None,
-        *,
         image_args: dict[str, Any] | None = None,
         repeat_periodically: bool = True,
         grid: GridBase | None = None,
-        set_bounds:bool=True,
+        set_bounds: bool = True,
         color_value: Callable | None = None,
         cmap=None,
         norm=None,
@@ -769,7 +768,6 @@ class Emulsion(list):
 
         ax.set_xlim(*bounds[0])
         ax.set_ylim(*bounds[1])
-
 
         # add colorbar if requested
         if color_value is not None and colorbar:
@@ -1002,11 +1000,7 @@ class EmulsionTimeCourse:
 
     @fill_in_docstring
     def tracker(
-        self,
-        interrupts: InterruptData = 1,
-        filename: str | None = None,
-        *,
-        interval=None,
+        self, interrupts: InterruptData = 1, filename: str | None = None
     ) -> DropletTracker:
         """Return a tracker that analyzes emulsions during simulations.
 
@@ -1019,10 +1013,7 @@ class EmulsionTimeCourse:
         from .trackers import DropletTracker
 
         return DropletTracker(
-            emulsion_timecourse=self,
-            filename=filename,
-            interrupts=interrupts,
-            interval=interval,
+            emulsion_timecourse=self, filename=filename, interrupts=interrupts
         )
 
 

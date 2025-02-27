@@ -72,6 +72,34 @@ def test_spherical_conversion(rng):
     np.testing.assert_allclose(c2s(s2c(ps)), ps, rtol=1e-6)
 
 
+def test_spherical_harmonics_examples():
+    """Test the conventions of our spherical harmonics."""
+    theta, phi = 0.3, 0.4
+
+    # test symmetric version
+    expect = 0.25 * np.sqrt(5 / np.pi) * (3 * np.cos(theta) ** 2 - 1)
+    assert spherical.spherical_harmonic_symmetric(2, theta) == pytest.approx(expect)
+    assert spherical.spherical_harmonic_real(2, 0, theta, phi) == pytest.approx(expect)
+
+    # test real spherical harmonics for l=0
+    expect = 0.5 * np.sqrt(1 / np.pi)
+    assert spherical.spherical_harmonic_real(0, 0, theta, phi) == pytest.approx(expect)
+
+    # test real spherical harmonics for l=1
+    expect = np.sqrt(3 / (4 * np.pi)) * np.sin(theta) * np.sin(phi)
+    assert spherical.spherical_harmonic_real(1, -1, theta, phi) == pytest.approx(expect)
+    expect = np.sqrt(3 / (4 * np.pi)) * np.cos(theta)
+    assert spherical.spherical_harmonic_real(1, 0, theta, phi) == pytest.approx(expect)
+    expect = np.sqrt(3 / (4 * np.pi)) * np.sin(theta) * np.cos(phi)
+    assert spherical.spherical_harmonic_real(1, 1, theta, phi) == pytest.approx(expect)
+
+    # test real spherical harmonics for l=2
+    expect = 0.25 * np.sqrt(15 / np.pi) * np.sin(theta) ** 2 * np.sin(2 * phi)
+    assert spherical.spherical_harmonic_real(2, -2, theta, phi) == pytest.approx(expect)
+    expect = 0.25 * np.sqrt(15 / np.pi) * np.sin(2 * theta) * np.sin(phi)
+    assert spherical.spherical_harmonic_real(2, -1, theta, phi) == pytest.approx(expect)
+
+
 def test_spherical_index():
     """Test the conversion of the spherical index."""
     # check initial state
@@ -110,7 +138,7 @@ def test_spherical_harmonics_real():
             φ = 2 * math.pi * random.random()
             y1 = spherical.spherical_harmonic_symmetric(deg, θ)
             y2 = spherical.spherical_harmonic_real(deg, 0, θ, φ)
-            assert y1 == y2
+            assert y1 == pytest.approx(y2)
 
     # test orthogonality of real spherical harmonics
     deg = 1

@@ -78,7 +78,14 @@ from typing import Callable, Literal, TypeVar
 
 import numpy as np
 from numba.extending import overload, register_jitable
-from scipy.special import sph_harm
+
+try:
+    from scipy.special import sph_harm_y
+except ImportError:
+    # support scipy version below 1.15.0
+    from scipy.special import sph_harm
+
+    sph_harm_y = lambda n, m, theta, phi: sph_harm(m, n, phi, theta)
 
 from pde.grids.base import DimensionError, GridBase
 from pde.grids.spherical import volume_from_radius
@@ -499,9 +506,7 @@ def spherical_harmonic_symmetric(degree: int, θ: float) -> float:
     Returns:
         float: The value of the spherical harmonics
     """
-    # note that the definition of `sph_harm` has a different convention for the
-    # usage of the variables φ and θ and we thus have to swap the args
-    return np.real(sph_harm(0.0, degree, 0.0, θ))  # type: ignore
+    return np.real(sph_harm_y(degree, 0, θ, 0.0))  # type: ignore
 
 
 def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> float:
@@ -520,20 +525,26 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
     Returns:
         float: The value of the spherical harmonics
     """
-    # note that the definition of `sph_harm` has a different convention for the
-    # usage of the variables φ and θ and we thus have to swap the args
-    # Moreover, the scipy functions expect first the order and then the degree
     if order > 0:
-        term1 = sph_harm(order, degree, φ, θ)
-        term2 = (-1) ** order * sph_harm(-order, degree, φ, θ)
+        return (-1) ** order * np.sqrt(2) * np.real(sph_harm_y(degree, order, θ, φ))
+
+    elif order == 0:
+        return np.real(sph_harm_y(degree, 0, θ, φ))  # type: ignore
+
+    else:  # order < 0
+        return np.sqrt(2) * (-1) ** order * np.imag(sph_harm_y(degree, -order, θ, φ))  # type: ignore
+
+    if order > 0:
+        term1 = sph_harm_y(degree, order, θ, φ)
+        term2 = (-1) ** order * sph_harm_y(degree, -order, θ, φ)
         return np.real((term1 + term2) / np.sqrt(2))  # type: ignore
 
     elif order == 0:
-        return np.real(sph_harm(0, degree, φ, θ))  # type: ignore
+        return np.real(sph_harm_y(degree, 0, θ, φ))  # type: ignore
 
     else:  # order < 0
-        term1 = sph_harm(-order, degree, φ, θ)
-        term2 = (-1) ** order * sph_harm(order, degree, φ, θ)
+        term1 = sph_harm_y(degree, -order, θ, φ)
+        term2 = (-1) ** order * sph_harm_y(degree, order, θ, φ)
         return np.real((term1 - term2) / (complex(0, np.sqrt(2))))  # type: ignore
 
 

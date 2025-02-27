@@ -43,7 +43,6 @@ class LengthScaleTracker(TrackerBase):
         ] = "structure_factor_mean",
         source: None | int | Callable = None,
         verbose: bool = False,
-        interval=None,
     ):
         r"""
         Args:
@@ -66,7 +65,7 @@ class LengthScaleTracker(TrackerBase):
             verbose (bool):
                 Determines whether errors in determining the length scales are logged.
         """
-        super().__init__(interrupts=interrupts, interval=interval)
+        super().__init__(interrupts=interrupts)
         self.length_scales: list[float] = []
         self.times: list[float] = []
         self.filename = filename
@@ -143,7 +142,6 @@ class DropletTracker(TrackerBase):
         refine: bool = False,
         refine_args: dict[str, Any] | None = None,
         perturbation_modes: int = 0,
-        interval=None,
     ):
         """
 
@@ -158,7 +156,7 @@ class DropletTracker(TrackerBase):
                 )
 
             :code:`field` is the scalar field, in which the droplets are located. The
-            `refine_args` set flexibel boundaries for the intensities inside and outside
+            `refine_args` set flexible boundaries for the intensities inside and outside
             the droplet.
 
         Args:
@@ -200,7 +198,7 @@ class DropletTracker(TrackerBase):
                 An option describing how many perturbation modes should be considered
                 when refining droplets. Only has an effect if `refine=True`.
         """
-        super().__init__(interrupts=interrupts, interval=interval)
+        super().__init__(interrupts=interrupts)
         if emulsion_timecourse is None:
             self.data = EmulsionTimeCourse()
         else:
