@@ -236,7 +236,8 @@ def test_emulsion_plotting():
         Emulsion([droplets.PerturbedDroplet2D([0, 1], 3, 1, [1, 2, 3, 4])]),
     ]
     for e2 in es:
-        e2.plot()
+        e2.plot(set_bounds=True)
+        e2.plot(set_bounds=False)
         e2.plot(field=field, repeat_periodically=True)
         e2.plot(grid=field.grid, repeat_periodically=True)
         e2.plot(color_value=lambda droplet: droplet.radius)
