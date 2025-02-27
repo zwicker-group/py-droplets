@@ -763,11 +763,10 @@ class Emulsion(list):
             else:
                 # determine the bounds from the emulsion data itself
                 bounds = self.bbox.bounds
+            ax.set_xlim(*bounds[0])
+            ax.set_ylim(*bounds[1])
         else:
             ax.autoscale_view()
-
-        ax.set_xlim(*bounds[0])
-        ax.set_ylim(*bounds[1])
 
         # add colorbar if requested
         if color_value is not None and colorbar:
