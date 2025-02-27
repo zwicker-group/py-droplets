@@ -526,7 +526,7 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
         float: The value of the spherical harmonics
     """
     if order > 0:
-        return (-1) ** order * np.sqrt(2) * np.real(sph_harm_y(degree, order, θ, φ))
+        return (-1) ** order * np.sqrt(2) * np.real(sph_harm_y(degree, order, θ, φ))  # type: ignore
 
     elif order == 0:
         return np.real(sph_harm_y(degree, 0, θ, φ))  # type: ignore
