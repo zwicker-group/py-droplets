@@ -459,7 +459,7 @@ def spherical_index_lm(k: int) -> tuple[int, int]:
 
     Returns:
         tuple: The degree `l` and order `m` of the spherical harmonics
-        assoicated with the combined index
+        associated with the combined index
     """
     degree = int(np.floor(np.sqrt(k)))
     return degree, k - degree * (degree + 1)
@@ -488,7 +488,7 @@ def spherical_index_count_optimal(k_count: int) -> bool:
             The number of modes considered
 
     Returns:
-        bool: indiciates whether `k_count` is optimally chosen.
+        bool: indicates whether `k_count` is optimally chosen.
     """
     is_square = bool(int(np.sqrt(k_count) + 0.5) ** 2 == k_count)
     return is_square
@@ -518,7 +518,7 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
         order (int):
             Order :math:`m` of the spherical harmonics
         θ (float):
-            Azimuthal angle (in :math:`[0, \pi]`) at which fucntion is evaluated.
+            Azimuthal angle (in :math:`[0, \pi]`) at which function is evaluated.
         φ (float):
             Polar angle (in :math:`[0, 2\pi]`) at which function is evaluated.
 
@@ -542,7 +542,7 @@ def spherical_harmonic_real_k(k: int, θ: float, φ: float) -> float:
         k (int):
             Combined index determining the degree and order of the spherical harmonics
         θ (float):
-            Azimuthal angle (in :math:`[0, \pi]`) at which fucntion is evaluated.
+            Azimuthal angle (in :math:`[0, \pi]`) at which function is evaluated.
         φ (float):
             Polar angle (in :math:`[0, 2\pi]`) at which function is evaluated.
 
