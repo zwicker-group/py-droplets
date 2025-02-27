@@ -625,9 +625,11 @@ class Emulsion(list):
         self,
         ax,
         field: ScalarField | None = None,
+        *,
         image_args: dict[str, Any] | None = None,
         repeat_periodically: bool = True,
         grid: GridBase | None = None,
+        set_bounds:bool=True,
         color_value: Callable | None = None,
         cmap=None,
         norm=None,
@@ -653,6 +655,11 @@ class Emulsion(list):
             grid (:class:`~pde.grids.base.GridBase`):
                 The grid on which the droplets are defined, which is necessary if
                 periodic boundary conditions should be respected for measuring distances
+            set_bounds (bool):
+                Determines whether the the axis bounds are set explicitly (and autoscale)
+                is disabled. If True, the bounds are determined from the supplied field
+                or grid. If these are omitted, the bounding box is determined from all
+                droplets.
             color_value (callable):
                 Function used to determine the color of a droplet. The function is
                 called with individual droplet objects and must return a single scalar
@@ -701,17 +708,6 @@ class Emulsion(list):
             elif grid != field.grid:
                 raise ValueError("Argument `grid` is incompatible with `field.grid`")
 
-        if grid is not None and isinstance(grid, CartesianGrid):
-            # determine the bounds from the (2d) grid
-            bounds = grid.axes_bounds
-        else:
-            # determine the bounds from the emulsion data itself
-            bounds = self.bbox.bounds
-
-        ax.set_xlim(*bounds[0])
-        ax.set_ylim(*bounds[1])
-        ax.set_aspect("equal")
-
         # determine non-vanishing droplets
         drops_finite = [droplet for droplet in self if droplet.radius > 0]
 
@@ -759,6 +755,21 @@ class Emulsion(list):
             col_args["zorder"] = kwargs["zorder"]
         coll = mpl.collections.PatchCollection(patches, match_original=True, **col_args)
         ax.add_collection(coll)
+
+        ax.set_aspect("equal")
+        if set_bounds:
+            if grid is not None and isinstance(grid, CartesianGrid):
+                # determine the bounds from the (2d) grid
+                bounds = grid.axes_bounds
+            else:
+                # determine the bounds from the emulsion data itself
+                bounds = self.bbox.bounds
+        else:
+            ax.autoscale_view()
+
+        ax.set_xlim(*bounds[0])
+        ax.set_ylim(*bounds[1])
+
 
         # add colorbar if requested
         if color_value is not None and colorbar:
