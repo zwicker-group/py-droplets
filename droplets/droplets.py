@@ -64,7 +64,7 @@ def get_dtype_field_size(dtype: DTypeLike, field_name: str) -> int:
         field_name (str):
             The name of the field that needs to be checked
     """
-    shape = dtype.fields[field_name][0].shape  # type: ignore
+    shape = dtype.fields[field_name][0].shape
     return np.prod(shape) if shape else 1  # type: ignore
 
 
@@ -318,7 +318,7 @@ class SphericalDroplet(DropletBase):
     @property
     def position(self) -> np.ndarray:
         """:class:`~numpy.ndarray`: the position of the droplet."""
-        return self.data["position"]
+        return self.data["position"]  # type: ignore
 
     @position.setter
     def position(self, value: np.ndarray) -> None:
@@ -468,7 +468,7 @@ class SphericalDroplet(DropletBase):
 
         # calculate distances from droplet center
         dist = spherical.polar_coordinates(grid, origin=self.position, ret_angle=False)
-        return (dist < self.radius).astype(dtype)
+        return (dist < self.radius).astype(dtype)  # type: ignore
 
     def get_phase_field(
         self,
@@ -703,7 +703,7 @@ class DiffuseDroplet(SphericalDroplet):
         else:
             result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)
 
-        return result.astype(dtype)
+        return result.astype(dtype)  # type: ignore
 
 
 class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
@@ -855,7 +855,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         else:
             result = 0.5 + 0.5 * np.tanh((interface - dist) / interface_width)
 
-        return result.astype(dtype)
+        return result.astype(dtype)  # type: ignore
 
     def _get_mpl_patch(self, dim=None, *, color=None, **kwargs):
         """Return the patch representing the droplet for plotting.
@@ -934,7 +934,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
                 dist += a * np.sin(n * φ)
             if b != 0:
                 dist += b * np.cos(n * φ)
-        return self.radius * dist
+        return self.radius * dist  # type: ignore
 
     @enable_scalar_args
     def interface_position(self, φ: np.ndarray) -> np.ndarray:
@@ -972,13 +972,13 @@ class PerturbedDroplet2D(PerturbedDropletBase):
                 curv_radius -= a * factor * np.sin(n * φ)
             if b != 0:
                 curv_radius -= b * factor * np.cos(n * φ)
-        return 1 / (self.radius * curv_radius)
+        return 1 / (self.radius * curv_radius)  # type: ignore
 
     @property
     def volume(self) -> float:
         """float: volume of the droplet"""
         term = 1 + np.sum(self.amplitudes**2) / 2
-        return np.pi * self.radius**2 * term  # type: ignore
+        return np.pi * self.radius**2 * term
 
     @volume.setter
     def volume(self, volume: float) -> None:
@@ -1122,7 +1122,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)  # type: ignore
-        return self.radius * dist
+        return self.radius * dist  # type: ignore
 
     @enable_scalar_args
     def interface_position(
@@ -1248,7 +1248,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
-        return self.radius * dist
+        return self.radius * dist  # type: ignore
 
     @enable_scalar_args
     def interface_curvature(self, θ: np.ndarray) -> np.ndarray:  # type: ignore

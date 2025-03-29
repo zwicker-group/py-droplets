@@ -38,9 +38,11 @@ def replace_in_file(infile, replacements, outfile=None):
 
 
 def main(folder="droplets"):
+    logger = logging.getLogger("autodoc")
+
     # remove old files
     for path in OUTPUT_PATH.glob("*.rst"):
-        logging.info("Remove file `%s`", path)
+        logger.info("Remove file `%s`", path)
         path.unlink()
 
     # run sphinx-apidoc
@@ -61,7 +63,7 @@ def main(folder="droplets"):
 
     # replace unwanted information
     for path in OUTPUT_PATH.glob("*.rst"):
-        logging.info("Patch file `%s`", path)
+        logger.info("Patch file `%s`", path)
         replace_in_file(path, {"Submodules\n----------\n\n": ""})
 
 

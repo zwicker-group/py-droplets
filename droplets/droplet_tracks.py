@@ -48,7 +48,7 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
         is the start index of the region and the second column is the end index
     """
     if len(condition) == 0:
-        return np.empty((0, 2), dtype=np.intc)
+        return np.empty((0, 2), dtype=np.intc)  # type:ignore
 
     # convert condition array to integer
     condition = np.asarray(condition, np.intc)
@@ -70,7 +70,7 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
         idx = np.r_[idx, condition.size]
 
     # Reshape the result into two columns
-    return idx.reshape(-1, 2).astype(np.intc)
+    return idx.reshape(-1, 2).astype(np.intc)  # type:ignore
 
 
 class DropletTrack:
@@ -179,7 +179,7 @@ class DropletTrack:
             result = np.empty(len(self), dtype=dtype)
             for i in range(len(self)):
                 result[i] = (self.times[i],) + self.droplets[i].data.tolist()
-            return result
+            return result  # type:ignore
 
     def __iter__(self):
         """Iterate over all droplets."""
@@ -240,7 +240,7 @@ class DropletTrack:
             ndimage.gaussian_filter1d(
                 trajectory, output=trajectory, sigma=smoothing, axis=0, mode="nearest"
             )
-        return trajectory
+        return trajectory  # type:ignore
 
     def get_radii(self, smoothing: float = 0) -> np.ndarray:
         """:class:`~numpy.ndarray`: returns the droplet radius for each time point.
