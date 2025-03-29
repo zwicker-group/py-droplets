@@ -276,7 +276,7 @@ class Emulsion(list):
         if len(self) == 0:
             # deal with empty emulsions
             if self.dtype:
-                return np.empty(0, dtype=self.dtype)
+                return np.empty(0, dtype=self.dtype)  # type: ignore
             else:
                 raise RuntimeError(
                     "Cannot create data array since the emulsion is empty and an "
@@ -295,7 +295,7 @@ class Emulsion(list):
             result = np.array([d.data for d in self])
             if result.dtype != self.dtype:
                 _logger.warning("Emulsion had inconsistent dtypes")
-            return result
+            return result  # type: ignore
 
     def get_linked_data(self) -> np.ndarray:
         """Link the data of all droplets in a single array.
@@ -503,7 +503,7 @@ class Emulsion(list):
                     dist -= d1.radius + d2.radius
                 dists[i, j] = dists[j, i] = dist
 
-        return dists
+        return dists  # type: ignore
 
     def get_neighbor_distances(self, subtract_radius: bool = False) -> np.ndarray:
         """Calculates the distance of each droplet to its nearest neighbor.
@@ -522,9 +522,9 @@ class Emulsion(list):
         """
         # handle simple cases
         if len(self) == 0:
-            return np.zeros((0,))
+            return np.zeros((0,))  # type: ignore
         elif len(self) == 1:
-            return np.full(1, np.nan)
+            return np.full(1, np.nan)  # type: ignore
 
         try:
             from scipy.spatial import cKDTree as KDTree
@@ -614,10 +614,10 @@ class Emulsion(list):
 
         return {
             "count": len(radii),
-            "radius_mean": np.mean(radii),
-            "radius_std": np.std(radii),
-            "volume_mean": np.mean(volumes),
-            "volume_std": np.std(volumes),
+            "radius_mean": np.mean(radii),  # type: ignore
+            "radius_std": np.std(radii),  # type: ignore
+            "volume_mean": np.mean(volumes),  # type: ignore
+            "volume_std": np.std(volumes),  # type: ignore
         }
 
     @plot_on_axes()

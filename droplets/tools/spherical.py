@@ -109,7 +109,7 @@ def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
         float or :class:`~numpy.ndarray`: Radius of the sphere
     """
     if dim == 1:
-        return volume / 2
+        return volume / 2  # type: ignore
     elif dim == 2:
         return np.sqrt(volume / π)  # type: ignore
     elif dim == 3:
@@ -131,7 +131,7 @@ def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     if dim == 1:
 
         def radius_from_volume(volume: TNumArr) -> TNumArr:
-            return volume / 2
+            return volume / 2  # type: ignore
 
     elif dim == 2:
 
@@ -158,7 +158,7 @@ def make_radius_from_volume_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
     @register_jitable
     def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
         if dim == 1:
-            return volume / 2
+            return volume / 2  # type: ignore
         elif dim == 2:
             return np.sqrt(volume / π)  # type: ignore
         elif dim == 3:
@@ -181,17 +181,17 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     if dim == 1:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return 2 * radius
+            return 2 * radius  # type: ignore
 
     elif dim == 2:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return π * radius**2
+            return π * radius**2  # type: ignore
 
     elif dim == 3:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return 4 * π / 3 * radius**3
+            return 4 * π / 3 * radius**3  # type: ignore
 
     else:
         raise NotImplementedError(f"Cannot calculate the volume in {dim} dimensions")
@@ -208,11 +208,11 @@ def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
     @register_jitable
     def volume_from_radius_impl(radius: TNumArr, dim: int) -> TNumArr:
         if dim == 1:
-            return 2 * radius
+            return 2 * radius  # type: ignore
         elif dim == 2:
-            return π * radius**2
+            return π * radius**2  # type: ignore
         elif dim == 3:
-            return 4 * π / 3 * radius**3
+            return 4 * π / 3 * radius**3  # type: ignore
         raise NotImplementedError
 
     return volume_from_radius_impl  # type: ignore
@@ -232,13 +232,13 @@ def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
     """
     if dim == 1:
         if isinstance(radius, np.ndarray):
-            return np.broadcast_to(2, radius.shape)
+            return np.broadcast_to(2, radius.shape)  # type: ignore
         else:
             return 2
     elif dim == 2:
-        return 2 * π * radius
+        return 2 * π * radius  # type: ignore
     elif dim == 3:
-        return 4 * π * radius**2
+        return 4 * π * radius**2  # type: ignore
     else:
         raise NotImplementedError(
             f"Cannot calculate the surface area in {dim} dimensions"
@@ -260,7 +260,7 @@ def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
     if dim == 1:
         raise RuntimeError("Cannot calculate radius of 1-d sphere from surface")
     elif dim == 2:
-        return surface / (2 * π)
+        return surface / (2 * π)  # type: ignore
     elif dim == 3:
         return np.sqrt(surface / (4 * π))  # type: ignore
     else:
@@ -301,13 +301,13 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
 
         @jit
         def surface_from_radius(radius: TNumArr) -> TNumArr:
-            return 2 * π * radius
+            return 2 * π * radius  # type: ignore
 
     elif dim == 3:
 
         @jit
         def surface_from_radius(radius: TNumArr) -> TNumArr:
-            return 4 * π * radius**2
+            return 4 * π * radius**2  # type: ignore
 
     else:
         raise NotImplementedError(
@@ -336,7 +336,7 @@ def points_cartesian_to_spherical(points: np.ndarray) -> np.ndarray:
     ps_spherical[..., 1] = np.arccos(points[..., 2] / ps_spherical[..., 0])
     # calculate φ in [0, 2 * pi]
     ps_spherical[..., 2] = np.arctan2(points[..., 1], points[..., 0]) % (2 * π)
-    return ps_spherical
+    return ps_spherical  # type: ignore
 
 
 def points_spherical_to_cartesian(points: np.ndarray) -> np.ndarray:
@@ -358,7 +358,7 @@ def points_spherical_to_cartesian(points: np.ndarray) -> np.ndarray:
     ps_cartesian[..., 0] = points[..., 0] * np.cos(points[..., 2]) * sin_θ
     ps_cartesian[..., 1] = points[..., 0] * np.sin(points[..., 2]) * sin_θ
     ps_cartesian[..., 2] = points[..., 0] * np.cos(points[..., 1])
-    return ps_cartesian
+    return ps_cartesian  # type: ignore
 
 
 @t.overload
@@ -403,11 +403,11 @@ def polar_coordinates(
         origin = np.zeros(grid.dim)
     else:
         origin = np.asarray(origin, dtype=float)
-        if origin.shape != (grid.dim,):
+        if origin.shape != (grid.dim,):  # type: ignore
             raise DimensionError("Dimensions are not compatible")
 
     # calculate the difference vector between all cells and the origin
-    origin_grid = grid.transform(origin, source="cartesian", target="grid")
+    origin_grid = grid.transform(origin, source="cartesian", target="grid")  # type: ignore
     diff = grid.difference_vector(origin_grid, grid.cell_coords)
     dist: np.ndarray = np.linalg.norm(diff, axis=-1)  # get distance
 

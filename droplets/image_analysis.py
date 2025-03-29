@@ -160,7 +160,7 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
     positions = grid.normalize_point(grid.transform(positions, "cell", "grid"))
     droplets = (
         SphericalDroplet.from_volume(position, volume)
-        for position, volume in zip(positions[indices - 1], volumes[indices - 1])
+        for position, volume in zip(positions[indices - 1], volumes[indices - 1])  # type:ignore
     )
 
     # filter overlapping droplets (e.g. due to duplicates)
@@ -885,7 +885,7 @@ def get_length_scale(
         _logger.warning("Unused keyword arguments: %s", ", ".join(kwargs))
 
     # return only the length scale with out any additional information
-    return length_scale  # type: ignore
+    return length_scale
 
 
 __all__ = [
