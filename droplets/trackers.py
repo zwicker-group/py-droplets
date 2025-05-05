@@ -182,7 +182,7 @@ class DropletTracker(TrackerBase):
 
                 * `extrema`: take mean between the minimum and the maximum of the data
                 * `mean`: take the mean over the entire data
-                * `otsu`: use Otsu's method implemented in :func:`threshold_otsu`
+                * `otsu`: use Otsu's method implemented in :func:`~droplets.image_analysis.threshold_otsu`
 
                 The special value `auto` currently defaults to the `extrema` method.
 
@@ -192,8 +192,9 @@ class DropletTracker(TrackerBase):
                 Flag determining whether the droplet coordinates should be
                 refined using fitting. This is a potentially slow procedure.
             refine_args (dict):
-                Additional keyword arguments passed on to :func:`refine_droplet`. Only
-                has an effect if `refine=True`.
+                Additional keyword arguments passed on to
+                :func:`~droplets.image_analysis.refine_droplet`. Only has an effect if
+                `refine=True`.
             perturbation_modes (int):
                 An option describing how many perturbation modes should be considered
                 when refining droplets. Only has an effect if `refine=True`.

@@ -172,7 +172,7 @@ class DropletBase:
             # scalar type (instance of numpy.record) that contains the
             # structured data. This conversion is necessary for numba to operate
             # on the data.
-            self.data = np.recarray(1, dtype=dtype)[0]
+            self.data = np.recarray(1, dtype=dtype)[0]  # type: ignore
 
     def __init_subclass__(cls, **kwargs):
         """Modify subclasses of this base class."""
@@ -318,7 +318,7 @@ class SphericalDroplet(DropletBase):
     @property
     def position(self) -> np.ndarray:
         """:class:`~numpy.ndarray`: the position of the droplet."""
-        return self.data["position"]  # type: ignore
+        return self.data["position"]
 
     @position.setter
     def position(self, value: np.ndarray) -> None:
