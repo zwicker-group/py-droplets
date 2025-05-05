@@ -48,7 +48,7 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
         is the start index of the region and the second column is the end index
     """
     if len(condition) == 0:
-        return np.empty((0, 2), dtype=np.intc)  # type:ignore
+        return np.empty((0, 2), dtype=np.intc)
 
     # convert condition array to integer
     condition = np.asarray(condition, np.intc)

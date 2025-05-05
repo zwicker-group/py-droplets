@@ -181,7 +181,7 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     if dim == 1:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return 2 * radius  # type: ignore
+            return 2 * radius
 
     elif dim == 2:
 
@@ -208,7 +208,7 @@ def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
     @register_jitable
     def volume_from_radius_impl(radius: TNumArr, dim: int) -> TNumArr:
         if dim == 1:
-            return 2 * radius  # type: ignore
+            return 2 * radius
         elif dim == 2:
             return π * radius**2  # type: ignore
         elif dim == 3:
