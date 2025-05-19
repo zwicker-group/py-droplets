@@ -810,7 +810,8 @@ def get_length_scale(
     """
     if method == "structure_factor_mean" or method == "structure_factor_average":
         # calculate the structure factor
-        k_mag, sf = get_structure_factor(scalar_field)
+        smoothing = kwargs.setdefault("smoothing", None)
+        k_mag, sf = get_structure_factor(scalar_field, smoothing=smoothing)
         length_scale = 2 * np.pi * np.sum(sf) / np.sum(k_mag * sf)
 
         if kwargs.pop("full_output", False):
