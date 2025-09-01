@@ -403,11 +403,11 @@ def polar_coordinates(
         origin = np.zeros(grid.dim)
     else:
         origin = np.asarray(origin, dtype=float)
-        if origin.shape != (grid.dim,):  # type: ignore
+        if origin.shape != (grid.dim,):
             raise DimensionError("Dimensions are not compatible")
 
     # calculate the difference vector between all cells and the origin
-    origin_grid = grid.transform(origin, source="cartesian", target="grid")  # type: ignore
+    origin_grid = grid.transform(origin, source="cartesian", target="grid")
     diff = grid.difference_vector(origin_grid, grid.cell_coords)
     dist: np.ndarray = np.linalg.norm(diff, axis=-1)  # get distance
 

@@ -15,6 +15,7 @@ import math
 from pathlib import Path
 from typing import Any, Callable, Literal
 
+from pde import ScalarField
 from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
 from pde.trackers.base import InfoDict, InterruptData, TrackerBase
@@ -88,6 +89,11 @@ class LengthScaleTracker(TrackerBase):
         from .image_analysis import get_length_scale
 
         scalar_field = extract_field(field, self.source, 0)
+        if not isinstance(scalar_field, ScalarField):
+            self._logger.exception(
+                "Field needs to be a scalar field. Use `source` parameter to select a "
+                "specific field of a FieldCollection."
+            )
 
         try:
             length = get_length_scale(scalar_field, method=self.method)  # type: ignore
@@ -226,6 +232,12 @@ class DropletTracker(TrackerBase):
         from .image_analysis import locate_droplets
 
         scalar_field = extract_field(field, self.source, 0)
+        if not isinstance(scalar_field, ScalarField):
+            self._logger.exception(
+                "Field needs to be a scalar field. Use `source` parameter to select a "
+                "specific field of a FieldCollection."
+            )
+
         emulsion = locate_droplets(
             scalar_field,  # type: ignore
             threshold=self.threshold,

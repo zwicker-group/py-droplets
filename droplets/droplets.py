@@ -738,7 +738,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
             position=position, radius=radius, interface_width=interface_width
         )
 
-        self.amplitudes = amplitudes  # type: ignore
+        self.amplitudes = amplitudes
 
         if len(self.position) != self.__class__.dim:
             raise ValueError(f"Space dimension must be {self.__class__.dim}")
