@@ -294,7 +294,7 @@ class DropletTrack:
             times = dataset["time"]
             droplet_data = rfn.rec_drop_fields(dataset, "time")
             for time, data in zip(times, droplet_data):
-                droplet = droplet_from_data(droplet_class, data)
+                droplet = droplet_from_data(droplet_class, data)  # type: ignore
                 obj.append(droplet, time=time)  # type: ignore
 
         return obj

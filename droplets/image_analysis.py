@@ -747,7 +747,7 @@ def get_structure_factor(
         # construct the smoothed function of the structure factor
         if smoothing == "auto":
             smoothing = k_mag.max() / 128
-        smoothing = float(smoothing)  # type: ignore
+        smoothing = float(smoothing)
         sf_smooth = SmoothData1D(k_mag, sf, sigma=smoothing)
 
         if no_wavenumbers:

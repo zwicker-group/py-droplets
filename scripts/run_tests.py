@@ -26,7 +26,7 @@ def _most_severe_exit_code(retcodes: Sequence[int]) -> int:
         return max(retcodes, key=lambda retcode: abs(retcode))
 
 
-def test_codestyle(*, verbose: bool = True) -> int:
+def run_test_codestyle(*, verbose: bool = True) -> int:
     """Run the codestyle tests.
 
     Args:
@@ -49,7 +49,7 @@ def test_codestyle(*, verbose: bool = True) -> int:
     return _most_severe_exit_code(retcodes)
 
 
-def test_types(*, report: bool = False, verbose: bool = True) -> int:
+def run_test_types(*, report: bool = False, verbose: bool = True) -> int:
     """Run mypy to check the types of the python code.
 
     Args:
@@ -239,11 +239,11 @@ def main() -> int:
     # run the requested tests
     retcodes = []
     if run_all or args.style:
-        retcode = test_codestyle(verbose=not args.quite)
+        retcode = run_test_codestyle(verbose=not args.quite)
         retcodes.append(retcode)
 
     if run_all or args.types:
-        retcode = test_types(report=args.report, verbose=not args.quite)
+        retcode = run_test_types(report=args.report, verbose=not args.quite)
         retcodes.append(retcode)
 
     if run_all or args.unit:
