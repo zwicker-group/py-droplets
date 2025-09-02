@@ -83,11 +83,11 @@ class LengthScaleTracker(TrackerBase):
             t (float):
                 The associated time
         """
-        # determine length scale
         from pde.visualization.plotting import extract_field
 
         from .image_analysis import get_length_scale
 
+        # extract correct scalar field
         scalar_field = extract_field(field, self.source, 0)
         if not isinstance(scalar_field, ScalarField):
             self._logger.exception(
@@ -95,6 +95,7 @@ class LengthScaleTracker(TrackerBase):
                 "specific field of a FieldCollection."
             )
 
+        # determine length scale
         try:
             length = get_length_scale(scalar_field, method=self.method)  # type: ignore
         except Exception:
@@ -231,6 +232,7 @@ class DropletTracker(TrackerBase):
 
         from .image_analysis import locate_droplets
 
+        # extract scalar field
         scalar_field = extract_field(field, self.source, 0)
         if not isinstance(scalar_field, ScalarField):
             self._logger.exception(
@@ -238,6 +240,7 @@ class DropletTracker(TrackerBase):
                 "specific field of a FieldCollection."
             )
 
+        # locate droplets in scalar field
         emulsion = locate_droplets(
             scalar_field,  # type: ignore
             threshold=self.threshold,
