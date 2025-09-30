@@ -376,7 +376,7 @@ def locate_droplets(
             )
 
         :code:`field` is the scalar field, in which the droplets are located. The
-        `refine_args` set flexibel boundaries for the intensities inside and outside
+        `refine_args` set flexible boundaries for the intensities inside and outside
         the droplet.
 
     Args:
@@ -410,7 +410,7 @@ def locate_droplets(
             an effect if `refine=True`.
         num_processes (int):
             Number of processes used for the refinement. If set to "auto", the number of
-            processes is choosen automatically.
+            processes is chosen automatically.
 
     Returns:
         :class:`~droplets.emulsions.Emulsion`: All detected droplets
@@ -500,7 +500,7 @@ def refine_droplets(
             Droplets that should be refined.
         num_processes (int or "auto"):
             Number of processes used for the refinement. If set to "auto", the number of
-            processes is choosen automatically.
+            processes is chosen automatically.
         \**kwargs (dict):
             Additional keyword arguments are passed on to :func:`refine_droplet`.
 
