@@ -32,6 +32,7 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 from pde.trackers.base import InfoDict, InterruptData
 
 from .droplets import SphericalDroplet, droplet_from_data
+from .tools.typing import RealArray
 
 if TYPE_CHECKING:
     from .trackers import DropletTracker
@@ -53,7 +54,7 @@ class Emulsion(list):
         droplets: Iterable[SphericalDroplet] | None = None,
         *,
         copy: bool = True,
-        dtype: np.typing.DTypeLike | np.ndarray | SphericalDroplet = None,
+        dtype: np.typing.DTypeLike | RealArray | SphericalDroplet = None,
         force_consistency: bool = False,
     ):
         """
@@ -265,7 +266,7 @@ class Emulsion(list):
         super().append(droplet)
 
     @property
-    def data(self) -> np.ndarray:
+    def data(self) -> RealArray:
         """:class:`~numpy.ndarray`: an array containing the data of the full emulsion.
 
         Warning:
@@ -276,7 +277,7 @@ class Emulsion(list):
         if len(self) == 0:
             # deal with empty emulsions
             if self.dtype:
-                return np.empty(0, dtype=self.dtype)  # type: ignore
+                return np.empty(0, dtype=self.dtype)
             else:
                 raise RuntimeError(
                     "Cannot create data array since the emulsion is empty and an "
@@ -295,9 +296,9 @@ class Emulsion(list):
             result = np.array([d.data for d in self])
             if result.dtype != self.dtype:
                 _logger.warning("Emulsion had inconsistent dtypes")
-            return result  # type: ignore
+            return result
 
-    def get_linked_data(self) -> np.ndarray:
+    def get_linked_data(self) -> RealArray:
         """Link the data of all droplets in a single array.
 
         Returns:
@@ -467,7 +468,7 @@ class Emulsion(list):
 
     def get_pairwise_distances(
         self, subtract_radius: bool = False, grid: GridBase | None = None
-    ) -> np.ndarray:
+    ) -> RealArray:
         """Return the pairwise distance between droplets.
 
         Args:
@@ -503,9 +504,9 @@ class Emulsion(list):
                     dist -= d1.radius + d2.radius
                 dists[i, j] = dists[j, i] = dist
 
-        return dists  # type: ignore
+        return dists
 
-    def get_neighbor_distances(self, subtract_radius: bool = False) -> np.ndarray:
+    def get_neighbor_distances(self, subtract_radius: bool = False) -> RealArray:
         """Calculates the distance of each droplet to its nearest neighbor.
 
         Warning:
@@ -522,9 +523,9 @@ class Emulsion(list):
         """
         # handle simple cases
         if len(self) == 0:
-            return np.zeros((0,))  # type: ignore
+            return np.zeros((0,))
         elif len(self) == 1:
-            return np.full(1, np.nan)  # type: ignore
+            return np.full(1, np.nan)
 
         try:
             from scipy.spatial import cKDTree as KDTree
@@ -540,9 +541,9 @@ class Emulsion(list):
         dist, index = tree.query(positions, 2)
 
         if subtract_radius:
-            return dist[:, 1] - self.data["radius"][index].sum(axis=1)  # type: ignore
+            return dist[:, 1] - self.data["radius"][index].sum(axis=1)
         else:
-            return dist[:, 1]  # type: ignore
+            return dist[:, 1]
 
     def remove_overlapping(
         self, min_distance: float = 0, grid: GridBase | None = None
@@ -719,7 +720,7 @@ class Emulsion(list):
 
             # and map them to colors
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-            colors: list | np.ndarray = mapper.to_rgba(values)
+            colors: list | RealArray = mapper.to_rgba(values)
 
             if kwargs.pop("color", None) is not None:
                 _logger.warning("`color` is overwritten by `color_value`.")
@@ -787,7 +788,7 @@ class EmulsionTimeCourse:
     def __init__(
         self,
         emulsions: Iterable[Emulsion] | None = None,
-        times: np.ndarray | Sequence[float] | None = None,
+        times: RealArray | Sequence[float] | None = None,
     ) -> None:
         """
         Args:
