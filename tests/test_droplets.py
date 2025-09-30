@@ -62,6 +62,12 @@ def test_perturbed_droplet_2d():
     d.interface_position(0.1)
     d.interface_curvature(0.1)
 
+    d = droplets.PerturbedDroplet2D.from_volume(
+        [0, 1], 10, interface_width=0.1, amplitudes=[0.0, 0.1, 0.2]
+    )
+    assert d.volume == pytest.approx(10, 0.1)
+    assert d.interface_width == pytest.approx(0.1)
+
 
 def test_perturbed_droplet_3d():
     """Test methods of perturbed droplets in 3d."""

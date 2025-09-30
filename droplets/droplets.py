@@ -300,20 +300,21 @@ class SphericalDroplet(DropletBase):
         return l, h
 
     @classmethod
-    def from_volume(cls, position: np.ndarray, volume: float):
-        """Construct a droplet from given volume instead of radius.
+    def from_volume(cls, position: np.ndarray, volume: float, **kwargs):
+        r"""Construct a droplet from given volume instead of radius.
 
         Args:
             position (:class:`~numpy.ndarray`):
                 Center of the droplet
             volume (float):
                 Volume of the droplet
-            interface_width (float, optional):
-                Width of the interface
+            \**kwargs:
+                Additional arguments are forwarded to the class initializer. This can
+                for instance be used to set the interfacial width.
         """
         dim = len(np.array(position, np.double, ndmin=1))
         radius = spherical.radius_from_volume(volume, dim)
-        return cls(position, radius)
+        return cls(position, radius, **kwargs)
 
     @property
     def position(self) -> np.ndarray:
@@ -781,7 +782,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     @property
     def modes(self) -> int:
         """int: number of perturbation modes"""
-        shape = self.data.dtype.fields["amplitudes"][0].shape
+        shape = self.data.dtype.fields["amplitudes"][0].shape  # type: ignore
         return int(shape[0]) if shape else 1
 
     @property
