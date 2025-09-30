@@ -130,7 +130,7 @@ class Emulsion(list):
                 each individual droplet is chosen.
             remove_overlapping (bool):
                 Flag determining whether overlapping droplets are removed. If enabled,
-                the resulting element might contain less thatn `num` droplets.
+                the resulting element might contain less than `num` droplets.
             droplet_class (:class:`~droplets.droplets.SphericalDroplet`):
                 The class that is used to create droplets.
             rng (:class:`~numpy.random.Generator`):

@@ -178,7 +178,7 @@ class DropletBase:
         """Modify subclasses of this base class."""
         super().__init_subclass__(**kwargs)
 
-        # register all subclassess to reconstruct them later
+        # register all subclasses to reconstruct them later
         if cls is not DropletBase:
             if cls.__name__ in cls._subclasses:
                 warnings.warn(f"Redefining class {cls.__name__}")
@@ -372,7 +372,7 @@ class SphericalDroplet(DropletBase):
             grid (:class:`~pde.grids.base.GridBase`):
                 grid that determines how distances are measured, which is for instance
                 important to respect periodic boundary conditions. If omitted, an
-                Eucledian distance is assumed.
+                Euclidean distance is assumed.
 
         Returns:
             bool: whether the droplets overlap or not
