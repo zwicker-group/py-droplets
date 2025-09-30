@@ -46,6 +46,7 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 
 from .tools import spherical
 from .tools.misc import enable_scalar_args
+from .tools.typing import RealArray
 
 _logger = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger instance."""
@@ -112,7 +113,7 @@ class DropletBase:
 
     data: np.recarray  # all information about the droplet in a record array
 
-    _merge_data: Callable[[np.ndarray, np.ndarray, np.ndarray], None]
+    _merge_data: Callable[[RealArray, RealArray, RealArray], None]
     """Private method for merging droplet data, created by __init_subclass__"""
 
     @classmethod
@@ -208,9 +209,9 @@ class DropletBase:
     __repr__ = __str__
 
     @property
-    def _data_array(self) -> np.ndarray:
+    def _data_array(self) -> RealArray:
         """:class:`~numpy.ndarray`: the data of the droplet in an unstructured array."""
-        return structured_to_unstructured(self.data)  # type: ignore
+        return structured_to_unstructured(self.data)
 
     def copy(self: TDroplet, **kwargs) -> TDroplet:
         r"""Return a copy of the current droplet.
@@ -225,7 +226,7 @@ class DropletBase:
             return self.from_data(self.data.copy())  # type: ignore
 
     @classmethod
-    def _make_merge_data(cls) -> Callable[[np.ndarray, np.ndarray, np.ndarray], None]:
+    def _make_merge_data(cls) -> Callable[[RealArray, RealArray, RealArray], None]:
         """Factory for a function that merges the data of two droplets."""
         raise NotImplementedError
 
@@ -240,7 +241,7 @@ class DropletBase:
             return self.__class__.from_data(result)  # type: ignore
 
     @property
-    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[RealArray, RealArray]:
         """tuple: lower and upper bounds on the parameters"""
         num = len(self._data_array)
         return np.full(num, -np.inf), np.full(num, np.inf)
@@ -251,7 +252,7 @@ class SphericalDroplet(DropletBase):
 
     __slots__ = ["data"]
 
-    def __init__(self, position: np.ndarray, radius: float):
+    def __init__(self, position: RealArray, radius: float):
         r"""
         Args:
             position (:class:`~numpy.ndarray`):
@@ -293,14 +294,14 @@ class SphericalDroplet(DropletBase):
         return get_dtype_field_size(self.data.dtype, "position")
 
     @property
-    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[RealArray, RealArray]:
         """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         l[self.dim] = 0  # radius must be non-negative
         return l, h
 
     @classmethod
-    def from_volume(cls, position: np.ndarray, volume: float, **kwargs):
+    def from_volume(cls, position: RealArray, volume: float, **kwargs):
         r"""Construct a droplet from given volume instead of radius.
 
         Args:
@@ -317,12 +318,12 @@ class SphericalDroplet(DropletBase):
         return cls(position, radius, **kwargs)
 
     @property
-    def position(self) -> np.ndarray:
+    def position(self) -> RealArray:
         """:class:`~numpy.ndarray`: the position of the droplet."""
         return self.data["position"]
 
     @position.setter
-    def position(self, value: np.ndarray) -> None:
+    def position(self, value: RealArray) -> None:
         value = np.asanyarray(value)
         if len(value) != self.dim:
             raise ValueError(f"The dimension of the position must be {self.dim}")
@@ -351,7 +352,7 @@ class SphericalDroplet(DropletBase):
     @property
     def surface_area(self) -> float:
         """float: surface area of the droplet"""
-        return spherical.surface_from_radius(self.radius, self.dim)
+        return spherical.surface_from_radius(self.radius, self.dim)  # type: ignore
 
     @property
     def bbox(self) -> Cuboid:
@@ -384,28 +385,28 @@ class SphericalDroplet(DropletBase):
         return distance < self.radius + other.radius
 
     @classmethod
-    def _make_merge_data(cls) -> Callable[[np.ndarray, np.ndarray, np.ndarray], None]:
+    def _make_merge_data(cls) -> Callable[[RealArray, RealArray, RealArray], None]:
         """Factory for a function that merges the data of two droplets."""
         radius_from_volume = spherical.make_radius_from_volume_nd_compiled()
         volume_from_radius = spherical.make_volume_from_radius_nd_compiled()
 
         @register_jitable
-        def merge_data(drop1: np.ndarray, drop2: np.ndarray, out: np.ndarray) -> None:
+        def merge_data(drop1: RealArray, drop2: RealArray, out: RealArray) -> None:
             """Merge the data of two droplets."""
-            dim = len(drop1.position)  # type: ignore
+            dim = len(drop1.position)
 
-            V1 = volume_from_radius(drop1.radius, dim)  # type: ignore
-            V2 = volume_from_radius(drop2.radius, dim)  # type: ignore
+            V1 = volume_from_radius(drop1.radius, dim)
+            V2 = volume_from_radius(drop2.radius, dim)
             volume = V1 + V2
-            out.radius = radius_from_volume(volume, dim)  # type: ignore
+            out.radius = radius_from_volume(volume, dim)
 
             # adjust droplet position
-            out.position[...] = (V1 * drop1.position + V2 * drop2.position) / volume  # type: ignore
+            out.position[...] = (V1 * drop1.position + V2 * drop2.position) / volume
 
         return merge_data  # type: ignore
 
     @enable_scalar_args
-    def interface_position(self, *args) -> np.ndarray:
+    def interface_position(self, *args) -> RealArray:
         r"""Calculates the position of the interface of the droplet.
 
         Args:
@@ -440,14 +441,14 @@ class SphericalDroplet(DropletBase):
             raise NotImplementedError(f"Cannot calculate {self.dim}d position")
 
         # shift the droplet center
-        return self.position[None, :] + pos  # type: ignore
+        return self.position[None, :] + pos
 
     @property
     def interface_curvature(self) -> float:
         """float: the mean curvature of the interface of the droplet"""
         return 1 / self.radius
 
-    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> np.ndarray:
+    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> RealArray:
         """Creates an image of the droplet on the `grid`
 
         Args:
@@ -469,7 +470,7 @@ class SphericalDroplet(DropletBase):
 
         # calculate distances from droplet center
         dist = spherical.polar_coordinates(grid, origin=self.position, ret_angle=False)
-        return (dist < self.radius).astype(dtype)  # type: ignore
+        return (dist < self.radius).astype(dtype)
 
     def get_phase_field(
         self,
@@ -601,7 +602,7 @@ class DiffuseDroplet(SphericalDroplet):
 
     def __init__(
         self,
-        position: np.ndarray,
+        position: RealArray,
         radius: float,
         interface_width: float | None = None,
     ):
@@ -619,7 +620,7 @@ class DiffuseDroplet(SphericalDroplet):
         self.interface_width = interface_width
 
     @property
-    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[RealArray, RealArray]:
         """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         l[self.dim + 1] = 0  # interface width must be non-negative
@@ -640,15 +641,15 @@ class DiffuseDroplet(SphericalDroplet):
         return dtype + [("interface_width", float)]
 
     @classmethod
-    def _make_merge_data(cls) -> Callable[[np.ndarray, np.ndarray, np.ndarray], None]:
+    def _make_merge_data(cls) -> Callable[[RealArray, RealArray, RealArray], None]:
         """Factory for a function that merges the data of two droplets."""
         parent_merge = super()._make_merge_data()
 
         @register_jitable
-        def merge_data(drop1: np.ndarray, drop2: np.ndarray, out: np.ndarray) -> None:
+        def merge_data(drop1: RealArray, drop2: RealArray, out: RealArray) -> None:
             """Merge the data of two droplets."""
             parent_merge(drop1, drop2, out)
-            out.interface_width = (drop1.interface_width + drop2.interface_width) / 2  # type: ignore
+            out.interface_width = (drop1.interface_width + drop2.interface_width) / 2
 
         return merge_data  # type: ignore
 
@@ -670,7 +671,7 @@ class DiffuseDroplet(SphericalDroplet):
             self.data["interface_width"] = value
         self.check_data()
 
-    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> np.ndarray:
+    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> RealArray:
         """Creates an image of the droplet on the `grid`
 
         Args:
@@ -704,7 +705,7 @@ class DiffuseDroplet(SphericalDroplet):
         else:
             result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)
 
-        return result.astype(dtype)  # type: ignore
+        return result.astype(dtype)
 
 
 class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
@@ -718,10 +719,10 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
     def __init__(
         self,
-        position: np.ndarray,
+        position: RealArray,
         radius: float,
         interface_width: float | None = None,
-        amplitudes: np.ndarray | None = None,
+        amplitudes: RealArray | None = None,
     ):
         """
         Args:
@@ -770,7 +771,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         return dtype + [("amplitudes", float, (modes,))]
 
     @property
-    def data_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+    def data_bounds(self) -> tuple[RealArray, RealArray]:
         """tuple: lower and upper bounds on the parameters"""
         l, h = super().data_bounds
         n = self.dim + 2
@@ -786,12 +787,12 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         return int(shape[0]) if shape else 1
 
     @property
-    def amplitudes(self) -> np.ndarray:
+    def amplitudes(self) -> RealArray:
         """:class:`~numpy.ndarray`: the perturbation amplitudes."""
-        return np.atleast_1d(self.data["amplitudes"])  # type: ignore
+        return np.atleast_1d(self.data["amplitudes"])
 
     @amplitudes.setter
-    def amplitudes(self, value: np.ndarray | None = None) -> None:
+    def amplitudes(self, value: RealArray | None = None) -> None:
         if value is None:
             if self.modes != 0:
                 raise ValueError("Require values for amplitudes")
@@ -801,11 +802,11 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         self.check_data()
 
     @abstractmethod
-    def interface_distance(self, *angles: np.ndarray) -> np.ndarray:
+    def interface_distance(self, *angles: RealArray) -> RealArray:
         pass
 
     @abstractmethod
-    def interface_curvature(self, *angles: np.ndarray) -> np.ndarray:  # type: ignore
+    def interface_curvature(self, *angles: RealArray) -> RealArray:  # type: ignore
         pass
 
     @property
@@ -820,7 +821,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     def surface_area(self) -> float:
         raise NotImplementedError
 
-    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> np.ndarray:
+    def _get_phase_field(self, grid: GridBase, dtype: DTypeLike = float) -> RealArray:
         """Creates a normalized image of the droplet on the `grid`
 
         Args:
@@ -856,7 +857,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         else:
             result = 0.5 + 0.5 * np.tanh((interface - dist) / interface_width)
 
-        return result.astype(dtype)  # type: ignore
+        return result.astype(dtype)
 
     def _get_mpl_patch(self, dim=None, *, color=None, **kwargs):
         """Return the patch representing the droplet for plotting.
@@ -891,10 +892,10 @@ class PerturbedDroplet2D(PerturbedDropletBase):
 
     def __init__(
         self,
-        position: np.ndarray,
+        position: RealArray,
         radius: float,
         interface_width: float | None = None,
-        amplitudes: np.ndarray | None = None,
+        amplitudes: RealArray | None = None,
     ):
         r"""
         Args:
@@ -919,30 +920,30 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             )
 
     @enable_scalar_args
-    def interface_distance(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
+    def interface_distance(self, φ: RealArray) -> RealArray:
         """Calculates the distance of the droplet interface to the origin.
 
         Args:
-            φ (float or :class:`~np.ndarray`):
+            φ (float or :class:`~RealArray`):
                 The angle in the polar coordinate system that describing the interface
 
         Returns:
             Array with distances of the interfacial points associated with each angle φ
         """
-        dist: np.ndarray = np.ones(φ.shape, dtype=float)
+        dist: RealArray = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φ)
             if b != 0:
                 dist += b * np.cos(n * φ)
-        return self.radius * dist  # type: ignore
+        return self.radius * dist
 
     @enable_scalar_args
-    def interface_position(self, φ: np.ndarray) -> np.ndarray:
+    def interface_position(self, φ: RealArray) -> RealArray:
         """Calculates the position of the interface of the droplet.
 
         Args:
-            φ (float or :class:`~np.ndarray`):
+            φ (float or :class:`~RealArray`):
                 The angle in the polar coordinate system that describing the interface
 
         Returns:
@@ -950,30 +951,30 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         """
         dist = self.interface_distance(φ)
         pos = dist[:, None] * np.transpose([np.cos(φ), np.sin(φ)])
-        return self.position[None, :] + pos  # type: ignore
+        return self.position[None, :] + pos
 
     @enable_scalar_args
-    def interface_curvature(self, φ: np.ndarray) -> np.ndarray:  # type: ignore
+    def interface_curvature(self, φ: RealArray) -> RealArray:  # type: ignore
         r"""Calculates the mean curvature of the interface of the droplet.
 
         For simplicity, the effect of the perturbations are only included to
         linear order in the perturbation amplitudes :math:`\epsilon^{(1/2)}_n`.
 
         Args:
-            φ (float or :class:`~np.ndarray`):
+            φ (float or :class:`~RealArray`):
                 The angle in the polar coordinate system that describing the interface
 
         Returns:
             Array with curvature at the interfacial points associated with each angle φ
         """
-        curv_radius: np.ndarray = np.ones(φ.shape, dtype=float)
+        curv_radius: RealArray = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             factor = n * n - 1
             if a != 0:
                 curv_radius -= a * factor * np.sin(n * φ)
             if b != 0:
                 curv_radius -= b * factor * np.cos(n * φ)
-        return 1 / (self.radius * curv_radius)  # type: ignore
+        return 1 / (self.radius * curv_radius)
 
     @property
     def volume(self) -> float:
@@ -993,8 +994,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         # discretize surface for simple approximation to integral
         φs, dφ = np.linspace(0, 2 * np.pi, 256, endpoint=False, retstep=True)
 
-        dist: np.ndarray = np.ones(φs.shape, dtype=float)
-        dist_dφ: np.ndarray = np.zeros(φs.shape, dtype=float)
+        dist: RealArray = np.ones(φs.shape, dtype=float)
+        dist_dφ: RealArray = np.zeros(φs.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
                 dist += a * np.sin(n * φs)
@@ -1068,10 +1069,10 @@ class PerturbedDroplet3D(PerturbedDropletBase):
 
     def __init__(
         self,
-        position: np.ndarray,
+        position: RealArray,
         radius: float,
         interface_width: float | None = None,
-        amplitudes: np.ndarray | None = None,
+        amplitudes: RealArray | None = None,
     ):
         r"""
         Args:
@@ -1101,15 +1102,13 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             )
 
     @enable_scalar_args
-    def interface_distance(  # type: ignore
-        self, θ: np.ndarray, φ: np.ndarray | None = None
-    ) -> np.ndarray:
+    def interface_distance(self, θ: RealArray, φ: RealArray | None = None) -> RealArray:
         r"""Calculates the distance of the droplet interface to the origin.
 
         Args:
-            θ (float or :class:`~np.ndarray`):
+            θ (float or :class:`~RealArray`):
                 Azimuthal angle (in :math:`[0, \pi]`)
-            φ (float or :class:`~np.ndarray`):
+            φ (float or :class:`~RealArray`):
                 Polar angle (in :math:`[0, 2\pi]`); 0 if omitted
 
         Returns:
@@ -1119,22 +1118,20 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             φ = np.zeros_like(θ)
         elif θ.shape != φ.shape:
             raise ValueError("Shape of θ and φ must agree")
-        dist: np.ndarray = np.ones(θ.shape, dtype=float)
+        dist: RealArray = np.ones(θ.shape, dtype=float)
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
-                dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)  # type: ignore
-        return self.radius * dist  # type: ignore
+                dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)
+        return self.radius * dist
 
     @enable_scalar_args
-    def interface_position(
-        self, θ: np.ndarray, φ: np.ndarray | None = None
-    ) -> np.ndarray:
+    def interface_position(self, θ: RealArray, φ: RealArray | None = None) -> RealArray:
         r"""Calculates the position of the interface of the droplet.
 
         Args:
-            θ (float or :class:`~np.ndarray`):
+            θ (float or :class:`~RealArray`):
                 Azimuthal angle (in :math:`[0, \pi]`)
-            φ (float or :class:`~np.ndarray`):
+            φ (float or :class:`~RealArray`):
                 Polar angle (in :math:`[0, 2\pi]`); 0 if omitted
 
         Returns:
@@ -1147,21 +1144,21 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         dist = self.interface_distance(θ, φ)
         unit_vector = [np.sin(θ) * np.cos(φ), np.sin(θ) * np.sin(φ), np.cos(θ)]
         pos = dist[:, None] * np.transpose(unit_vector)
-        return self.position[None, :] + pos  # type: ignore
+        return self.position[None, :] + pos
 
     @enable_scalar_args
     def interface_curvature(  # type: ignore
-        self, θ: np.ndarray, φ: np.ndarray | None = None
-    ) -> np.ndarray:
+        self, θ: RealArray, φ: RealArray | None = None
+    ) -> RealArray:
         r"""Calculates the mean curvature of the interface of the droplet.
 
         For simplicity, the effect of the perturbations are only included to
         linear order in the perturbation amplitudes :math:`\epsilon_{l,m}`.
 
         Args:
-            θ (float or :class:`~np.ndarray`):
+            θ (float or :class:`~RealArray`):
                 Azimuthal angle (in :math:`[0, \pi]`)
-            φ (float or :class:`~np.ndarray`):
+            φ (float or :class:`~RealArray`):
                 Polar angle (in :math:`[0, 2\pi]`); 0 if omitted
 
         Returns:
@@ -1177,8 +1174,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             if a != 0:
                 l, _ = spherical.spherical_index_lm(k)
                 hk = (l**2 + l - 2) / 2
-                correction = a * hk * Yk(k, θ, φ)  # type: ignore
-        return 1 / self.radius + correction / self.radius**2  # type: ignore
+                correction = a * hk * Yk(k, θ, φ)
+        return 1 / self.radius + correction / self.radius**2
 
     @property
     def volume(self) -> float:
@@ -1235,31 +1232,31 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
             raise ValueError("Droplet must lie on z-axis")
 
     @enable_scalar_args
-    def interface_distance(self, θ: np.ndarray) -> np.ndarray:  # type: ignore
+    def interface_distance(self, θ: RealArray) -> RealArray:
         r"""Calculates the distance of the droplet interface to the origin.
 
         Args:
-            θ (float or :class:`~np.ndarray`):
+            θ (float or :class:`~RealArray`):
                 Azimuthal angle (in :math:`[0, \pi]`)
 
         Returns:
             Array with distances of the interfacial points associated with the angles
         """
-        dist: np.ndarray = np.ones(θ.shape, dtype=float)
+        dist: RealArray = np.ones(θ.shape, dtype=float)
         for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
-                dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
-        return self.radius * dist  # type: ignore
+                dist += a * spherical.spherical_harmonic_symmetric(order, θ)
+        return self.radius * dist
 
     @enable_scalar_args
-    def interface_curvature(self, θ: np.ndarray) -> np.ndarray:  # type: ignore
+    def interface_curvature(self, θ: RealArray) -> RealArray:  # type: ignore
         r"""Calculates the mean curvature of the interface of the droplet.
 
         For simplicity, the effect of the perturbations are only included to
         linear order in the perturbation amplitudes :math:`\epsilon_{l,m}`.
 
         Args:
-            θ (float or :class:`~np.ndarray`):
+            θ (float or :class:`~RealArray`):
                 Azimuthal angle (in :math:`[0, \pi]`)
 
         Returns:
@@ -1270,8 +1267,8 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 hl = (order**2 + order - 2) / 2
-                correction = a * hl * Yl(order, θ)  # type: ignore
-        return 1 / self.radius + correction / self.radius**2  # type: ignore
+                correction = a * hl * Yl(order, θ)
+        return 1 / self.radius + correction / self.radius**2
 
     @property
     def volume_approx(self) -> float:
@@ -1282,7 +1279,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         return volume
 
 
-def droplet_from_data(droplet_class: str, data: np.ndarray) -> DropletBase:
+def droplet_from_data(droplet_class: str, data: RealArray) -> DropletBase:
     """Create a droplet instance of the given class using some data.
 
     Args:

@@ -18,6 +18,7 @@ from typing import Callable, Literal
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
+from numpy.typing import NDArray
 from scipy import ndimage
 from scipy.spatial import distance
 
@@ -29,12 +30,13 @@ from pde.trackers.base import InfoDict
 
 from .droplets import SphericalDroplet, droplet_from_data
 from .emulsions import Emulsion, EmulsionTimeCourse
+from .tools.typing import RealArray
 
 _logger = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger instance."""
 
 
-def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
+def contiguous_true_regions(condition: NDArray[np.bool]) -> NDArray[np.intc]:
     """Finds contiguous True regions in the boolean array "condition".
 
     Inspired by http://stackoverflow.com/a/4495197/932593
@@ -48,8 +50,7 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
         is the start index of the region and the second column is the end index
     """
     if len(condition) == 0:
-        return np.empty((0, 2), dtype=np.intc)  # type: ignore
-
+        return np.empty((0, 2), dtype=np.intc)
     # convert condition array to integer
     condition = np.asarray(condition, np.intc)
 
@@ -70,7 +71,7 @@ def contiguous_true_regions(condition: np.ndarray) -> np.ndarray:
         idx = np.r_[idx, condition.size]
 
     # Reshape the result into two columns
-    return idx.reshape(-1, 2).astype(np.intc)  # type:ignore
+    return idx.reshape(-1, 2).astype(np.intc)
 
 
 class DropletTrack:
@@ -169,7 +170,7 @@ class DropletTrack:
             return None
 
     @property
-    def data(self) -> np.ndarray | None:
+    def data(self) -> RealArray | None:
         """:class:`~numpy.ndarray`: an array containing the data of the full track."""
         if len(self) == 0:
             return None
@@ -179,7 +180,7 @@ class DropletTrack:
             result = np.empty(len(self), dtype=dtype)
             for i in range(len(self)):
                 result[i] = (self.times[i],) + self.droplets[i].data.tolist()
-            return result  # type:ignore
+            return result
 
     def __iter__(self):
         """Iterate over all droplets."""
@@ -210,18 +211,18 @@ class DropletTrack:
             time = 0 if len(self.times) == 0 else self.times[-1] + 1
         self.times.append(time)
 
-    def get_position(self, time: float) -> np.ndarray:
+    def get_position(self, time: float) -> RealArray:
         """:class:`~numpy.ndarray`: returns the droplet position at a specific time."""
         try:
             idx = self.times.index(time)
         except AttributeError:
             # assume that self.times is a numpy array
             idx = np.nonzero(self.times == time)[0][0]
-        return self.droplets[idx].position  # type: ignore
+        return self.droplets[idx].position
 
     def get_trajectory(
         self, smoothing: float = 0, *, attribute: str = "position"
-    ) -> np.ndarray:
+    ) -> RealArray:
         """Return a the time-evolution of a droplet attribute (e.g., the position)
 
         Args:
@@ -240,9 +241,9 @@ class DropletTrack:
             ndimage.gaussian_filter1d(
                 trajectory, output=trajectory, sigma=smoothing, axis=0, mode="nearest"
             )
-        return trajectory  # type:ignore
+        return trajectory
 
-    def get_radii(self, smoothing: float = 0) -> np.ndarray:
+    def get_radii(self, smoothing: float = 0) -> RealArray:
         """:class:`~numpy.ndarray`: returns the droplet radius for each time point.
 
         Args:
@@ -252,7 +253,7 @@ class DropletTrack:
         """
         return self.get_trajectory(smoothing, attribute="radius")
 
-    def get_volumes(self, smoothing: float = 0) -> np.ndarray:
+    def get_volumes(self, smoothing: float = 0) -> RealArray:
         """:class:`~numpy.ndarray`: returns the droplet volume for each time point.
 
         Args:
@@ -455,7 +456,7 @@ class DropletTrack:
                 segments.append(close)
 
             # plot the individual segments
-            line, cx = None, []  # type: ignore
+            line, cx = None, []
             for s, e in contiguous_true_regions(np.array(segments)):
                 if line is None:
                     color = kwargs.get("color", "k")

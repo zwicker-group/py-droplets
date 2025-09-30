@@ -91,9 +91,11 @@ from pde.grids.base import DimensionError, GridBase
 from pde.grids.spherical import volume_from_radius
 from pde.tools.numba import jit
 
+from .typing import RealArray
+
 π = float(np.pi)
 
-TNumArr = TypeVar("TNumArr", float, np.ndarray)
+TNumArr = TypeVar("TNumArr", float, RealArray)
 
 
 def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
@@ -109,7 +111,7 @@ def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
         float or :class:`~numpy.ndarray`: Radius of the sphere
     """
     if dim == 1:
-        return volume / 2  # type: ignore
+        return volume / 2
     elif dim == 2:
         return np.sqrt(volume / π)  # type: ignore
     elif dim == 3:
@@ -131,7 +133,7 @@ def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     if dim == 1:
 
         def radius_from_volume(volume: TNumArr) -> TNumArr:
-            return volume / 2  # type: ignore
+            return volume / 2
 
     elif dim == 2:
 
@@ -158,7 +160,7 @@ def make_radius_from_volume_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
     @register_jitable
     def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
         if dim == 1:
-            return volume / 2  # type: ignore
+            return volume / 2
         elif dim == 2:
             return np.sqrt(volume / π)  # type: ignore
         elif dim == 3:
@@ -186,12 +188,12 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     elif dim == 2:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return π * radius**2  # type: ignore
+            return π * radius**2
 
     elif dim == 3:
 
         def volume_from_radius(radius: TNumArr) -> TNumArr:
-            return 4 * π / 3 * radius**3  # type: ignore
+            return 4 * π / 3 * radius**3
 
     else:
         raise NotImplementedError(f"Cannot calculate the volume in {dim} dimensions")
@@ -210,9 +212,9 @@ def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
         if dim == 1:
             return 2 * radius
         elif dim == 2:
-            return π * radius**2  # type: ignore
+            return π * radius**2
         elif dim == 3:
-            return 4 * π / 3 * radius**3  # type: ignore
+            return 4 * π / 3 * radius**3
         raise NotImplementedError
 
     return volume_from_radius_impl  # type: ignore
@@ -236,9 +238,9 @@ def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
         else:
             return 2
     elif dim == 2:
-        return 2 * π * radius  # type: ignore
+        return 2 * π * radius
     elif dim == 3:
-        return 4 * π * radius**2  # type: ignore
+        return 4 * π * radius**2
     else:
         raise NotImplementedError(
             f"Cannot calculate the surface area in {dim} dimensions"
@@ -260,7 +262,7 @@ def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
     if dim == 1:
         raise RuntimeError("Cannot calculate radius of 1-d sphere from surface")
     elif dim == 2:
-        return surface / (2 * π)  # type: ignore
+        return surface / (2 * π)
     elif dim == 3:
         return np.sqrt(surface / (4 * π))  # type: ignore
     else:
@@ -301,13 +303,13 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
 
         @jit
         def surface_from_radius(radius: TNumArr) -> TNumArr:
-            return 2 * π * radius  # type: ignore
+            return 2 * π * radius
 
     elif dim == 3:
 
         @jit
         def surface_from_radius(radius: TNumArr) -> TNumArr:
-            return 4 * π * radius**2  # type: ignore
+            return 4 * π * radius**2
 
     else:
         raise NotImplementedError(
@@ -316,7 +318,7 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     return surface_from_radius  # type: ignore
 
 
-def points_cartesian_to_spherical(points: np.ndarray) -> np.ndarray:
+def points_cartesian_to_spherical(points: RealArray) -> RealArray:
     """Convert points from Cartesian to spherical coordinates.
 
     Args:
@@ -336,10 +338,10 @@ def points_cartesian_to_spherical(points: np.ndarray) -> np.ndarray:
     ps_spherical[..., 1] = np.arccos(points[..., 2] / ps_spherical[..., 0])
     # calculate φ in [0, 2 * pi]
     ps_spherical[..., 2] = np.arctan2(points[..., 1], points[..., 0]) % (2 * π)
-    return ps_spherical  # type: ignore
+    return ps_spherical
 
 
-def points_spherical_to_cartesian(points: np.ndarray) -> np.ndarray:
+def points_spherical_to_cartesian(points: RealArray) -> RealArray:
     """Convert points from spherical to Cartesian coordinates.
 
     Args:
@@ -358,27 +360,27 @@ def points_spherical_to_cartesian(points: np.ndarray) -> np.ndarray:
     ps_cartesian[..., 0] = points[..., 0] * np.cos(points[..., 2]) * sin_θ
     ps_cartesian[..., 1] = points[..., 0] * np.sin(points[..., 2]) * sin_θ
     ps_cartesian[..., 2] = points[..., 0] * np.cos(points[..., 1])
-    return ps_cartesian  # type: ignore
+    return ps_cartesian
 
 
 @t.overload
 def polar_coordinates(
     grid: GridBase,
     *,
-    origin: np.ndarray | None = None,
+    origin: RealArray | None = None,
     ret_angle: Literal[False] = False,
-) -> np.ndarray: ...
+) -> RealArray: ...
 
 
 @t.overload
 def polar_coordinates(
-    grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: Literal[True]
-) -> tuple[np.ndarray, ...]: ...
+    grid: GridBase, *, origin: RealArray | None = None, ret_angle: Literal[True]
+) -> tuple[RealArray, ...]: ...
 
 
 def polar_coordinates(
-    grid: GridBase, *, origin: np.ndarray | None = None, ret_angle: bool = False
-) -> np.ndarray | tuple[np.ndarray, ...]:
+    grid: GridBase, *, origin: RealArray | None = None, ret_angle: bool = False
+) -> RealArray | tuple[RealArray, ...]:
     """Return polar coordinates associated with grid points.
 
     Args:
@@ -409,7 +411,7 @@ def polar_coordinates(
     # calculate the difference vector between all cells and the origin
     origin_grid = grid.transform(origin, source="cartesian", target="grid")
     diff = grid.difference_vector(origin_grid, grid.cell_coords)
-    dist: np.ndarray = np.linalg.norm(diff, axis=-1)  # get distance
+    dist: RealArray = np.linalg.norm(diff, axis=-1)  # get distance
 
     # determine distance and optionally angles for these vectors
     if not ret_angle:

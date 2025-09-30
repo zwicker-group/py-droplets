@@ -51,12 +51,13 @@ from .droplets import (
     SphericalDroplet,
 )
 from .emulsions import Emulsion
+from .tools.typing import RealArray
 
 _logger = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger instance."""
 
 
-def threshold_otsu(data: np.ndarray, nbins: int = 256) -> float:
+def threshold_otsu(data: RealArray, nbins: int = 256) -> float:
     """Find the threshold value for a bimodal histogram using the Otsu method.
 
     If you have a distribution that is bimodal, i.e., with two peaks and a valley
@@ -127,8 +128,8 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
     # connect clusters linked viaperiodic boundary conditions
     for ax in np.flatnonzero(grid.periodic):  # look at all periodic axes
         # compile list of all boundary points connected along the current axis
-        low: list[list[int] | np.ndarray] = []
-        high: list[list[int] | np.ndarray] = []
+        low: list[list[int] | RealArray] = []
+        high: list[list[int] | RealArray] = []
         for a in range(grid.num_axes):
             if a == ax:
                 low.append([0])
@@ -216,7 +217,7 @@ class _SpanningDropletSignal(RuntimeError):
 
 
 def _locate_droplets_in_mask_cylindrical_single(
-    grid: CylindricalSymGrid, mask: np.ndarray
+    grid: CylindricalSymGrid, mask: RealArray
 ) -> Emulsion:
     """Locate droplets in a data set on a single cylindrical grid.
 
@@ -604,7 +605,7 @@ def refine_droplet(
     # determine the coordinate constraints and only vary the free data points
     data_flat = structured_to_unstructured(droplet.data)  # unstructured data
     dtype = droplet.data.dtype
-    free: np.ndarray = np.ones(len(data_flat), dtype=bool)
+    free: RealArray = np.ones(len(data_flat), dtype=bool)
     free[phase_field.grid.coordinate_constraints] = False
 
     # determine data bounds
@@ -673,7 +674,7 @@ def get_structure_factor(
     smoothing: None | float | Literal["auto", "none"] = "auto",
     wave_numbers: Sequence[float] | Literal["auto"] = "auto",
     add_zero: bool = False,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[RealArray, RealArray]:
     r"""Calculates the structure factor associated with a field.
 
     Here, the structure factor is basically the power spectral density of the field
