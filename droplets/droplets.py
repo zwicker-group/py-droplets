@@ -703,7 +703,7 @@ class DiffuseDroplet(SphericalDroplet):
         if interface_width == 0 or np.issubdtype(dtype, bool):
             result = dist < self.radius
         else:
-            result = 0.5 + 0.5 * np.tanh((self.radius - dist) / interface_width)
+            result = 0.5 + 0.5 * np.tanh(2 * (self.radius - dist) / interface_width)
 
         return result.astype(dtype)
 
@@ -855,7 +855,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         if interface_width == 0 or np.issubdtype(dtype, bool):
             result = dist < interface
         else:
-            result = 0.5 + 0.5 * np.tanh((interface - dist) / interface_width)
+            result = 0.5 + 0.5 * np.tanh(2 * (interface - dist) / interface_width)
 
         return result.astype(dtype)
 
