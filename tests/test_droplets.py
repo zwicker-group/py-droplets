@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from scipy import integrate
 
-from pde.grids import UnitGrid
+from pde.grids import UnitGrid, CartesianGrid
 from pde.tools.misc import module_available
 from pde.tools.numba import jit
 
@@ -289,3 +289,15 @@ def test_droplet_interface_merge():
     d2 = droplets.DiffuseDroplet([2, 2], 1, 2)
     d1.merge(d2, inplace=True)
     assert d1.interface_width == pytest.approx(1.5)
+
+
+def test_droplet_interface_width(rng):
+    """Test whether interface width matches Cahn's definition"""
+    w = rng.uniform(0.5, 3)
+    vmin = rng.uniform(0, 0.4)
+    vmax = rng.uniform(0.6, 1)
+    drop = droplets.DiffuseDroplet([100], 100, w)
+    grid = CartesianGrid([[-0.01, 0.01]], 16)
+    field = drop.get_phase_field(grid, vmin=vmin, vmax=vmax)
+    field_grad = field.gradient("curvature")
+    assert field_grad.interpolate([0]) == pytest.approx((vmax - vmin) / w)
