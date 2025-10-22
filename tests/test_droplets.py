@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from scipy import integrate
 
-from pde.grids import UnitGrid, CartesianGrid
+from pde.grids import CartesianGrid, UnitGrid
 from pde.tools.misc import module_available
 from pde.tools.numba import jit
 
@@ -292,7 +292,7 @@ def test_droplet_interface_merge():
 
 
 def test_droplet_interface_width(rng):
-    """Test whether interface width matches Cahn's definition"""
+    """Test whether interface width matches Cahn's definition."""
     w = rng.uniform(0.5, 3)
     vmin = rng.uniform(0, 0.4)
     vmax = rng.uniform(0.6, 1)
