@@ -122,7 +122,7 @@ class DropletBase:
     """Private method for merging droplet data, created by __init_subclass__"""
 
     @classmethod
-    def from_data(cls, data: np.recarray) -> DropletBase:
+    def from_data(cls, data: np.recarray) -> Self:
         """Create droplet class from a given data.
 
         Args:
@@ -137,7 +137,7 @@ class DropletBase:
         return obj
 
     @classmethod
-    def from_droplet(cls, droplet: DropletBase, **kwargs) -> DropletBase:
+    def from_droplet(cls, droplet: DropletBase, **kwargs) -> Self:
         r"""Return a droplet with data taken from `droplet`
 
         Args:
@@ -226,15 +226,15 @@ class DropletBase:
                 Additional arguments an be used to set data of the returned droplet.
         """
         if kwargs:
-            return self.from_droplet(self, **kwargs)  # type: ignore
-        return self.from_data(self.data.copy())  # type: ignore
+            return self.from_droplet(self, **kwargs)
+        return self.from_data(self.data.copy())
 
     @classmethod
     def _make_merge_data(cls) -> Callable[[RealArray, RealArray, RealArray], None]:
         """Factory for a function that merges the data of two droplets."""
         raise NotImplementedError
 
-    def merge(self, other: Self, *, inplace: bool = False) -> Self:
+    def merge(self, other: DropletBase, *, inplace: bool = False) -> Self:
         """Merge two droplets into one."""
         if inplace:
             self._merge_data(self.data, other.data, out=self.data)  # type: ignore
