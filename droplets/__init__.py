@@ -18,8 +18,12 @@ except ImportError:
         __version__ = "unknown"
     del PackageNotFoundError, version  # clean name space
 
-from .droplet_tracks import DropletTrack, DropletTrackList
-from .droplets import DiffuseDroplet, SphericalDroplet
-from .emulsions import Emulsion, EmulsionTimeCourse
-from .image_analysis import get_length_scale, get_structure_factor, locate_droplets
-from .trackers import DropletTracker, LengthScaleTracker
+from .droplet_tracks import DropletTrack, DropletTrackList  # noqa: F401
+from .droplets import DiffuseDroplet, SphericalDroplet  # noqa: F401
+from .emulsions import Emulsion, EmulsionTimeCourse  # noqa: F401
+from .image_analysis import (  # noqa: F401
+    get_length_scale,
+    get_structure_factor,
+    locate_droplets,
+)
+from .trackers import DropletTracker, LengthScaleTracker  # noqa: F401

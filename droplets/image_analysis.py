@@ -19,10 +19,9 @@ import functools
 import logging
 import math
 import warnings
-from collections.abc import Iterable, Sequence
 from functools import reduce
 from itertools import product
-from typing import Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 import numpy as np
 from numpy.lib.recfunctions import (
@@ -41,7 +40,6 @@ from pde.grids import CartesianGrid, CylindricalSymGrid
 from pde.grids.base import GridBase
 from pde.grids.spherical import SphericalSymGridBase
 from pde.tools.math import SmoothData1D
-from pde.tools.typing import NumberOrArray
 
 from .droplets import (
     DiffuseDroplet,
@@ -51,7 +49,13 @@ from .droplets import (
     SphericalDroplet,
 )
 from .emulsions import Emulsion
-from .tools.typing import RealArray
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from pde.tools.typing import NumberOrArray
+
+    from .tools.typing import RealArray
 
 _logger = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger instance."""
@@ -207,9 +211,8 @@ def _locate_droplets_in_mask_spherical(mask: ScalarField) -> Emulsion:
     # return an emulsion of droplets
     if droplet:
         return Emulsion([droplet])
-    else:
-        example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
-        return Emulsion.empty(example_drop)
+    example_drop = SphericalDroplet(np.zeros(grid.dim), radius=0)
+    return Emulsion.empty(example_drop)
 
 
 class _SpanningDropletSignal(RuntimeError):
@@ -336,14 +339,15 @@ def locate_droplets_in_mask(mask: ScalarField) -> Emulsion:
     """
     if isinstance(mask.grid, CartesianGrid):
         return _locate_droplets_in_mask_cartesian(mask)
-    elif isinstance(mask.grid, SphericalSymGridBase):
+    if isinstance(mask.grid, SphericalSymGridBase):
         return _locate_droplets_in_mask_spherical(mask)
-    elif isinstance(mask.grid, CylindricalSymGrid):
+    if isinstance(mask.grid, CylindricalSymGrid):
         return _locate_droplets_in_mask_cylindrical(mask)
-    elif isinstance(mask.grid, GridBase):
-        raise NotImplementedError(f"Locating droplets is not possible for {mask.grid}")
-    else:
-        raise ValueError(f"Invalid grid {mask.grid}")
+    if isinstance(mask.grid, GridBase):
+        msg = f"Locating droplets is not possible for {mask.grid}"
+        raise NotImplementedError(msg)
+    msg = f"Invalid grid {mask.grid}"
+    raise ValueError(msg)
 
 
 def locate_droplets(
@@ -417,11 +421,13 @@ def locate_droplets(
         :class:`~droplets.emulsions.Emulsion`: All detected droplets
     """
     if not isinstance(phase_field, ScalarField):
-        raise TypeError("`phase_field` must be ScalarField")
+        msg = "`phase_field` must be ScalarField"
+        raise TypeError(msg)
     dim = phase_field.grid.dim  # dimensionality of the space
 
     if modes > 0 and dim not in [2, 3]:
-        raise ValueError("Perturbed droplets only supported for 2d and 3d")
+        msg = "Perturbed droplets only supported for 2d and 3d"
+        raise ValueError(msg)
     if refine_args is None:
         refine_args = {}
 
@@ -463,7 +469,8 @@ def locate_droplets(
                 else:
                     droplet_class = PerturbedDroplet3D
             else:
-                raise NotImplementedError(f"Dimension {dim} is not supported")
+                msg = f"Dimension {dim} is not supported"
+                raise NotImplementedError(msg)
             args["amplitudes"] = np.zeros(modes)
 
         # recreate a droplet of the correct class
@@ -582,7 +589,8 @@ def refine_droplet(
             The refined droplet as an instance of the argument `droplet`
     """
     if not isinstance(phase_field, ScalarField):
-        raise TypeError("`phase_field` must be ScalarField")
+        msg = "`phase_field` must be ScalarField"
+        raise TypeError(msg)
     if least_squares_params is None:
         least_squares_params = {}
     if tolerance is not None:
@@ -703,16 +711,16 @@ def get_structure_factor(
         :math:`2\pi/k`.
     """
     if not isinstance(scalar_field, ScalarField):
-        raise TypeError(
+        msg = (
             "Length scales can only be calculated for scalar "
             f"fields, not {scalar_field.__class__.__name__}"
         )
+        raise TypeError(msg)
 
     grid = scalar_field.grid
     if not isinstance(grid, CartesianGrid):
-        raise NotImplementedError(
-            "Structure factor can currently only be calculated for Cartesian grids"
-        )
+        msg = "Structure factor can currently only be calculated for Cartesian grids"
+        raise NotImplementedError(msg)
     if not all(grid.periodic):
         _logger.warning(
             "Structure factor calculation assumes periodic boundary "
@@ -877,10 +885,11 @@ def get_length_scale(
         length_scale = volume_per_droplet ** (1 / len(axes))
 
     else:
-        raise ValueError(
+        msg = (
             f"Method {method} is not defined. Valid values are `structure_factor_mean` "
             "and `structure_factor_maximum`"
         )
+        raise ValueError(msg)
 
     if kwargs:
         # raise warning if keyword arguments remain
@@ -891,9 +900,9 @@ def get_length_scale(
 
 
 __all__ = [
-    "threshold_otsu",
+    "get_length_scale",
+    "get_structure_factor",
     "locate_droplets",
     "refine_droplet",
-    "get_structure_factor",
-    "get_length_scale",
+    "threshold_otsu",
 ]

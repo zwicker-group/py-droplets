@@ -14,23 +14,27 @@ from __future__ import annotations
 import functools
 import json
 import logging
-from typing import Callable, Literal
+from typing import TYPE_CHECKING, Callable, Literal
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
-from numpy.typing import NDArray
 from scipy import ndimage
 from scipy.spatial import distance
 
-from pde.grids.base import GridBase
-from pde.storage.base import StorageBase
 from pde.tools.output import display_progress
 from pde.tools.plotting import PlotReference, plot_on_axes
-from pde.trackers.base import InfoDict
 
 from .droplets import SphericalDroplet, droplet_from_data
 from .emulsions import Emulsion, EmulsionTimeCourse
-from .tools.typing import RealArray
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+    from pde.grids.base import GridBase
+    from pde.storage.base import StorageBase
+    from pde.trackers.base import InfoDict
+
+    from .tools.typing import RealArray
 
 _logger = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger instance."""
@@ -103,19 +107,17 @@ class DropletTrack:
             self.times = list(times)
 
         if len(self.times) != len(self.droplets):
-            raise ValueError(
-                "The lists of droplets and times need to have the same length"
-            )
+            msg = "The lists of droplets and times need to have the same length"
+            raise ValueError(msg)
 
     def __repr__(self):
         """Human-readable representation of a droplet track."""
         class_name = self.__class__.__name__
         if len(self.times) == 0:
             return f"{class_name}([])"
-        elif len(self.times) == 1:
+        if len(self.times) == 1:
             return f"{class_name}(time={self.start:g})"
-        else:
-            return f"{class_name}(timespan={self.start:g}..{self.end:g})"
+        return f"{class_name}(timespan={self.start:g}..{self.end:g})"
 
     def __len__(self):
         """Number of time points."""
@@ -126,8 +128,7 @@ class DropletTrack:
         result = self.droplets.__getitem__(key)
         if isinstance(key, slice):
             return self.__class__(droplets=result, times=self.times[key])
-        else:
-            return result
+        return result
 
     def __eq__(self, other):
         """Determine whether two DropletTracks instance are equal."""
@@ -148,8 +149,7 @@ class DropletTrack:
         """float: total duration of the track"""
         if len(self.times) > 0:
             return self.end - self.start
-        else:
-            return 0
+        return 0
 
     @property
     def first(self) -> SphericalDroplet:
@@ -174,13 +174,12 @@ class DropletTrack:
         """:class:`~numpy.ndarray`: an array containing the data of the full track."""
         if len(self) == 0:
             return None
-        else:
-            d0 = self.first
-            dtype = [("time", "f8")] + d0.data.dtype.descr
-            result = np.empty(len(self), dtype=dtype)
-            for i in range(len(self)):
-                result[i] = (self.times[i],) + self.droplets[i].data.tolist()
-            return result
+        d0 = self.first
+        dtype = [("time", "f8"), *d0.data.dtype.descr]
+        result = np.empty(len(self), dtype=dtype)
+        for i in range(len(self)):
+            result[i] = (self.times[i], *self.droplets[i].data.tolist())
+        return result
 
     def __iter__(self):
         """Iterate over all droplets."""
@@ -200,10 +199,11 @@ class DropletTrack:
                 The associated time point
         """
         if self.dim is not None and droplet.dim != self.dim:
-            raise ValueError(
+            msg = (
                 "Space dimension of added droplet must match the DropletTrack "
                 f" ({droplet.dim} != {self.dim})"
             )
+            raise ValueError(msg)
 
         # add the emulsion
         self.droplets.append(droplet.copy())
@@ -290,13 +290,12 @@ class DropletTrack:
         obj = cls()
         if droplet_class == "None":
             return obj
-        else:
-            # separate time from the data set
-            times = dataset["time"]
-            droplet_data = rfn.rec_drop_fields(dataset, "time")
-            for time, data in zip(times, droplet_data):
-                droplet = droplet_from_data(droplet_class, data)
-                obj.append(droplet, time=time)  # type: ignore
+        # separate time from the data set
+        times = dataset["time"]
+        droplet_data = rfn.rec_drop_fields(dataset, "time")
+        for time, data in zip(times, droplet_data):
+            droplet = droplet_from_data(droplet_class, data)
+            obj.append(droplet, time=time)  # type: ignore
 
         return obj
 
@@ -313,11 +312,12 @@ class DropletTrack:
 
         with h5py.File(path, "r") as fp:
             if len(fp) != 1:
-                raise RuntimeError(
+                msg = (
                     f"Multiple droplet tracks found in file {path}. Did you mean to "
                     "load a DropletTrackList instead?"
                 )
-            dataset = fp[list(fp.keys())[0]]  # retrieve the only dataset
+                raise RuntimeError(msg)
+            dataset = fp[next(iter(fp.keys()))]  # retrieve the only dataset
             obj = cls._from_hdf_dataset(dataset)
 
         return obj
@@ -436,7 +436,8 @@ class DropletTrack:
             return PlotReference(ax, None, {"arrow": arrow})
 
         if self.dim != 2:
-            raise NotImplementedError("Plotting is only implemented for 2d grids")
+            msg = "Plotting is only implemented for 2d grids"
+            raise NotImplementedError(msg)
 
         # obtain droplet positions as a function of time
         xy = self.get_trajectory()
@@ -489,8 +490,7 @@ class DropletTrackList(list):
         result = super().__getitem__(key)
         if isinstance(key, slice):
             return self.__class__(result)
-        else:
-            return result
+        return result
 
     @classmethod
     def from_emulsion_time_course(
@@ -539,10 +539,11 @@ class DropletTrackList(list):
                 found_multiple_overlap = False
                 for droplet in emulsion:
                     # determine which old tracks could be extended
-                    overlaps: list[DropletTrack] = []
-                    for track in tracks_alive:
-                        if track.last.overlaps(droplet, grid=grid):
-                            overlaps.append(track)
+                    overlaps: list[DropletTrack] = [
+                        track
+                        for track in tracks_alive
+                        if track.last.overlaps(droplet, grid=grid)
+                    ]
 
                     if len(overlaps) == 1:
                         overlaps[0].append(droplet, time=time)
@@ -594,7 +595,8 @@ class DropletTrackList(list):
                         tracks.append(DropletTrack(droplets=[droplet], times=[time]))
 
         else:
-            raise ValueError("Unknown tracking method `%s`", method)
+            msg = "Unknown tracking method `%s`"
+            raise ValueError(msg, method)
 
         # check kwargs
         if kwargs:

@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import argparse
 import os
 import subprocess as sp
 import sys
-from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 PACKAGE = "droplets"  # name of the package that needs to be tested
 PACKAGE_PATH = Path(__file__).resolve().parents[1]  # base path of the package
@@ -22,8 +26,7 @@ def _most_severe_exit_code(retcodes: Sequence[int]) -> int:
     """
     if all(retcode == 0 for retcode in retcodes):
         return 0
-    else:
-        return max(retcodes, key=lambda retcode: abs(retcode))
+    return max(retcodes, key=lambda retcode: abs(retcode))
 
 
 def run_test_codestyle(*, verbose: bool = True) -> int:
@@ -91,7 +94,7 @@ def run_unit_tests(
     parallel: bool = False,
     coverage: bool = False,
     no_numba: bool = False,
-    pattern: str = None,
+    pattern: str | None = None,
 ) -> int:
     """Run the unit tests.
 

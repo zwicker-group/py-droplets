@@ -16,7 +16,6 @@ import functools
 import json
 import logging
 import math
-from collections.abc import Iterable, Iterator, Sequence
 from typing import TYPE_CHECKING, Any, Callable, Literal, overload
 
 import numpy as np
@@ -24,17 +23,20 @@ import numpy as np
 from pde.fields import ScalarField
 from pde.grids.base import GridBase
 from pde.grids.cartesian import CartesianGrid
-from pde.storage.base import StorageBase
-from pde.tools.cuboid import Cuboid
 from pde.tools.docstrings import fill_in_docstring
 from pde.tools.output import display_progress
 from pde.tools.plotting import PlotReference, plot_on_axes
-from pde.trackers.base import InfoDict, InterruptData
 
 from .droplets import SphericalDroplet, droplet_from_data
-from .tools.typing import RealArray
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
+
+    from pde.storage.base import StorageBase
+    from pde.tools.cuboid import Cuboid
+    from pde.trackers.base import InfoDict, InterruptData
+
+    from .tools.typing import RealArray
     from .trackers import DropletTracker
 
 
@@ -152,7 +154,8 @@ class Emulsion(list):
         else:
             bnds = np.atleast_2d(grid_or_bounds)
             if bnds.ndim != 2 or bnds.shape[0] == 0 or bnds.shape[1] != 2:
-                raise ValueError(f"Bounds must be array of shape (n, 2), got {bnds}")
+                msg = f"Bounds must be array of shape (n, 2), got {bnds}"
+                raise ValueError(msg)
 
             def get_position():
                 return rng.uniform(bnds[:, 0], bnds[:, 1])
@@ -177,8 +180,7 @@ class Emulsion(list):
         """int: dimensionality of space in which droplets are defined"""
         if self.dtype:
             return self.dtype["position"].shape[0]  # type: ignore
-        else:
-            return None
+        return None
 
     def __repr__(self):
         return f"{self.__class__.__name__}({super().__repr__()})"
@@ -198,8 +200,7 @@ class Emulsion(list):
         result = list.__getitem__(self, key)
         if isinstance(result, SphericalDroplet):
             return result
-        else:
-            return Emulsion(result)
+        return Emulsion(result)
 
     def copy(self, min_radius: float = -1) -> Emulsion:
         """Return a copy of this emulsion.
@@ -258,9 +259,8 @@ class Emulsion(list):
         if not hasattr(self, "dtype") or self.dtype is None:
             self.dtype = droplet.data.dtype
         elif force_consistency and self.dtype != droplet.data.dtype:
-            raise ValueError(
-                f"Expected type {self.dtype}, but got {droplet.data.dtype}"
-            )
+            msg = f"Expected type {self.dtype}, but got {droplet.data.dtype}"
+            raise ValueError(msg)
         if copy:
             droplet = droplet.copy()
         super().append(droplet)
@@ -278,32 +278,30 @@ class Emulsion(list):
             # deal with empty emulsions
             if self.dtype:
                 return np.empty(0, dtype=self.dtype)
-            else:
-                raise RuntimeError(
-                    "Cannot create data array since the emulsion is empty and an "
-                    "explicit dtype has not been specified."
-                )
+            msg = (
+                "Cannot create data array since the emulsion is empty and an "
+                "explicit dtype has not been specified."
+            )
+            raise RuntimeError(msg)
 
-        else:
-            # emulsion contains at least one droplet
-            classes = {d.__class__ for d in self}
-            if len(classes) > 1:
-                raise TypeError(
-                    "Emulsion data cannot be stored contiguously if it contains a "
-                    "multiple of droplet classes: "
-                    + ", ".join(c.__name__ for c in classes)
-                )
-            result = np.array([d.data for d in self])
-            if result.dtype != self.dtype:
-                _logger.warning("Emulsion had inconsistent dtypes")
-            return result
+        # emulsion contains at least one droplet
+        classes = {d.__class__ for d in self}
+        if len(classes) > 1:
+            raise TypeError(
+                "Emulsion data cannot be stored contiguously if it contains a "
+                "multiple of droplet classes: " + ", ".join(c.__name__ for c in classes)
+            )
+        result = np.array([d.data for d in self])
+        if result.dtype != self.dtype:
+            _logger.warning("Emulsion had inconsistent dtypes")
+        return result
 
     def get_linked_data(self) -> RealArray:
         """Link the data of all droplets in a single array.
 
         Returns:
-            :class:`~numpy.ndarray`: The array containing all droplet data. If entries in
-                this array are modified, it will be reflected in the droplets.
+            :class:`~numpy.ndarray`: The array containing all droplet data. If entries
+                in this array are modified, it will be reflected in the droplets.
         """
         data = self.data  # create an array with all the droplet data
         # link back to droplets
@@ -349,10 +347,11 @@ class Emulsion(list):
 
         with h5py.File(path, "r") as fp:
             if len(fp) != 1:
-                raise RuntimeError(f"Multiple emulsions found in file `{path}`")
+                msg = f"Multiple emulsions found in file `{path}`"
+                raise RuntimeError(msg)
 
             # read the actual droplet data
-            dataset = fp[list(fp.keys())[0]]  # retrieve the only dataset
+            dataset = fp[next(iter(fp.keys()))]  # retrieve the only dataset
             obj = cls._from_hdf_dataset(dataset)
 
         return obj
@@ -408,7 +407,7 @@ class Emulsion(list):
         for droplet in self:
             try:
                 interface_width = droplet.interface_width
-            except AttributeError:
+            except AttributeError:  # noqa: PERF203
                 pass
             else:
                 if interface_width is not None:
@@ -418,14 +417,14 @@ class Emulsion(list):
 
         if area == 0:
             return None
-        else:
-            return width / area
+        return width / area
 
     @property
     def bbox(self) -> Cuboid:
         """:class:`Cuboid`: bounding box of the emulsion."""
         if len(self) == 0:
-            raise RuntimeError("Bounding box of empty emulsion is undefined")
+            msg = "Bounding box of empty emulsion is undefined"
+            raise RuntimeError(msg)
         return sum((droplet.bbox for droplet in self[1:]), self[0].bbox)
 
     def get_phasefield(self, grid: GridBase, label: str | None = None) -> ScalarField:
@@ -444,12 +443,11 @@ class Emulsion(list):
         if len(self) == 0:
             return ScalarField(grid)
 
-        else:
-            result: ScalarField = self[0].get_phase_field(grid, label=label)
-            for d in self[1:]:
-                result += d.get_phase_field(grid)
-            np.clip(result.data, 0, 1, out=result.data)
-            return result
+        result: ScalarField = self[0].get_phase_field(grid, label=label)
+        for d in self[1:]:
+            result += d.get_phase_field(grid)
+        np.clip(result.data, 0, 1, out=result.data)
+        return result
 
     def remove_small(self, min_radius: float = -np.inf) -> None:
         """Remove droplets that are very small.
@@ -524,7 +522,7 @@ class Emulsion(list):
         # handle simple cases
         if len(self) == 0:
             return np.zeros((0,))
-        elif len(self) == 1:
+        if len(self) == 1:
             return np.full(1, np.nan)
 
         try:
@@ -542,8 +540,7 @@ class Emulsion(list):
 
         if subtract_radius:
             return dist[:, 1] - self.data["radius"][index].sum(axis=1)
-        else:
-            return dist[:, 1]
+        return dist[:, 1]
 
     def remove_overlapping(
         self, min_distance: float = 0, grid: GridBase | None = None
@@ -656,7 +653,7 @@ class Emulsion(list):
                 The grid on which the droplets are defined, which is necessary if
                 periodic boundary conditions should be respected for measuring distances
             set_bounds (bool):
-                Determines whether the the axis bounds are set explicitly (and autoscale)
+                Determines whether the axis bounds are set explicitly (and autoscale)
                 is disabled. If True, the bounds are determined from the supplied field
                 or grid. If these are omitted, the bounding box is determined from all
                 droplets.
@@ -687,10 +684,9 @@ class Emulsion(list):
             return PlotReference(ax, [], {})
 
         if self.dim is None or self.dim <= 1:
-            raise NotImplementedError(
-                f"Plotting emulsions in {self.dim} dimensions is not implemented."
-            )
-        elif self.dim > 2 and Emulsion._show_projection_warning:
+            msg = f"Plotting emulsions in {self.dim} dimensions is not implemented."
+            raise NotImplementedError(msg)
+        if self.dim > 2 and Emulsion._show_projection_warning:
             _logger.warning("A projection on the first two axes is shown.")
             Emulsion._show_projection_warning = False
 
@@ -706,7 +702,8 @@ class Emulsion(list):
             if grid is None:
                 grid = field.grid
             elif grid != field.grid:
-                raise ValueError("Argument `grid` is incompatible with `field.grid`")
+                msg = "Argument `grid` is incompatible with `field.grid`"
+                raise ValueError(msg)
 
         # determine non-vanishing droplets
         drops_finite = [droplet for droplet in self if droplet.radius > 0]
@@ -815,7 +812,8 @@ class EmulsionTimeCourse:
             self.times = list(times)
 
         if len(self.times) != len(self.emulsions):
-            raise ValueError("Lists of emulsions and times must have same length")
+            msg = "Lists of emulsions and times must have same length"
+            raise ValueError(msg)
 
     def append(
         self, emulsion: Emulsion, time: float | None = None, copy: bool = True
@@ -860,8 +858,7 @@ class EmulsionTimeCourse:
         result = self.emulsions.__getitem__(key)
         if isinstance(key, slice):
             return self.__class__(emulsions=result, times=self.times[key])
-        else:
-            return result
+        return result
 
     def __iter__(self) -> Iterator[Emulsion]:
         """Iterate over the emulsions."""

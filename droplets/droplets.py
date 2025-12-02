@@ -31,22 +31,27 @@ import math
 import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Callable, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
 
 import numpy as np
 from numba.extending import register_jitable
 from numpy.lib.recfunctions import structured_to_unstructured
-from numpy.typing import DTypeLike
 from scipy import integrate
+from typing_extensions import Self
 
 from pde.fields import ScalarField
-from pde.grids.base import GridBase
 from pde.tools.cuboid import Cuboid
 from pde.tools.plotting import PlotReference, plot_on_axes
 
 from .tools import spherical
 from .tools.misc import enable_scalar_args
-from .tools.typing import RealArray
+
+if TYPE_CHECKING:
+    from numpy.typing import DTypeLike
+
+    from pde.grids.base import GridBase
+
+    from .tools.typing import RealArray
 
 _logger = logging.getLogger(__name__)
 """:class:`logging.Logger`: Logger instance."""
@@ -117,7 +122,7 @@ class DropletBase:
     """Private method for merging droplet data, created by __init_subclass__"""
 
     @classmethod
-    def from_data(cls, data: np.recarray) -> DropletBase:
+    def from_data(cls, data: np.recarray) -> Self:
         """Create droplet class from a given data.
 
         Args:
@@ -132,7 +137,7 @@ class DropletBase:
         return obj
 
     @classmethod
-    def from_droplet(cls, droplet: DropletBase, **kwargs) -> DropletBase:
+    def from_droplet(cls, droplet: DropletBase, **kwargs) -> Self:
         r"""Return a droplet with data taken from `droplet`
 
         Args:
@@ -182,7 +187,7 @@ class DropletBase:
         # register all subclasses to reconstruct them later
         if cls is not DropletBase:
             if cls.__name__ in cls._subclasses:
-                warnings.warn(f"Redefining class {cls.__name__}")
+                warnings.warn(f"Redefining class {cls.__name__}", stacklevel=2)
             cls._subclasses[cls.__name__] = cls
 
         # create a staticmethod for merging droplet data
@@ -213,7 +218,7 @@ class DropletBase:
         """:class:`~numpy.ndarray`: the data of the droplet in an unstructured array."""
         return structured_to_unstructured(self.data)
 
-    def copy(self: TDroplet, **kwargs) -> TDroplet:
+    def copy(self, **kwargs) -> Self:
         r"""Return a copy of the current droplet.
 
         Args:
@@ -221,24 +226,22 @@ class DropletBase:
                 Additional arguments an be used to set data of the returned droplet.
         """
         if kwargs:
-            return self.from_droplet(self, **kwargs)  # type: ignore
-        else:
-            return self.from_data(self.data.copy())  # type: ignore
+            return self.from_droplet(self, **kwargs)
+        return self.from_data(self.data.copy())
 
     @classmethod
     def _make_merge_data(cls) -> Callable[[RealArray, RealArray, RealArray], None]:
         """Factory for a function that merges the data of two droplets."""
         raise NotImplementedError
 
-    def merge(self: TDroplet, other: TDroplet, *, inplace: bool = False) -> TDroplet:
+    def merge(self, other: DropletBase, *, inplace: bool = False) -> Self:
         """Merge two droplets into one."""
         if inplace:
             self._merge_data(self.data, other.data, out=self.data)  # type: ignore
             return self
-        else:
-            result = np.record(np.zeros_like(self.data))
-            self._merge_data(self.data, other.data, out=result)  # type: ignore
-            return self.__class__.from_data(result)  # type: ignore
+        result = np.record(np.zeros_like(self.data))
+        self._merge_data(self.data, other.data, out=result)  # type: ignore
+        return self.__class__.from_data(result)  # type: ignore
 
     @property
     def data_bounds(self) -> tuple[RealArray, RealArray]:
@@ -269,7 +272,8 @@ class SphericalDroplet(DropletBase):
     def check_data(self):
         """Method that checks the validity and consistency of self.data."""
         if self.radius < 0:
-            raise ValueError("Radius must be positive")
+            msg = "Radius must be positive"
+            raise ValueError(msg)
 
     @classmethod
     def get_dtype(cls, **kwargs) -> DTypeList:
@@ -284,7 +288,8 @@ class SphericalDroplet(DropletBase):
         """
         position = np.atleast_1d(kwargs.pop("position"))
         if kwargs:
-            raise ValueError(f"Leftover keyword arguments: {kwargs}")
+            msg = f"Leftover keyword arguments: {kwargs}"
+            raise ValueError(msg)
         dim = len(position)
         return [("position", float, (dim,)), ("radius", float)]
 
@@ -326,7 +331,8 @@ class SphericalDroplet(DropletBase):
     def position(self, value: RealArray) -> None:
         value = np.asanyarray(value)
         if len(value) != self.dim:
-            raise ValueError(f"The dimension of the position must be {self.dim}")
+            msg = f"The dimension of the position must be {self.dim}"
+            raise ValueError(msg)
         self.data["position"] = value
 
     @property
@@ -342,7 +348,7 @@ class SphericalDroplet(DropletBase):
     @property
     def volume(self) -> float:
         """float: volume of the droplet"""
-        return spherical.volume_from_radius(self.radius, self.dim)
+        return spherical.volume_from_radius(self.radius, self.dim)  # type: ignore
 
     @volume.setter
     def volume(self, volume: float) -> None:
@@ -424,7 +430,8 @@ class SphericalDroplet(DropletBase):
             ValueError: If the dimension of the space is not 2
         """
         if self.dim != len(args) + 1:
-            raise ValueError(f"Interfacial position requires {self.dim - 1} angles")
+            msg = f"Interfacial position requires {self.dim - 1} angles"
+            raise ValueError(msg)
 
         if self.dim == 2:
             # spherical droplet in two dimensions
@@ -438,7 +445,8 @@ class SphericalDroplet(DropletBase):
             pos = spherical.points_spherical_to_cartesian(np.c_[r, θ, φ])
 
         else:
-            raise NotImplementedError(f"Cannot calculate {self.dim}d position")
+            msg = f"Cannot calculate {self.dim}d position"
+            raise NotImplementedError(msg)
 
         # shift the droplet center
         return self.position[None, :] + pos
@@ -463,10 +471,11 @@ class SphericalDroplet(DropletBase):
             phase field at support points of the `grid`.
         """
         if self.dim != grid.dim:
-            raise ValueError(
+            msg = (
                 f"Droplet (dimension {self.dim}) incompatible with grid (dimension "
                 f"{grid.dim})"
             )
+            raise ValueError(msg)
 
         # calculate distances from droplet center
         dist = spherical.polar_coordinates(grid, origin=self.position, ret_angle=False)
@@ -519,7 +528,7 @@ class SphericalDroplet(DropletBase):
             lines = np.c_[np.arange(num), np.arange(1, num + 1) % num]
             return {"vertices": vertices, "lines": lines}
 
-        elif self.dim == 3:
+        if self.dim == 3:
             # estimate the number of triangles covering the surface
             try:
                 surface_area = self.surface_area
@@ -535,8 +544,8 @@ class SphericalDroplet(DropletBase):
                 "triangles": tri["cells"],
             }
 
-        else:
-            raise NotImplementedError(f"Triangulation not implemented for {self.dim}d")
+        msg = f"Triangulation not implemented for {self.dim}d"
+        raise NotImplementedError(msg)
 
     def _get_mpl_patch(self, dim=None, **kwargs):
         """Return the patch representing the droplet for plotting.
@@ -560,7 +569,8 @@ class SphericalDroplet(DropletBase):
             dim = self.dim
 
         if dim != 2:
-            raise NotImplementedError("Plotting is only implemented in 2d")
+            msg = "Plotting is only implemented in 2d"
+            raise NotImplementedError(msg)
 
         if self.dim == 1:
             position = (self.position[0], 0)
@@ -638,7 +648,7 @@ class DiffuseDroplet(SphericalDroplet):
             :class:`numpy.dtype`: the (structured) dtype associated with this class
         """
         dtype = super().get_dtype(**kwargs)
-        return dtype + [("interface_width", float)]
+        return [*dtype, ("interface_width", float)]
 
     @classmethod
     def _make_merge_data(cls) -> Callable[[RealArray, RealArray, RealArray], None]:
@@ -658,15 +668,15 @@ class DiffuseDroplet(SphericalDroplet):
         """float: the width of the interface of this droplet"""
         if np.isnan(self.data["interface_width"]):
             return None
-        else:
-            return float(self.data["interface_width"])
+        return float(self.data["interface_width"])
 
     @interface_width.setter
     def interface_width(self, value: float | None) -> None:
         if value is None:
             self.data["interface_width"] = math.nan
         elif value < 0:
-            raise ValueError("Interface width must not be negative")
+            msg = "Interface width must not be negative"
+            raise ValueError(msg)
         else:
             self.data["interface_width"] = value
         self.check_data()
@@ -686,10 +696,11 @@ class DiffuseDroplet(SphericalDroplet):
             phase field at support points of the `grid`.
         """
         if self.dim != grid.dim:
-            raise ValueError(
+            msg = (
                 f"Droplet (dimension {self.dim}) incompatible with grid (dimension "
                 f"{grid.dim})"
             )
+            raise ValueError(msg)
 
         if self.interface_width is None:
             interface_width = grid.typical_discretization
@@ -743,7 +754,8 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
         self.amplitudes = amplitudes
 
         if len(self.position) != self.__class__.dim:
-            raise ValueError(f"Space dimension must be {self.__class__.dim}")
+            msg = f"Space dimension must be {self.__class__.dim}"
+            raise ValueError(msg)
 
     @classmethod
     def get_dtype(cls, **kwargs) -> DTypeList:
@@ -768,7 +780,7 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
 
         # create dtype
         dtype = super().get_dtype(**kwargs)
-        return dtype + [("amplitudes", float, (modes,))]
+        return [*dtype, ("amplitudes", float, (modes,))]
 
     @property
     def data_bounds(self) -> tuple[RealArray, RealArray]:
@@ -795,7 +807,8 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
     def amplitudes(self, value: RealArray | None = None) -> None:
         if value is None:
             if self.modes != 0:
-                raise ValueError("Require values for amplitudes")
+                msg = "Require values for amplitudes"
+                raise ValueError(msg)
             self.data["amplitudes"] = np.broadcast_to(0.0, (0,))
         else:
             self.data["amplitudes"] = np.broadcast_to(value, (self.modes,))
@@ -833,10 +846,11 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
             phase field at support points of the `grid`.
         """
         if self.dim != grid.dim:
-            raise ValueError(
+            msg = (
                 f"Droplet (dimension {self.dim}) incompatible with grid (dimension "
                 f"{grid.dim})"
             )
+            raise ValueError(msg)
 
         if self.interface_width is None:
             interface_width = grid.typical_discretization
@@ -867,7 +881,8 @@ class PerturbedDropletBase(DiffuseDroplet, metaclass=ABCMeta):
                 The dimension in which the data is plotted. If omitted, the actual
                 physical dimension is assumed
         """
-        raise NotImplementedError(f"Plotting {self.__class__.__name__} not implemented")
+        msg = f"Plotting {self.__class__.__name__} not implemented"
+        raise NotImplementedError(msg)
 
 
 class PerturbedDroplet2D(PerturbedDropletBase):
@@ -1040,7 +1055,8 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             dim = self.dim
 
         if dim != 2:
-            raise NotImplementedError("Plotting is only implemented in 2d")
+            msg = "Plotting is only implemented in 2d"
+            raise NotImplementedError(msg)
 
         φ = np.linspace(0, 2 * np.pi, endpoint=False)
         xy = self.interface_position(φ)
@@ -1117,7 +1133,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         if φ is None:
             φ = np.zeros_like(θ)
         elif θ.shape != φ.shape:
-            raise ValueError("Shape of θ and φ must agree")
+            msg = "Shape of θ and φ must agree"
+            raise ValueError(msg)
         dist: RealArray = np.ones(θ.shape, dtype=float)
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
@@ -1140,7 +1157,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         if φ is None:
             φ = np.zeros_like(θ)
         elif θ.shape != φ.shape:
-            raise ValueError("Shape of θ and φ must agree")
+            msg = "Shape of θ and φ must agree"
+            raise ValueError(msg)
         dist = self.interface_distance(θ, φ)
         unit_vector = [np.sin(θ) * np.cos(φ), np.sin(θ) * np.sin(φ), np.cos(θ)]
         pos = dist[:, None] * np.transpose(unit_vector)
@@ -1167,7 +1185,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         if φ is None:
             φ = np.zeros_like(θ)
         elif θ.shape != φ.shape:
-            raise ValueError("Shape of θ and φ must agree")
+            msg = "Shape of θ and φ must agree"
+            raise ValueError(msg)
         Yk = spherical.spherical_harmonic_real_k
         correction = 0
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
@@ -1194,12 +1213,13 @@ class PerturbedDroplet3D(PerturbedDropletBase):
     @volume.setter
     def volume(self, volume: float) -> None:
         """Set volume keeping relative perturbations."""
-        raise NotImplementedError("Cannot set volume")
+        msg = "Cannot set volume"
+        raise NotImplementedError(msg)
 
     @property
     def volume_approx(self) -> float:
         """float: approximate volume to linear order in the perturbation"""
-        volume = spherical.volume_from_radius(self.radius, 3)
+        volume: float = spherical.volume_from_radius(self.radius, 3)
         if len(self.amplitudes) > 0:
             volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius**2
         return volume
@@ -1229,7 +1249,8 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         """Method that checks the validity and consistency of self.data."""
         super().check_data()
         if not np.allclose(self.position[:2], 0):
-            raise ValueError("Droplet must lie on z-axis")
+            msg = "Droplet must lie on z-axis"
+            raise ValueError(msg)
 
     @enable_scalar_args
     def interface_distance(self, θ: RealArray) -> RealArray:
@@ -1273,7 +1294,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
     @property
     def volume_approx(self) -> float:
         """float: approximate volume to linear order in the perturbation"""
-        volume = spherical.volume_from_radius(self.radius, 3)
+        volume: float = spherical.volume_from_radius(self.radius, 3)
         if len(self.amplitudes) > 0:
             volume += self.amplitudes[0] * 2 * np.sqrt(np.pi) * self.radius**2
         return volume
@@ -1337,9 +1358,9 @@ triangulated_spheres = _TriangulatedSpheres()
 
 
 __all__ = [
-    "SphericalDroplet",
     "DiffuseDroplet",
     "PerturbedDroplet2D",
     "PerturbedDroplet3D",
     "PerturbedDroplet3DAxisSym",
+    "SphericalDroplet",
 ]

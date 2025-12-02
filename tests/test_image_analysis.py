@@ -230,7 +230,7 @@ def test_localization_threshold(rng):
 
 
 @pytest.mark.parametrize(
-    "adjust_values, auto_values", [(False, False), (True, False), (True, True)]
+    ("adjust_values", "auto_values"), [(False, False), (True, False), (True, True)]
 )
 def test_localization_vmin_vmax(adjust_values, auto_values):
     """Tests localization of droplets with non-normalized densities."""

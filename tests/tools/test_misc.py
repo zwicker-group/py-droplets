@@ -3,7 +3,6 @@
 """
 
 import numpy as np
-from scipy import integrate
 
 from droplets.tools import misc
 
