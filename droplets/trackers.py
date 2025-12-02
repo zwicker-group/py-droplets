@@ -13,14 +13,16 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 from pde import ScalarField
-from pde.fields.base import FieldBase
 from pde.tools.docstrings import fill_in_docstring
 from pde.trackers.base import InfoDict, InterruptData, TrackerBase
 
 from .emulsions import EmulsionTimeCourse
+
+if TYPE_CHECKING:
+    from pde.fields.base import FieldBase
 
 
 class LengthScaleTracker(TrackerBase):
@@ -189,7 +191,8 @@ class DropletTracker(TrackerBase):
 
                 * `extrema`: take mean between the minimum and the maximum of the data
                 * `mean`: take the mean over the entire data
-                * `otsu`: use Otsu's method implemented in :func:`~droplets.image_analysis.threshold_otsu`
+                * `otsu`: use Otsu's method implemented in
+                          :func:`~droplets.image_analysis.threshold_otsu`
 
                 The special value `auto` currently defaults to the `extrema` method.
 

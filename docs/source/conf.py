@@ -18,16 +18,14 @@ sys.path.insert(0, os.path.abspath("../.."))  # noqa: PTH100
 sys.path.insert(0, os.path.abspath("../../../py-pde"))  # noqa: PTH100
 sys.path.insert(0, ".")
 
-from datetime import date
-
-import sphinx_simplify_typehints
+from datetime import datetime, timezone
 
 # -- Project information -----------------------------------------------------
 
 project = "py-droplets"
 module_name = "droplets"
 author = "David Zwicker"
-copyright = f"{date.today().year}, {author}"  # noqa: A001
+copyright = f"{datetime.now(timezone.utc).year}, {author}"  # noqa: A001
 
 # The short X.Y version
 import droplets

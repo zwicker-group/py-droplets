@@ -85,10 +85,11 @@ except ImportError:
     # support scipy version below 1.15.0
     from scipy.special import sph_harm
 
-    sph_harm_y = lambda n, m, theta, phi: sph_harm(m, n, phi, theta)
+    def sph_harm_y(n, m, theta, phi):
+        return sph_harm(m, n, phi, theta)
+
 
 from pde.grids.base import DimensionError, GridBase
-from pde.grids.spherical import volume_from_radius
 from pde.tools.numba import jit
 
 from .typing import RealArray
@@ -112,12 +113,12 @@ def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
     """
     if dim == 1:
         return volume / 2
-    elif dim == 2:
+    if dim == 2:
         return np.sqrt(volume / π)  # type: ignore
-    elif dim == 3:
+    if dim == 3:
         return (3 * volume / (4 * π)) ** (1 / 3)  # type: ignore
-    else:
-        raise NotImplementedError(f"Cannot calculate the radius in {dim} dimensions")
+    msg = f"Cannot calculate the radius in {dim} dimensions"
+    raise NotImplementedError(msg)
 
 
 def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
@@ -146,7 +147,8 @@ def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
             return (3 * volume / (4 * π)) ** (1 / 3)  # type: ignore
 
     else:
-        raise NotImplementedError(f"Cannot calculate the radius in {dim} dimensions")
+        msg = f"Cannot calculate the radius in {dim} dimensions"
+        raise NotImplementedError(msg)
     return jit(radius_from_volume)  # type: ignore
 
 
@@ -161,13 +163,35 @@ def make_radius_from_volume_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
     def radius_from_volume(volume: TNumArr, dim: int) -> TNumArr:
         if dim == 1:
             return volume / 2
-        elif dim == 2:
+        if dim == 2:
             return np.sqrt(volume / π)  # type: ignore
-        elif dim == 3:
+        if dim == 3:
             return (3 * volume / (4 * π)) ** (1 / 3)  # type: ignore
         raise NotImplementedError
 
     return radius_from_volume  # type: ignore
+
+
+def volume_from_radius(radius: TNumArr, dim: int) -> TNumArr:
+    """Return the volume of a sphere with a given radius.
+
+    Args:
+        radius (float or :class:`~numpy.ndarray`):
+            Radius of the sphere
+        dim (int):
+            Dimension of the space
+
+    Returns:
+        float or :class:`~numpy.ndarray`: Volume of the sphere
+    """
+    if dim == 1:
+        return 2 * radius
+    if dim == 2:
+        return π * radius**2
+    if dim == 3:
+        return (4 * π) / 3 * radius**3
+    msg = f"Cannot calculate volume in {dim} dimensions"
+    raise NotImplementedError(msg)
 
 
 def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
@@ -196,7 +220,8 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
             return 4 * π / 3 * radius**3
 
     else:
-        raise NotImplementedError(f"Cannot calculate the volume in {dim} dimensions")
+        msg = f"Cannot calculate the volume in {dim} dimensions"
+        raise NotImplementedError(msg)
     return jit(volume_from_radius)  # type: ignore
 
 
@@ -211,9 +236,9 @@ def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
     def volume_from_radius_impl(radius: TNumArr, dim: int) -> TNumArr:
         if dim == 1:
             return 2 * radius
-        elif dim == 2:
+        if dim == 2:
             return π * radius**2
-        elif dim == 3:
+        if dim == 3:
             return 4 * π / 3 * radius**3
         raise NotImplementedError
 
@@ -235,16 +260,13 @@ def surface_from_radius(radius: TNumArr, dim: int) -> TNumArr:
     if dim == 1:
         if isinstance(radius, np.ndarray):
             return np.broadcast_to(2, radius.shape)
-        else:
-            return 2
-    elif dim == 2:
+        return 2
+    if dim == 2:
         return 2 * π * radius
-    elif dim == 3:
+    if dim == 3:
         return 4 * π * radius**2
-    else:
-        raise NotImplementedError(
-            f"Cannot calculate the surface area in {dim} dimensions"
-        )
+    msg = f"Cannot calculate the surface area in {dim} dimensions"
+    raise NotImplementedError(msg)
 
 
 def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
@@ -260,13 +282,14 @@ def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
         float or :class:`~numpy.ndarray`: Radius of the sphere
     """
     if dim == 1:
-        raise RuntimeError("Cannot calculate radius of 1-d sphere from surface")
-    elif dim == 2:
+        msg = "Cannot calculate radius of 1-d sphere from surface"
+        raise RuntimeError(msg)
+    if dim == 2:
         return surface / (2 * π)
-    elif dim == 3:
+    if dim == 3:
         return np.sqrt(surface / (4 * π))  # type: ignore
-    else:
-        raise NotImplementedError(f"Cannot calculate the radius in {dim} dimensions")
+    msg = f"Cannot calculate the radius in {dim} dimensions"
+    raise NotImplementedError(msg)
 
 
 def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
@@ -285,15 +308,13 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
         def _surface_from_radius(radius):
             if isinstance(radius, np.ndarray):
                 return np.full(radius.shape, 2)
-            else:
-                return 2
+            return 2
 
         @overload(_surface_from_radius)
         def ol_surface_from_radius(radius):
             if isinstance(radius, nb.types.Array):
                 return lambda radius: np.full(radius.shape, 2)
-            else:
-                return lambda radius: 2
+            return lambda radius: 2
 
         @jit
         def surface_from_radius(radius: TNumArr) -> TNumArr:
@@ -312,9 +333,8 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
             return 4 * π * radius**2
 
     else:
-        raise NotImplementedError(
-            f"Cannot calculate the surface area in {dim} dimensions"
-        )
+        msg = f"Cannot calculate the surface area in {dim} dimensions"
+        raise NotImplementedError(msg)
     return surface_from_radius  # type: ignore
 
 
@@ -329,7 +349,8 @@ def points_cartesian_to_spherical(points: RealArray) -> RealArray:
     """
     points = np.atleast_1d(points)
     if points.shape[-1] != 3:
-        raise DimensionError("Points must have 3 coordinates")
+        msg = "Points must have 3 coordinates"
+        raise DimensionError(msg)
 
     ps_spherical = np.empty(points.shape)
     # calculate radius in [0, infinity]
@@ -353,7 +374,8 @@ def points_spherical_to_cartesian(points: RealArray) -> RealArray:
     """
     points = np.atleast_1d(points)
     if points.shape[-1] != 3:
-        raise DimensionError("Points must have 3 coordinates")
+        msg = "Points must have 3 coordinates"
+        raise DimensionError(msg)
 
     sin_θ = np.sin(points[..., 1])
     ps_cartesian = np.empty(points.shape)
@@ -406,7 +428,8 @@ def polar_coordinates(
     else:
         origin = np.asarray(origin, dtype=float)
         if origin.shape != (grid.dim,):
-            raise DimensionError("Dimensions are not compatible")
+            msg = "Dimensions are not compatible"
+            raise DimensionError(msg)
 
     # calculate the difference vector between all cells and the origin
     origin_grid = grid.transform(origin, source="cartesian", target="grid")
@@ -417,19 +440,19 @@ def polar_coordinates(
     if not ret_angle:
         return dist
 
-    elif grid.dim == 1:
+    if grid.dim == 1:
         return dist, np.sign(diff)[..., 0]
 
-    elif grid.dim == 2:
+    if grid.dim == 2:
         return dist, np.arctan2(diff[..., 1], diff[..., 0])
 
-    elif grid.dim == 3:
+    if grid.dim == 3:
         theta = np.arccos(diff[..., 2] / dist)
         phi = np.arctan2(diff[..., 1], diff[..., 0])
         return dist, theta, phi
 
-    else:
-        raise NotImplementedError(f"Cannot calculate angles for dimension {grid.dim}")
+    msg = f"Cannot calculate angles for dimension {grid.dim}"
+    raise NotImplementedError(msg)
 
 
 def spherical_index_k(degree: int, order: int = 0) -> int:
@@ -448,7 +471,8 @@ def spherical_index_k(degree: int, order: int = 0) -> int:
         int: a combined index k
     """
     if not -degree <= order <= degree:
-        raise ValueError("order must lie between -degree and degree")
+        msg = "order must lie between -degree and degree"
+        raise ValueError(msg)
     return degree * (degree + 1) + order
 
 
@@ -530,11 +554,11 @@ def spherical_harmonic_real(degree: int, order: int, θ: float, φ: float) -> fl
     if order > 0:
         return (-1) ** order * np.sqrt(2) * np.real(sph_harm_y(degree, order, θ, φ))  # type: ignore
 
-    elif order == 0:
+    if order == 0:
         return np.real(sph_harm_y(degree, 0, θ, φ))  # type: ignore
 
-    else:  # order < 0
-        return np.sqrt(2) * (-1) ** order * np.imag(sph_harm_y(degree, -order, θ, φ))  # type: ignore
+    # order < 0
+    return np.sqrt(2) * (-1) ** order * np.imag(sph_harm_y(degree, -order, θ, φ))  # type: ignore
 
 
 def spherical_harmonic_real_k(k: int, θ: float, φ: float) -> float:

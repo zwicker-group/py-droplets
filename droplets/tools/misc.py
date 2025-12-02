@@ -39,7 +39,6 @@ def enable_scalar_args(method: TFunc) -> TFunc:
         if args[0].ndim == 0:
             args = [arg[None] for arg in args]
             return method(self, *args)[0]
-        else:
-            return method(self, *args)
+        return method(self, *args)
 
     return wrapper  # type: ignore
