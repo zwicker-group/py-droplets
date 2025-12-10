@@ -74,7 +74,7 @@ harmonics, where the order is always zero and the degree :math:`l` and the mode
 from __future__ import annotations
 
 import typing as t
-from typing import Callable, Literal, TypeVar
+from typing import Literal, TypeVar
 
 import numpy as np
 from numba.extending import overload, register_jitable
@@ -93,6 +93,9 @@ from pde.grids.base import DimensionError, GridBase
 from pde.tools.numba import jit
 
 from .typing import RealArray
+
+if t.TYPE_CHECKING:
+    from collections.abc import Callable
 
 π = float(np.pi)
 
@@ -285,7 +288,7 @@ def radius_from_surface(surface: TNumArr, dim: int) -> TNumArr:
         msg = "Cannot calculate radius of 1-d sphere from surface"
         raise RuntimeError(msg)
     if dim == 2:
-        return surface / (2 * π)
+        return surface / (2 * π)  # type: ignore
     if dim == 3:
         return np.sqrt(surface / (4 * π))  # type: ignore
     msg = f"Cannot calculate the radius in {dim} dimensions"
@@ -432,7 +435,7 @@ def polar_coordinates(
             raise DimensionError(msg)
 
     # calculate the difference vector between all cells and the origin
-    origin_grid = grid.transform(origin, source="cartesian", target="grid")
+    origin_grid = grid.transform(origin, source="cartesian", target="grid")  # type: ignore
     diff = grid.difference_vector(origin_grid, grid.cell_coords)
     dist: RealArray = np.linalg.norm(diff, axis=-1)  # get distance
 

@@ -1,0 +1,6 @@
+-r ../requirements.txt
+docformatter>=1.7
+mypy>=0.770
+ruff>=0.6
+types-PyYAML
+types-tqdm

@@ -307,7 +307,10 @@ def test_emulsion_from_storage(proc):
     radii = [3, 2.7, 4.3]
     pos = [[7, 8], [9, 22], [22, 10]]
     em1 = Emulsion(
-        [DiffuseDroplet(p, r, interface_width=1) for p, r in zip(pos, radii)]
+        [
+            DiffuseDroplet(p, r, interface_width=1)
+            for p, r in zip(pos, radii, strict=False)
+        ]
     )
     field1 = em1.get_phasefield(grid)
     em2 = em1[1:]

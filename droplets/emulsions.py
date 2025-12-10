@@ -16,7 +16,7 @@ import functools
 import json
 import logging
 import math
-from typing import TYPE_CHECKING, Any, Callable, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import numpy as np
 
@@ -30,7 +30,7 @@ from pde.tools.plotting import PlotReference, plot_on_axes
 from .droplets import SphericalDroplet, droplet_from_data
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Sequence
+    from collections.abc import Callable, Iterable, Iterator, Sequence
 
     from pde.storage.base import StorageBase
     from pde.tools.cuboid import Cuboid
@@ -532,15 +532,15 @@ class Emulsion(list):
 
         # build tree to query the nearest neighbors
         assert self.data is not None
-        positions = self.data["position"]
+        positions = self.data["position"]  # type: ignore
 
         # we could support periodic boundary conditions using `freud.locality.AABBQuery`
         tree = KDTree(positions)
         dist, index = tree.query(positions, 2)
 
         if subtract_radius:
-            return dist[:, 1] - self.data["radius"][index].sum(axis=1)
-        return dist[:, 1]
+            return dist[:, 1] - self.data["radius"][index].sum(axis=1)  # type: ignore
+        return dist[:, 1]  # type: ignore
 
     def remove_overlapping(
         self, min_distance: float = 0, grid: GridBase | None = None
@@ -612,10 +612,10 @@ class Emulsion(list):
 
         return {
             "count": len(radii),
-            "radius_mean": np.mean(radii),  # type: ignore
-            "radius_std": np.std(radii),  # type: ignore
-            "volume_mean": np.mean(volumes),  # type: ignore
-            "volume_std": np.std(volumes),  # type: ignore
+            "radius_mean": np.mean(radii),
+            "radius_std": np.std(radii),
+            "volume_mean": np.mean(volumes),
+            "volume_std": np.std(volumes),
         }
 
     @plot_on_axes()
@@ -730,12 +730,12 @@ class Emulsion(list):
             # plot only the droplets themselves
             patches = [
                 droplet._get_mpl_patch(dim=2, color=color, **kwargs)
-                for droplet, color in zip(drops_finite, colors)
+                for droplet, color in zip(drops_finite, colors, strict=False)
             ]
         else:
             # plot droplets also in their mirror positions
             patches = []
-            for droplet, color in zip(drops_finite, colors):
+            for droplet, color in zip(drops_finite, colors, strict=False):
                 for p in grid.iter_mirror_points(
                     droplet.position, with_self=True, only_periodic=True
                 ):
@@ -866,7 +866,7 @@ class EmulsionTimeCourse:
 
     def items(self) -> Iterator[tuple[float, Emulsion]]:
         """Iterate over all times and emulsions, returning them in pairs."""
-        return zip(self.times, self.emulsions)
+        return zip(self.times, self.emulsions, strict=False)
 
     def __eq__(self, other):
         """Determine whether two EmulsionTimeCourse instance are equal."""

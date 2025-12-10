@@ -12,9 +12,10 @@
 from __future__ import annotations
 
 import functools
+import itertools
 import json
 import logging
-from typing import TYPE_CHECKING, Callable, Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from numpy.lib import recfunctions as rfn
@@ -28,6 +29,8 @@ from .droplets import SphericalDroplet, droplet_from_data
 from .emulsions import Emulsion, EmulsionTimeCourse
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from numpy.typing import NDArray
 
     from pde.grids.base import GridBase
@@ -187,7 +190,7 @@ class DropletTrack:
 
     def items(self):
         """Iterate over all times and droplets, returning them in pairs."""
-        return zip(self.times, self.droplets)
+        return zip(self.times, self.droplets, strict=False)
 
     def append(self, droplet: SphericalDroplet, time: float | None = None) -> None:
         """Append a new droplet with a time code.
@@ -218,7 +221,7 @@ class DropletTrack:
         except AttributeError:
             # assume that self.times is a numpy array
             idx = np.nonzero(self.times == time)[0][0]
-        return self.droplets[idx].position
+        return self.droplets[idx].position  # type: ignore
 
     def get_trajectory(
         self, smoothing: float = 0, *, attribute: str = "position"
@@ -293,7 +296,7 @@ class DropletTrack:
         # separate time from the data set
         times = dataset["time"]
         droplet_data = rfn.rec_drop_fields(dataset, "time")
-        for time, data in zip(times, droplet_data):
+        for time, data in zip(times, droplet_data, strict=False):
             droplet = droplet_from_data(droplet_class, data)
             obj.append(droplet, time=time)  # type: ignore
 
@@ -450,14 +453,14 @@ class DropletTrack:
         else:
             # use the grid to detect wrapping around
             segments = []
-            for p1, p2 in zip(xy[:-1], xy[1:]):
+            for p1, p2 in itertools.pairwise(xy):
                 dist_direct = np.hypot(p1[0] - p2[0], p1[1] - p2[1])
                 dist_real = grid.distance(p1, p2, coords="cartesian")
                 close = np.isclose(dist_direct, dist_real)
                 segments.append(close)
 
             # plot the individual segments
-            line, cx = None, []
+            line, cx = None, []  # type: ignore
             for s, e in contiguous_true_regions(np.array(segments)):
                 if line is None:
                     color = kwargs.get("color", "k")

@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pde import ScalarField
 from pde.tools.docstrings import fill_in_docstring
@@ -22,6 +22,8 @@ from pde.trackers.base import InfoDict, InterruptData, TrackerBase
 from .emulsions import EmulsionTimeCourse
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pde.fields.base import FieldBase
 
 
