@@ -366,7 +366,12 @@ def test_droplet_refine_parallel(num_processes):
     grid = UnitGrid([32, 32])
     radii = [3, 2.7, 4.3]
     pos = [[7, 8], [9, 22], [22, 10]]
-    em = Emulsion([DiffuseDroplet(p, r, interface_width=1) for p, r in zip(pos, radii)])
+    em = Emulsion(
+        [
+            DiffuseDroplet(p, r, interface_width=1)
+            for p, r in zip(pos, radii, strict=False)
+        ]
+    )
     field = em.get_phasefield(grid)
 
     emulsion = image_analysis.locate_droplets(
@@ -374,7 +379,7 @@ def test_droplet_refine_parallel(num_processes):
     )
     assert len(emulsion) == 3
 
-    for droplet, p, r in zip(emulsion, pos, radii):
+    for droplet, p, r in zip(emulsion, pos, radii, strict=False):
         np.testing.assert_almost_equal(droplet.position, p, decimal=4)
         assert droplet.radius == pytest.approx(r, rel=1e-4)
         assert droplet.interface_width == pytest.approx(1, rel=1e-4)

@@ -21,7 +21,7 @@ import math
 import warnings
 from functools import reduce
 from itertools import product
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from numpy.lib.recfunctions import (
@@ -51,7 +51,7 @@ from .droplets import (
 from .emulsions import Emulsion
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Callable, Iterable, Sequence
 
     from pde.tools.typing import NumberOrArray
 
@@ -143,7 +143,7 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
                 high.append(np.arange(grid.shape[a]))
 
         # iterate over all boundary points
-        for l, h in zip(product(*low), product(*high)):
+        for l, h in zip(product(*low), product(*high), strict=False):
             i_l, i_h = labels[l], labels[h]
             if i_l > 0 and i_h > 0 and i_l != i_h:
                 # boundary condition on the low side connects to that of the high side
@@ -165,7 +165,9 @@ def _locate_droplets_in_mask_cartesian(mask: ScalarField) -> Emulsion:
     positions = grid.normalize_point(grid.transform(positions, "cell", "grid"))
     droplets = (
         SphericalDroplet.from_volume(position, volume)
-        for position, volume in zip(positions[indices - 1], volumes[indices - 1])  # type:ignore
+        for position, volume in zip(
+            positions[indices - 1], volumes[indices - 1], strict=False
+        )
     )
 
     # filter overlapping droplets (e.g. due to duplicates)
@@ -267,7 +269,7 @@ def _locate_droplets_in_mask_cylindrical_single(
     # return an emulsion of droplets
     droplets = (
         SphericalDroplet.from_volume(np.array([0, 0, p[2]]), v)
-        for p, v in zip(pos, vol)
+        for p, v in zip(pos, vol, strict=False)
     )
     return Emulsion(droplets)
 
@@ -298,7 +300,7 @@ def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
 
         # locate droplets in the extended image
         try:
-            candidates = _locate_droplets_in_mask_cylindrical_single(grid, mask_padded)
+            candidates = _locate_droplets_in_mask_cylindrical_single(grid, mask_padded)  # type: ignore
         except _SpanningDropletSignal:
             pass
         else:
@@ -320,7 +322,7 @@ def _locate_droplets_in_mask_cylindrical(mask: ScalarField) -> Emulsion:
             return droplets
 
     # simply locate droplets in the mask
-    droplets = _locate_droplets_in_mask_cylindrical_single(mask.grid, mask.data)
+    droplets = _locate_droplets_in_mask_cylindrical_single(mask.grid, mask.data)  # type: ignore
 
     return droplets
 
@@ -437,7 +439,7 @@ def locate_droplets(
     elif threshold == "mean":
         threshold = float(phase_field.data.mean())
     elif threshold == "otsu":
-        threshold = threshold_otsu(phase_field.data)
+        threshold = threshold_otsu(phase_field.data)  # type: ignore
     else:
         threshold = float(threshold)
 
@@ -667,11 +669,11 @@ def refine_droplet(
             _image_deviation, data_flat[free], bounds=bounds, **least_squares_params
         )
         data_flat[free] = result.x
-    droplet.data = unstructured_to_structured(data_flat, dtype=dtype)
+    droplet.data = unstructured_to_structured(data_flat, dtype=dtype)  # type: ignore
 
     # normalize the droplet position
     grid = phase_field.grid
-    coords = grid.transform(droplet.position, "cartesian", "grid")
+    coords = grid.transform(droplet.position, "cartesian", "grid")  # type: ignore
     droplet.position = grid.transform(grid.normalize_point(coords), "grid", "cartesian")
 
     return droplet
@@ -821,7 +823,7 @@ def get_length_scale(
         # calculate the structure factor
         smoothing = kwargs.setdefault("smoothing", None)
         k_mag, sf = get_structure_factor(scalar_field, smoothing=smoothing)
-        length_scale = 2 * np.pi * np.sum(sf) / np.sum(k_mag * sf)
+        length_scale: float = 2 * np.pi * np.sum(sf) / np.sum(k_mag * sf)
 
         if kwargs.pop("full_output", False):
             return length_scale, sf

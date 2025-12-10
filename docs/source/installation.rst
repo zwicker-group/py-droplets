@@ -1,7 +1,7 @@
 Installation
 ############
 
-This `py-droplets` package is developed for python 3.9+ and should run on all
+This `py-droplets` package is developed for python 3.10+ and should run on all
 common platforms.
 The code is tested under Linux, Windows, and macOS.
 

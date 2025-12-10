@@ -31,7 +31,7 @@ import math
 import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import numpy as np
 from numba.extending import register_jitable
@@ -47,6 +47,8 @@ from .tools import spherical
 from .tools.misc import enable_scalar_args
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from numpy.typing import DTypeLike
 
     from pde.grids.base import GridBase
@@ -58,7 +60,7 @@ _logger = logging.getLogger(__name__)
 
 
 TDroplet = TypeVar("TDroplet", bound="DropletBase")
-DTypeList = list[Union[tuple[str, type[Any]], tuple[str, type[Any], tuple[int, ...]]]]
+DTypeList = list[tuple[str, type[Any]] | tuple[str, type[Any], tuple[int, ...]]]
 
 
 def get_dtype_field_size(dtype: DTypeLike, field_name: str) -> int:
@@ -68,9 +70,9 @@ def get_dtype_field_size(dtype: DTypeLike, field_name: str) -> int:
         dtype (list):
             The dtype of the numpy array
         field_name (str):
-            The name of the field that needs to be checked
+            The name of the field that needs to be checkedrm
     """
-    shape = dtype.fields[field_name][0].shape
+    shape = dtype.fields[field_name][0].shape  # type: ignore
     return np.prod(shape) if shape else 1  # type: ignore
 
 
@@ -178,7 +180,7 @@ class DropletBase:
             # scalar type (instance of numpy.record) that contains the
             # structured data. This conversion is necessary for numba to operate
             # on the data.
-            self.data = np.recarray(1, dtype=dtype)[0]  # type: ignore
+            self.data = np.recarray(1, dtype=dtype)[0]
 
     def __init_subclass__(cls, **kwargs):
         """Modify subclasses of this base class."""
@@ -348,7 +350,7 @@ class SphericalDroplet(DropletBase):
     @property
     def volume(self) -> float:
         """float: volume of the droplet"""
-        return spherical.volume_from_radius(self.radius, self.dim)  # type: ignore
+        return spherical.volume_from_radius(self.radius, self.dim)
 
     @volume.setter
     def volume(self, volume: float) -> None:
@@ -358,7 +360,7 @@ class SphericalDroplet(DropletBase):
     @property
     def surface_area(self) -> float:
         """float: surface area of the droplet"""
-        return spherical.surface_from_radius(self.radius, self.dim)  # type: ignore
+        return spherical.surface_from_radius(self.radius, self.dim)
 
     @property
     def bbox(self) -> Cuboid:
@@ -387,7 +389,7 @@ class SphericalDroplet(DropletBase):
         if grid is None:
             distance = float(np.linalg.norm(self.position - other.position))
         else:
-            distance = grid.distance(self.position, other.position, coords="cartesian")
+            distance = grid.distance(self.position, other.position, coords="cartesian")  # type: ignore
         return distance < self.radius + other.radius
 
     @classmethod
@@ -399,15 +401,15 @@ class SphericalDroplet(DropletBase):
         @register_jitable
         def merge_data(drop1: RealArray, drop2: RealArray, out: RealArray) -> None:
             """Merge the data of two droplets."""
-            dim = len(drop1.position)
+            dim = len(drop1.position)  # type: ignore
 
-            V1 = volume_from_radius(drop1.radius, dim)
-            V2 = volume_from_radius(drop2.radius, dim)
+            V1 = volume_from_radius(drop1.radius, dim)  # type: ignore
+            V2 = volume_from_radius(drop2.radius, dim)  # type: ignore
             volume = V1 + V2
-            out.radius = radius_from_volume(volume, dim)
+            out.radius = radius_from_volume(volume, dim)  # type: ignore
 
             # adjust droplet position
-            out.position[...] = (V1 * drop1.position + V2 * drop2.position) / volume
+            out.position[...] = (V1 * drop1.position + V2 * drop2.position) / volume  # type: ignore
 
         return merge_data  # type: ignore
 
@@ -442,7 +444,7 @@ class SphericalDroplet(DropletBase):
             # spherical droplet in three dimensions
             θ, φ = args[0], args[1]
             r = np.full_like(θ, self.radius)
-            pos = spherical.points_spherical_to_cartesian(np.c_[r, θ, φ])
+            pos = spherical.points_spherical_to_cartesian(np.c_[r, θ, φ])  # type: ignore
 
         else:
             msg = f"Cannot calculate {self.dim}d position"
@@ -659,7 +661,7 @@ class DiffuseDroplet(SphericalDroplet):
         def merge_data(drop1: RealArray, drop2: RealArray, out: RealArray) -> None:
             """Merge the data of two droplets."""
             parent_merge(drop1, drop2, out)
-            out.interface_width = (drop1.interface_width + drop2.interface_width) / 2
+            out.interface_width = (drop1.interface_width + drop2.interface_width) / 2  # type: ignore
 
         return merge_data  # type: ignore
 
@@ -935,7 +937,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
             )
 
     @enable_scalar_args
-    def interface_distance(self, φ: RealArray) -> RealArray:
+    def interface_distance(self, φ: RealArray) -> RealArray:  # type: ignore
         """Calculates the distance of the droplet interface to the origin.
 
         Args:
@@ -948,9 +950,9 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         dist: RealArray = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
-                dist += a * np.sin(n * φ)
+                dist += a * np.sin(n * φ)  # type: ignore
             if b != 0:
-                dist += b * np.cos(n * φ)
+                dist += b * np.cos(n * φ)  # type: ignore
         return self.radius * dist
 
     @enable_scalar_args
@@ -966,7 +968,7 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         """
         dist = self.interface_distance(φ)
         pos = dist[:, None] * np.transpose([np.cos(φ), np.sin(φ)])
-        return self.position[None, :] + pos
+        return self.position[None, :] + pos  # type: ignore
 
     @enable_scalar_args
     def interface_curvature(self, φ: RealArray) -> RealArray:  # type: ignore
@@ -986,9 +988,9 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             factor = n * n - 1
             if a != 0:
-                curv_radius -= a * factor * np.sin(n * φ)
+                curv_radius -= a * factor * np.sin(n * φ)  # type: ignore
             if b != 0:
-                curv_radius -= b * factor * np.cos(n * φ)
+                curv_radius -= b * factor * np.cos(n * φ)  # type: ignore
         return 1 / (self.radius * curv_radius)
 
     @property
@@ -1013,11 +1015,11 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         dist_dφ: RealArray = np.zeros(φs.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
-                dist += a * np.sin(n * φs)
-                dist_dφ += a * n * np.cos(n * φs)
+                dist += a * np.sin(n * φs)  # type: ignore
+                dist_dφ += a * n * np.cos(n * φs)  # type: ignore
             if b != 0:
-                dist += b * np.cos(n * φs)
-                dist_dφ -= b * n * np.sin(n * φs)
+                dist += b * np.cos(n * φs)  # type: ignore
+                dist_dφ -= b * n * np.sin(n * φs)  # type: ignore
 
         dx = dist_dφ * np.cos(φs) - dist * np.sin(φs)
         dy = dist_dφ * np.sin(φs) + dist * np.cos(φs)
@@ -1118,7 +1120,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             )
 
     @enable_scalar_args
-    def interface_distance(self, θ: RealArray, φ: RealArray | None = None) -> RealArray:
+    def interface_distance(self, θ: RealArray, φ: RealArray | None = None) -> RealArray:  # type: ignore
         r"""Calculates the distance of the droplet interface to the origin.
 
         Args:
@@ -1138,7 +1140,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         dist: RealArray = np.ones(θ.shape, dtype=float)
         for k, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
-                dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)
+                dist += a * spherical.spherical_harmonic_real_k(k, θ, φ)  # type: ignore
         return self.radius * dist
 
     @enable_scalar_args
@@ -1162,7 +1164,7 @@ class PerturbedDroplet3D(PerturbedDropletBase):
         dist = self.interface_distance(θ, φ)
         unit_vector = [np.sin(θ) * np.cos(φ), np.sin(θ) * np.sin(φ), np.cos(θ)]
         pos = dist[:, None] * np.transpose(unit_vector)
-        return self.position[None, :] + pos
+        return self.position[None, :] + pos  # type: ignore
 
     @enable_scalar_args
     def interface_curvature(  # type: ignore
@@ -1193,8 +1195,8 @@ class PerturbedDroplet3D(PerturbedDropletBase):
             if a != 0:
                 l, _ = spherical.spherical_index_lm(k)
                 hk = (l**2 + l - 2) / 2
-                correction = a * hk * Yk(k, θ, φ)
-        return 1 / self.radius + correction / self.radius**2
+                correction = a * hk * Yk(k, θ, φ)  # type: ignore
+        return 1 / self.radius + correction / self.radius**2  # type: ignore
 
     @property
     def volume(self) -> float:
@@ -1253,7 +1255,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
             raise ValueError(msg)
 
     @enable_scalar_args
-    def interface_distance(self, θ: RealArray) -> RealArray:
+    def interface_distance(self, θ: RealArray) -> RealArray:  # type: ignore
         r"""Calculates the distance of the droplet interface to the origin.
 
         Args:
@@ -1266,7 +1268,7 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         dist: RealArray = np.ones(θ.shape, dtype=float)
         for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
-                dist += a * spherical.spherical_harmonic_symmetric(order, θ)
+                dist += a * spherical.spherical_harmonic_symmetric(order, θ)  # type: ignore
         return self.radius * dist
 
     @enable_scalar_args
@@ -1288,8 +1290,8 @@ class PerturbedDroplet3DAxisSym(PerturbedDropletBase):
         for order, a in enumerate(self.amplitudes, 1):  # skip zero-th mode!
             if a != 0:
                 hl = (order**2 + order - 2) / 2
-                correction = a * hl * Yl(order, θ)
-        return 1 / self.radius + correction / self.radius**2
+                correction = a * hl * Yl(order, θ)  # type: ignore
+        return 1 / self.radius + correction / self.radius**2  # type: ignore
 
     @property
     def volume_approx(self) -> float:
