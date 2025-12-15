@@ -78,19 +78,10 @@ from typing import Literal, TypeVar
 
 import numpy as np
 from numba.extending import overload, register_jitable
+from scipy.special import sph_harm_y
 
-try:
-    from scipy.special import sph_harm_y
-except ImportError:
-    # support scipy version below 1.15.0
-    from scipy.special import sph_harm
-
-    def sph_harm_y(n, m, theta, phi):
-        return sph_harm(m, n, phi, theta)
-
-
+from pde.backends.numba.utils import jit
 from pde.grids.base import DimensionError, GridBase
-from pde.tools.numba import jit
 
 from .typing import RealArray
 

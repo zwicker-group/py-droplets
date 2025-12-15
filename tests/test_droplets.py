@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 from scipy import integrate
 
+from pde.backends.numba.utils import jit
 from pde.grids import CartesianGrid, UnitGrid
 from pde.tools.misc import module_available
-from pde.tools.numba import jit
 
 from droplets import droplets
 

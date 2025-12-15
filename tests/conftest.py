@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from pde.tools.numba import random_seed
+from pde.backends.numba.utils import random_seed
 
 
 @pytest.fixture(autouse=False, name="rng")
