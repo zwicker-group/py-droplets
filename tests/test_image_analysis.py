@@ -313,7 +313,7 @@ def test_emulsion_processing():
 def test_structure_factor_random():
     """Test the structure factor function for random input."""
     g1 = CartesianGrid([[0, 10]] * 2, 64, periodic=True)
-    f1 = ScalarField.random_colored(g1, -2)
+    f1 = ScalarField.random_normal(g1, -2, correlation="power law")
 
     # test invariance with re-meshing
     g2 = CartesianGrid([[0, 10]] * 2, [128, 64], periodic=True)
