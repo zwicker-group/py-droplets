@@ -47,7 +47,7 @@ with h5py.File("spheres_3d.hdf5", "w") as f:
                     else:
                         pass
                         # raise RuntimeError(f"Unsupported cell type `{data.type}`")
-                cells = np.concatenate(cells)
+                cells = np.concatenate(cells)  # type: ignore
                 dset = group.create_dataset("cells", data=cells)
                 dset.attrs["column_names"] = ["p1", "p2", "p3"]
 

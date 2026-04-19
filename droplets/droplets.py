@@ -950,9 +950,9 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         dist: RealArray = np.ones(φ.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
-                dist += a * np.sin(n * φ)  # type: ignore
+                dist += a * np.sin(n * φ)
             if b != 0:
-                dist += b * np.cos(n * φ)  # type: ignore
+                dist += b * np.cos(n * φ)
         return self.radius * dist
 
     @enable_scalar_args
@@ -988,9 +988,9 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             factor = n * n - 1
             if a != 0:
-                curv_radius -= a * factor * np.sin(n * φ)  # type: ignore
+                curv_radius -= a * factor * np.sin(n * φ)
             if b != 0:
-                curv_radius -= b * factor * np.cos(n * φ)  # type: ignore
+                curv_radius -= b * factor * np.cos(n * φ)
         return 1 / (self.radius * curv_radius)
 
     @property
@@ -1015,11 +1015,11 @@ class PerturbedDroplet2D(PerturbedDropletBase):
         dist_dφ: RealArray = np.zeros(φs.shape, dtype=float)
         for n, (a, b) in enumerate(iterate_in_pairs(self.amplitudes), 1):  # no 0th mode
             if a != 0:
-                dist += a * np.sin(n * φs)  # type: ignore
-                dist_dφ += a * n * np.cos(n * φs)  # type: ignore
+                dist += a * np.sin(n * φs)
+                dist_dφ += a * n * np.cos(n * φs)
             if b != 0:
-                dist += b * np.cos(n * φs)  # type: ignore
-                dist_dφ -= b * n * np.sin(n * φs)  # type: ignore
+                dist += b * np.cos(n * φs)
+                dist_dφ -= b * n * np.sin(n * φs)
 
         dx = dist_dφ * np.cos(φs) - dist * np.sin(φs)
         dy = dist_dφ * np.sin(φs) + dist * np.cos(φs)

@@ -143,7 +143,7 @@ def make_radius_from_volume_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     else:
         msg = f"Cannot calculate the radius in {dim} dimensions"
         raise NotImplementedError(msg)
-    return jit(radius_from_volume)  # type: ignore
+    return jit(radius_from_volume)
 
 
 def make_radius_from_volume_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
@@ -216,7 +216,7 @@ def make_volume_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     else:
         msg = f"Cannot calculate the volume in {dim} dimensions"
         raise NotImplementedError(msg)
-    return jit(volume_from_radius)  # type: ignore
+    return jit(volume_from_radius)
 
 
 def make_volume_from_radius_nd_compiled() -> Callable[[TNumArr, int], TNumArr]:
@@ -329,7 +329,7 @@ def make_surface_from_radius_compiled(dim: int) -> Callable[[TNumArr], TNumArr]:
     else:
         msg = f"Cannot calculate the surface area in {dim} dimensions"
         raise NotImplementedError(msg)
-    return surface_from_radius  # type: ignore
+    return surface_from_radius
 
 
 def points_cartesian_to_spherical(points: RealArray) -> RealArray:
