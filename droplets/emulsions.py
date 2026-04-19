@@ -47,6 +47,9 @@ _logger = logging.getLogger(__name__)
 class Emulsion(list):
     """Class representing a collection of droplets in a common system."""
 
+    dtype: np.typing.DTypeLike | None
+    """Type of the data, which determines the type of droplets in the emulsion."""
+
     _show_projection_warning: bool = True
     """bool: Flag determining whether a warning is shown when high-dimensional
     emulsions are plotted"""
@@ -56,7 +59,7 @@ class Emulsion(list):
         droplets: Iterable[SphericalDroplet] | None = None,
         *,
         copy: bool = True,
-        dtype: np.typing.DTypeLike | RealArray | SphericalDroplet = None,
+        dtype: np.typing.DTypeLike | RealArray | SphericalDroplet | None = None,
         force_consistency: bool = False,
     ):
         """
@@ -85,7 +88,7 @@ class Emulsion(list):
             dtype = np.dtype(dtype)  # assume a proper dtype is given
         assert dtype is None or isinstance(dtype, np.dtype)
         if isinstance(dtype, np.record):
-            self.dtype: np.typing.DTypeLike = dtype.dtype  # strip record part
+            self.dtype = dtype.dtype  # strip record part
         else:
             self.dtype = dtype
 
