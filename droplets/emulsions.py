@@ -379,7 +379,7 @@ class Emulsion(list):
 
         else:
             # create empty dataset to indicate empty emulsion
-            dataset = hdf_path.create_dataset(key, shape=())
+            dataset = hdf_path.create_dataset(key, shape=(), dtype="f4")
             dataset.attrs["droplet_class"] = "None"
 
         return dataset
