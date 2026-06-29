@@ -987,7 +987,7 @@ class EmulsionTimeCourse:
                     fp.attrs[k] = json.dumps(v)
 
     def get_emulsion(self, time: float) -> Emulsion:
-        """Returns the emulsion clostest to a specific time point.
+        """Returns the emulsion closest to a specific time point.
 
         Args:
             time (float): The time point
