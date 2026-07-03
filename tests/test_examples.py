@@ -14,7 +14,7 @@ import pytest
 from pde.tools.misc import module_available
 
 PACKAGE_PATH = Path(__file__).resolve().parents[1]
-EXAMPLES = (PACKAGE_PATH / "examples").glob("*.py")
+EXAMPLES = list((PACKAGE_PATH / "examples").glob("*.py"))
 
 SKIP_EXAMPLES: list[str] = []
 if not module_available("matplotlib"):

@@ -518,7 +518,6 @@ def refine_droplets(
         list of :class:`~droplets.droplets.DiffuseDroplet`:
             The refined droplets
     """
-
     if num_processes == 1:
         # refine droplets serially in this process
         droplets = [

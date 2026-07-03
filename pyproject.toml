@@ -166,8 +166,8 @@ module = [
     "IPython.*",
     "ipywidgets.*",
     "matplotlib.*",
-    "mpl_toolkits.*",
     "mpi4py.*",
+    "mpl_toolkits.*",
     "napari.*",
     "numba_mpi.*",
     "numpy.*",
@@ -178,5 +178,6 @@ module = [
     "scipy.*",
     "sympy.*",
     "tqdm.*",
+    "zarr.*",
 ]
 ignore_missing_imports = true

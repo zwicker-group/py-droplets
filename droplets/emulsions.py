@@ -484,27 +484,29 @@ class Emulsion(list):
         Returns:
             :class:`~numpy.ndarray`: a matrix with the distances between all droplets
         """
-        if grid is None:
+        if len(self) == 0:
+            return np.zeros((0, 0))
+
+        if grid:
+            get_distance = functools.partial(grid.distance, coords="cartesian")
+        else:
 
             def get_distance(p1, p2):
                 """Helper function calculating the distance between points."""
-                return np.linalg.norm(p1 - p2)
+                return np.linalg.norm(p1 - p2, axis=-1)
 
-        else:
-            get_distance = functools.partial(grid.distance, coords="cartesian")
+        # calculate pairwise distances, assuming `get_distance` is vectorized
+        positions = self.data["position"]
+        i, j = np.triu_indices(len(self), k=1)
+        dist_els = get_distance(positions[i], positions[j])
+        if subtract_radius:
+            radii = self.data["radius"]
+            dist_els -= radii[i] + radii[j]
 
-        # calculate pairwise distance and return it in requested form
-        num = len(self)
-        dists = np.zeros((num, num))
-        # iterate over all droplet pairs
-        for i in range(num):
-            for j in range(i + 1, num):
-                d1, d2 = self[i], self[j]
-                dist = get_distance(d1.position, d2.position)
-                if subtract_radius:
-                    dist -= d1.radius + d2.radius
-                dists[i, j] = dists[j, i] = dist
-
+        # return distances in square matrix form
+        dists = np.zeros((len(self), len(self)))
+        dists[i, j] = dist_els
+        dists[j, i] = dist_els
         return dists
 
     def get_neighbor_distances(self, subtract_radius: bool = False) -> RealArray:
@@ -565,9 +567,12 @@ class Emulsion(list):
                 periodic boundary conditions should be respected for measuring distances
         """
         # filter duplicates until there are none left
+        _logger.debug("Determine pairwise distances of all droplets")
         dists = self.get_pairwise_distances(subtract_radius=True, grid=grid)
         np.fill_diagonal(dists, np.inf)
 
+        _logger.debug("Remove overlapping droplets")
+        num_old = len(self)
         while len(dists) > 1:
             # find minimal distance
             x, y = np.unravel_index(np.argmin(dists), dists.shape)
@@ -581,6 +586,7 @@ class Emulsion(list):
                     dists = np.delete(np.delete(dists, x, 0), x, 1)
             else:
                 break
+        _logger.debug("Removed %d droplets", num_old - len(self))
 
     @property
     def total_droplet_volume(self) -> float:
