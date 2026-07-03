@@ -463,9 +463,11 @@ class Emulsion(list):
                 exactly min_radius are removed, so `min_radius == 0` can be used to
                 filter vanished droplets. The default value does not remove any droplets
         """
+        num_old = len(self)
         for i in reversed(range(len(self))):
             if self[i].radius <= min_radius:
                 self.pop(i)
+        _logger.info("Removed %d droplets", num_old - len(self))
 
     def get_pairwise_distances(
         self, subtract_radius: bool = False, grid: GridBase | None = None
@@ -586,7 +588,7 @@ class Emulsion(list):
                     dists = np.delete(np.delete(dists, x, 0), x, 1)
             else:
                 break
-        _logger.debug("Removed %d droplets", num_old - len(self))
+        _logger.info("Removed %d droplets", num_old - len(self))
 
     @property
     def total_droplet_volume(self) -> float:
