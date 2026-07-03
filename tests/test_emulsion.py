@@ -28,6 +28,8 @@ def test_empty_emulsion(caplog):
     assert e.total_droplet_volume == 0
     dists = e.get_pairwise_distances()
     np.testing.assert_array_equal(dists, np.zeros((0, 0)))
+    dists = e.get_pairwise_distances(subtract_radius=True)
+    np.testing.assert_array_equal(dists, np.zeros((0, 0)))
     expect = {
         "count": 0,
         "radius_mean": math.nan,
@@ -89,6 +91,8 @@ def test_emulsion_single():
     assert e.total_droplet_volume == pytest.approx(6)
     dists = e.get_pairwise_distances()
     np.testing.assert_array_equal(dists, np.zeros((1, 1)))
+    dists = e.get_pairwise_distances(subtract_radius=True)
+    np.testing.assert_array_equal(dists, np.zeros((1, 1)))
     expect = {
         "count": 1,
         "radius_mean": 3,
@@ -115,6 +119,8 @@ def test_emulsion_two():
 
     dists = e.get_pairwise_distances()
     np.testing.assert_array_equal(dists, np.array([[0, 10], [10, 0]]))
+    dists = e.get_pairwise_distances(subtract_radius=True)
+    np.testing.assert_array_equal(dists, np.array([[0, 2], [2, 0]]))
     expect = {
         "count": 2,
         "radius_mean": 4,
