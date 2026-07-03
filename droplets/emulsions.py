@@ -487,14 +487,13 @@ class Emulsion(list):
         if len(self) == 0:
             return np.zeros((0, 0))
 
-        if grid is None:
+        if grid:
+            get_distance = functools.partial(grid.distance, coords="cartesian")
+        else:
 
             def get_distance(p1, p2):
                 """Helper function calculating the distance between points."""
-                return np.linalg.norm(p1 - p2)
-
-        else:
-            get_distance = functools.partial(grid.distance, coords="cartesian")
+                return np.linalg.norm(p1 - p2, axis=-1)
 
         # calculate pairwise distances, assuming `get_distance` is vectorized
         positions = self.data["position"]
@@ -506,7 +505,8 @@ class Emulsion(list):
 
         # return distances in square matrix form
         dists = np.zeros((len(self), len(self)))
-        dists[i, j] = dists[j, i] = dist_els
+        dists[i, j] = dist_els
+        dists[j, i] = dist_els
         return dists
 
     def get_neighbor_distances(self, subtract_radius: bool = False) -> RealArray:
@@ -572,6 +572,7 @@ class Emulsion(list):
         np.fill_diagonal(dists, np.inf)
 
         _logger.debug("Remove overlapping droplets")
+        num_old = len(self)
         while len(dists) > 1:
             # find minimal distance
             x, y = np.unravel_index(np.argmin(dists), dists.shape)
@@ -585,6 +586,7 @@ class Emulsion(list):
                     dists = np.delete(np.delete(dists, x, 0), x, 1)
             else:
                 break
+        _logger.debug("Removed %d droplets", num_old - len(self))
 
     @property
     def total_droplet_volume(self) -> float:

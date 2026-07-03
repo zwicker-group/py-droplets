@@ -2,6 +2,7 @@
 .. codeauthor:: David Zwicker <david.zwicker@ds.mpg.de>
 """
 
+import functools
 import logging
 import math
 
@@ -107,6 +108,7 @@ def test_emulsion_single():
 
 def test_emulsion_two():
     """Test an emulsions with two droplets."""
+    grid = UnitGrid([30])
     e = Emulsion([DiffuseDroplet([10], 3, 1)])
     e1 = Emulsion([DiffuseDroplet([20], 5, 1)])
     e.extend(e1)
@@ -120,6 +122,10 @@ def test_emulsion_two():
     dists = e.get_pairwise_distances()
     np.testing.assert_array_equal(dists, np.array([[0, 10], [10, 0]]))
     dists = e.get_pairwise_distances(subtract_radius=True)
+    np.testing.assert_array_equal(dists, np.array([[0, 2], [2, 0]]))
+    dists = e.get_pairwise_distances(grid=grid)
+    np.testing.assert_array_equal(dists, np.array([[0, 10], [10, 0]]))
+    dists = e.get_pairwise_distances(subtract_radius=True, grid=grid)
     np.testing.assert_array_equal(dists, np.array([[0, 2], [2, 0]]))
     expect = {
         "count": 2,
@@ -329,3 +335,39 @@ def test_emulsion_from_storage(proc):
 
     etc = EmulsionTimeCourse.from_storage(storage, num_processes=proc, refine=True)
     assert len(etc) == 2
+
+
+@pytest.mark.parametrize("use_grid", [True, False])
+@pytest.mark.parametrize("subtract_radius", [True, False])
+def test_distance_calculation(use_grid, subtract_radius):
+    """Test optimized distance calculation against a naive implementation."""
+    grid = UnitGrid([10, 20], periodic=True)
+
+    if use_grid:
+        get_distance = functools.partial(grid.distance, coords="cartesian")
+
+    else:
+
+        def get_distance(p1, p2):
+            """Helper function calculating the distance between points."""
+            return np.linalg.norm(p1 - p2)
+
+    e = Emulsion.from_random(3, grid_or_bounds=grid, radius=4, remove_overlapping=False)
+
+    dists1 = e.get_pairwise_distances(
+        subtract_radius=subtract_radius, grid=grid if use_grid else None
+    )
+
+    # calculate pairwise distance and return it in requested form
+    num = len(e)
+    dists2 = np.zeros((num, num))
+    # iterate over all droplet pairs
+    for i in range(num):
+        for j in range(i + 1, num):
+            d1, d2 = e[i], e[j]
+            dist = get_distance(d1.position, d2.position)
+            if subtract_radius:
+                dist -= d1.radius + d2.radius
+            dists2[i, j] = dists2[j, i] = dist
+
+    np.testing.assert_allclose(dists1, dists2)
