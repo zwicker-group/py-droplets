@@ -452,6 +452,26 @@ class Emulsion(list):
         np.clip(result.data, 0, 1, out=result.data)
         return result
 
+    def filter(
+        self, *, min_radius: float = -np.inf, max_radius: float = np.inf
+    ) -> Emulsion:
+        """Filter droplets by various criteria
+
+        Args:
+            min_radius (float):
+                The minimal radius of the droplets that are retained. Droplets with
+                exactly min_radius are removed, so `min_radius == 0` can be used to
+                filter vanished droplets. The default value does not remove any droplets
+            max_radius (float):
+                The maximal radius of the droplets that are retained.
+
+        Returns:
+            :class:`Emulsion` The emulsion with droplets that are retained
+        """
+        return self.__class__(
+            [droplet for droplet in self if min_radius < droplet.radius < max_radius]
+        )
+
     def remove_small(self, min_radius: float = -np.inf) -> None:
         """Remove droplets that are very small.
 
@@ -724,7 +744,13 @@ class Emulsion(list):
             import matplotlib.pyplot as plt
 
             # determine the scalar values associated with all droplets
-            values = np.array([color_value(droplet) for droplet in drops_finite])
+            if callable(color_value):
+                values = np.array([color_value(droplet) for droplet in drops_finite])
+            elif len(color_value) == len(self):
+                values = color_value
+            else:
+                msg = f"`color_value` must be function or array of length {len(self)}"
+                raise ValueError(msg)
 
             # and map them to colors
             mapper = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
@@ -733,15 +759,29 @@ class Emulsion(list):
             if kwargs.pop("color", None) is not None:
                 _logger.warning("`color` is overwritten by `color_value`.")
 
+        elif "color" in kwargs:
+            # read color values from `color` attribute
+            color = kwargs.pop("color")
+            if isinstance(color, str):
+                colors = [color] * len(drops_finite)
+            else:
+                color = np.array(color)
+                if color.ndim < 2:
+                    colors = [color] * len(drops_finite)
+                elif color.ndim == 2:
+                    colors = color
+                else:
+                    raise ValueError
+
         else:
-            colors = [kwargs.pop("color", None)] * len(drops_finite)
+            colors = [None] * len(drops_finite)
 
         # get patches representing all droplets
         if grid is None or not repeat_periodically:
             # plot only the droplets themselves
             patches = [
                 droplet._get_mpl_patch(dim=2, color=color, **kwargs)
-                for droplet, color in zip(drops_finite, colors, strict=False)
+                for droplet, color in zip(drops_finite, colors, strict=True)
             ]
         else:
             # plot droplets also in their mirror positions

@@ -259,6 +259,8 @@ def test_emulsion_plotting():
     e3 = Emulsion([DiffuseDroplet([0, 1, 2], 10, 0.5)] * 2)
     e3.plot()
     e3.plot(field=field)
+    e3.plot(color="C1")
+    e3.plot(color=[0.5, 0.5, 0.5])
 
     e3 = Emulsion([droplets.PerturbedDroplet3D([0, 1, 2], 3, 1, [1, 2, 3, 4, 5, 6])])
     with pytest.raises(NotImplementedError):
