@@ -373,3 +373,23 @@ def test_distance_calculation(use_grid, subtract_radius):
             dists2[i, j] = dists2[j, i] = dist
 
     np.testing.assert_allclose(dists1, dists2)
+
+
+def test_emulsion_add():
+    """Test adding emulsions"""
+    e = Emulsion([SphericalDroplet([1], 2)])
+    e2 = e + e
+    assert isinstance(e2, Emulsion)
+    assert len(e2) == 2
+    # check that droplets are independent
+    e2[0].radius = 3
+    assert e2[1].radius == 2
+
+
+def test_emulsion_filter():
+    """Test emulsion filter function"""
+    e = Emulsion([SphericalDroplet([1], r) for r in [1, 2, 3]])
+    assert len(e.filter(min_radius=1.5)) == 2
+    assert len(e.filter(max_radius=2.5)) == 2
+    assert len(e.filter(min_radius=1.5, max_radius=2.5)) == 1
+    assert len(e) == 3
