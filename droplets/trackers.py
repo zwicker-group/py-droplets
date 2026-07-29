@@ -46,7 +46,7 @@ class LengthScaleTracker(TrackerBase):
         method: Literal[
             "structure_factor_mean", "structure_factor_maximum", "droplet_detection"
         ] = "structure_factor_mean",
-        source: None | int | Callable = None,
+        source: int | Callable | None = None,
         verbose: bool = False,
     ):
         r"""
@@ -94,7 +94,7 @@ class LengthScaleTracker(TrackerBase):
         # extract correct scalar field
         scalar_field = extract_field(field, self.source, 0)
         if not isinstance(scalar_field, ScalarField):
-            self._logger.exception(
+            self._logger.error(
                 "Field needs to be a scalar field. Use `source` parameter to select a "
                 "specific field of a FieldCollection."
             )
@@ -147,7 +147,7 @@ class DropletTracker(TrackerBase):
         filename: str | None = None,
         *,
         emulsion_timecourse: EmulsionTimeCourse | None = None,
-        source: None | int | Callable = None,
+        source: int | Callable | None = None,
         threshold: float | Literal["auto", "extrema", "mean", "otsu"] = 0.5,
         minimal_radius: float = 0,
         refine: bool = False,
@@ -193,8 +193,7 @@ class DropletTracker(TrackerBase):
 
                 * `extrema`: take mean between the minimum and the maximum of the data
                 * `mean`: take the mean over the entire data
-                * `otsu`: use Otsu's method implemented in
-                          :func:`~droplets.image_analysis.threshold_otsu`
+                * `otsu`: Otsu's method :func:`~droplets.image_analysis.threshold_otsu`
 
                 The special value `auto` currently defaults to the `extrema` method.
 
@@ -240,7 +239,7 @@ class DropletTracker(TrackerBase):
         # extract scalar field
         scalar_field = extract_field(field, self.source, 0)
         if not isinstance(scalar_field, ScalarField):
-            self._logger.exception(
+            self._logger.error(
                 "Field needs to be a scalar field. Use `source` parameter to select a "
                 "specific field of a FieldCollection."
             )

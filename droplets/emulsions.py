@@ -1048,7 +1048,7 @@ class EmulsionTimeCourse:
 
     @fill_in_docstring
     def tracker(
-        self, interrupts: InterruptData = 1, filename: str | None = None
+        self, interrupts: InterruptData = 1, filename: str | None = None, **kwargs
     ) -> DropletTracker:
         """Return a tracker that analyzes emulsions during simulations.
 
@@ -1057,11 +1057,14 @@ class EmulsionTimeCourse:
                 {ARG_TRACKER_INTERRUPTS}
             filename (str): determines where the EmulsionTimeCourse data is
                 stored
+            **kwargs:
+                Arguments forwarded to :class:`~droplets.trackers.DropletTracker`
+
         """
         from .trackers import DropletTracker
 
         return DropletTracker(
-            emulsion_timecourse=self, filename=filename, interrupts=interrupts
+            emulsion_timecourse=self, filename=filename, interrupts=interrupts, **kwargs
         )
 
 
