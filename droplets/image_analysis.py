@@ -680,7 +680,7 @@ def refine_droplet(
 
 def get_structure_factor(
     scalar_field: ScalarField,
-    smoothing: None | float | Literal["auto", "none"] = "auto",
+    smoothing: float | Literal["auto", "none"] | None = "auto",
     wave_numbers: Sequence[float] | Literal["auto"] = "auto",
     add_zero: bool = False,
 ) -> tuple[RealArray, RealArray]:

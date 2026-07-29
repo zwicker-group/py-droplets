@@ -17,53 +17,50 @@ REPLACEMENTS = collections.OrderedDict(
         # Complex types that can be represented by some descriptive name
         ("Union[dict, str, BCBase]", "BoundaryData"),
         (
-            "Union[Dict[str, BoundaryData], "
-            "BoundaryData, Tuple[BoundaryData, BoundaryData]]",
+            (
+                "Union[Dict[str, BoundaryData], "
+                "BoundaryData, Tuple[BoundaryData, BoundaryData]]"
+            ),
             "BoundaryPairData",
         ),
         (
-            "Union[Dict[str, BoundaryData], dict, str, BCBase, "
-            "Tuple[BoundaryData, BoundaryData]]",
+            (
+                "Union[Dict[str, BoundaryData], dict, str, BCBase, "
+                "Tuple[BoundaryData, BoundaryData]]"
+            ),
             "BoundaryPairData",
         ),
         ("Union[BoundaryPairData, Sequence[BoundaryPairData]]", "BoundariesData"),
         (
-            "Union[Dict[str, BoundaryData], dict, str, BCBase, "
-            "Tuple[BoundaryData, BoundaryData], Sequence[BoundaryPairData]]",
+            (
+                "Union[Dict[str, BoundaryData], dict, str, BCBase, "
+                "Tuple[BoundaryData, BoundaryData], Sequence[BoundaryPairData]]"
+            ),
             "BoundariesData",
         ),
         (
-            "Union[dict, str, BCBase, Tuple[Union[dict, str, BCBase], "
-            "Union[dict, str, BCBase]], Sequence[Union[dict, str, BCBase, "
-            "Tuple[Union[dict, str, BCBase], Union[dict, str, BCBase]]]]]",
+            (
+                "Union[dict, str, BCBase, Tuple[Union[dict, str, BCBase], "
+                "Union[dict, str, BCBase]], Sequence[Union[dict, str, BCBase, "
+                "Tuple[Union[dict, str, BCBase], Union[dict, str, BCBase]]]]]"
+            ),
             "BoundaryConditionData",
         ),
         (
-            "Union[Dict[str, Union[Dict, str, BCBase]], Dict, str, BCBase, "
-            "Tuple[Union[Dict, str, BCBase], Union[Dict, str, BCBase]], "
-            "Sequence[Union[Dict[str, Union[Dict, str, BCBase]], Dict, str, BCBase, "
-            "Tuple[Union[Dict, str, BCBase], Union[Dict, str, BCBase]]]]]",
+            (
+                "Union[dict, str, BCBase, Tuple[Union[dict, str, BCBase], "
+                "Union[dict, str, BCBase]], Sequence[Union[dict, str, BCBase, "
+                "Tuple[Union[dict, str, BCBase], Union[dict, str, BCBase]]]], "
+                "Sequence[BoundaryConditionData]]"
+            ),
             "BoundaryConditionData",
         ),
         (
-            "Union[dict, str, BCBase, Tuple[Union[dict, str, BCBase], "
-            "Union[dict, str, BCBase]], Sequence[Union[dict, str, BCBase, "
-            "Tuple[Union[dict, str, BCBase], Union[dict, str, BCBase]]]], "
-            "Sequence[BoundaryConditionData]]",
-            "BoundaryConditionData",
-        ),
-        (
-            "Union[Dict[str, BoundaryData], dict, str, BCBase, "
-            "Tuple[BoundaryData, BoundaryData], "
-            "Sequence[BoundaryPairData], Sequence[BoundariesData]]",
-            "BoundariesDataList",
-        ),
-        (
-            "Union[Dict[str, Union[Dict, str, BCBase]], Dict, str, BCBase, "
-            "Tuple[Union[Dict, str, BCBase], Union[Dict, str, BCBase]], "
-            "Sequence[Union[Dict[str, Union[Dict, str, BCBase]], Dict, str, BCBase, "
-            "Tuple[Union[Dict, str, BCBase], Union[Dict, str, BCBase]]]], "
-            "Sequence[BoundaryConditionData]]",
+            (
+                "Union[Dict[str, BoundaryData], dict, str, BCBase, "
+                "Tuple[BoundaryData, BoundaryData], "
+                "Sequence[BoundaryPairData], Sequence[BoundariesData]]"
+            ),
             "BoundariesDataList",
         ),
         ("Union[List[Union[TrackerBase, str]], TrackerBase, str, None]", "TrackerData"),
