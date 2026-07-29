@@ -68,7 +68,7 @@ We also provide a tracker, which can be used to monitor simulations:
 
 The script prints statistics of the emulsion in the last tracked frame, which should
 n something like ``{'count': 10, 'radius_mean': 2.3, 'radius_std': 0.8, 'volume_mean': 19.2, 'volume_std': 12.6}``.
-However, the :class:`~droplets.emulsion.EmulsionTimeCourse` object ``etc`` provides much
+However, the :class:`~droplets.emulsions.EmulsionTimeCourse` object ``etc`` provides much
 more detailed information. In particular, it can be converted to a
 :class:`~droplets.droplet_tracks.DropletTrackList` object by calling
 :meth:`~droplets.droplet_tracks.DropletTrackList.from_emulsion_time_course`.
