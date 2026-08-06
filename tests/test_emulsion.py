@@ -9,7 +9,7 @@ import math
 import numpy as np
 import pytest
 
-from pde import CartesianGrid, MemoryStorage, ScalarField, UnitGrid
+from pde import CartesianGrid, MemoryStorage, ScalarField, UnitGrid, VectorField
 from pde.tools.misc import module_available
 
 from droplets import DiffuseDroplet, Emulsion, SphericalDroplet, droplets, emulsions
@@ -253,6 +253,9 @@ def test_emulsion_plotting():
         e2.plot(field=field, repeat_periodically=True)
         e2.plot(grid=field.grid, repeat_periodically=True)
         e2.plot(color_value=lambda droplet: droplet.radius)
+
+    with pytest.raises(TypeError):
+        e2.plot(field=VectorField(field.grid))
 
     # 3d emulsion
     field = ScalarField(UnitGrid([5, 5, 5], periodic=True))
