@@ -723,6 +723,9 @@ class Emulsion(list):
 
         # plot background and determine bounds for the droplets
         if field is not None:
+            if not isinstance(field, ScalarField):
+                msg = "`field` must be a ScalarField"
+                raise TypeError(msg)
             # plot the phase field and use its bounds
             if image_args is None:
                 image_args = {}

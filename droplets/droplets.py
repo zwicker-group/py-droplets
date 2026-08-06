@@ -582,7 +582,9 @@ class SphericalDroplet(DropletBase):
         return mpl.patches.Circle(position, self.radius, **kwargs)
 
     @plot_on_axes()
-    def plot(self, ax, value: Callable | None = None, **kwargs) -> PlotReference:
+    def plot(
+        self, ax, value: Callable | None = None, autoscale: bool = True, **kwargs
+    ) -> PlotReference:
         """Plot the droplet.
 
         Args:
@@ -592,6 +594,9 @@ class SphericalDroplet(DropletBase):
                 <https://matplotlib.org/stable/tutorials/colors/colors.html>`_ or a
                 function that takes the droplet instance and returns a color in which
                 this droplet is drawn. If given, it overwrites the `color` argument.
+            autoscale (bool):
+                Determines whether the axes limits should be scaled automatically. If
+                True :func:`~matplotlib.axes.Axes.autoscale` is called.
             **kwargs:
                 Additional keyword arguments are passed to the class that creates the
                 patch that represents the droplet. For instance, to only draw the
@@ -600,10 +605,13 @@ class SphericalDroplet(DropletBase):
         Returns:
             :class:`~pde.tools.plotting.PlotReference`: Information about the plot
         """
+        # enable scaling of the axes limits if requested
+        if autoscale:
+            ax.autoscale(enable=True)
         # create the artist representing the droplet
         artist = self._get_mpl_patch(**kwargs)
         # add artist to axis and return all information in a plot reference
-        ax.add_artist(artist)
+        ax.add_patch(artist)
         return PlotReference(ax, artist)
 
 
