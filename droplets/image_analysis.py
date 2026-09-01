@@ -905,5 +905,6 @@ __all__ = [
     "get_structure_factor",
     "locate_droplets",
     "refine_droplet",
+    "refine_droplets",
     "threshold_otsu",
 ]
