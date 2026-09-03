@@ -587,6 +587,12 @@ class SphericalDroplet(DropletBase):
     ) -> PlotReference:
         """Plot the droplet.
 
+        .. tip::
+
+            The default settings shows the droplet as a blue disk. The color can be set
+            using the ``color`` argument or via more detailed arguments, such as
+            ``facecolor`` or ``edgecolor``. To only show an outline, use ``fill=False``.
+
         Args:
             {PLOT_ARGS}
             value (callable):
