@@ -11,9 +11,9 @@ jobs:
         python-version: ['3.10']
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -30,7 +30,7 @@ jobs:
         pytest --cov-config=pyproject.toml --cov-report xml:report_coverage.xml --cov=droplets tests
 
     - name: Upload coverage to Codecov  
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./report_coverage.xml
