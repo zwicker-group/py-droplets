@@ -37,7 +37,6 @@ The required packages are listed in the table below:
 ===========  ========= =========
 Package      Version   Usage
 ===========  ========= =========
-h5py         >=2.10    Reading and writing data
 matplotlib   >=3.1     Visualizing results
 numpy        >=1.22    Array library used for storing data
 numba        >=0.59    Just-in-time compilation to accelerate numerics

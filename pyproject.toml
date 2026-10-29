@@ -27,7 +27,6 @@ classifiers = [
 
 # Requirements for setuptools
 dependencies = [
-    "h5py>=2.10",
     "matplotlib>=3.1",
     "numba>=0.59",
     "numpy>=1.22",
